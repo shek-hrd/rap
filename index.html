@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rapture - Screen Capture & AI Analysis</title>
     <link rel="stylesheet" href="styles.css">
-</head>
+
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self';"></head>
 <body>
     <div class="container">
         <header>
@@ -85,12 +86,7 @@
                 <h2>Recent Captures</h2>
                 <div id="capturesList" class="captures-grid"></div>
             </div>
-        </main>
-    </div>
-
-    <script src="script.js"></script>
-</body>
-</html>            <div class="explanation-section">                <h2>What is RAP? <span class="explanation-toggle" id="explanationToggle">[Click to expand]</span></h2>                <div class="explanation-content" id="explanationContent">                    <div class="explanation-text">                        <h3>?? RAP - Advanced Screen Capture & AI Analysis Tool</h3>                        <p><strong>Overview:</strong> RAP is a comprehensive web-based application designed for capturing, recording, and analyzing screen content using advanced AI technologies. Built with modern web standards, it provides a complete solution for screen capture workflows.</p>                        <h4>?? Core Functionality:</h4>                        <ul>                            <li><strong>Screen Capture:</strong> Capture entire screens, specific windows, or browser tabs</li>                            <li><strong>Video Recording:</strong> Record screen activity with audio</li>                            <li><strong>AI Analysis:</strong> Intelligent content analysis using multiple AI providers</li>                        </ul>                    </div>                </div>            </div>
+        <div class="explanation-section">                <h2>What is RAP? <span class="explanation-toggle" id="explanationToggle">[Click to expand]</span></h2>                <div class="explanation-content" id="explanationContent">                    <div class="explanation-text">                        <h3>🎬 RAP - Advanced Screen Capture & AI Analysis Tool</h3>                        <p><strong>Overview:</strong> RAP is a comprehensive web-based application designed for capturing, recording, and analyzing screen content using advanced AI technologies. Built with modern web standards, it provides a complete solution for screen capture workflows.</p>                        <h4>🎬 Core Functionality:</h4>                        <ul>                            <li><strong>Screen Capture:</strong> Capture entire screens, specific windows, or browser tabs</li>                            <li><strong>Video Recording:</strong> Record screen activity with audio</li>                            <li><strong>AI Analysis:</strong> Intelligent content analysis using multiple AI providers</li>                        </ul>                    </div>                </div>            </div>
             <div class="processing-details" id="processingDetails" style="display: none;">                <div class="detail-line" id="processingStatus">Initializing...</div>                <div class="progress-bar">                    <div class="progress-fill" id="processingProgress" style="width: 0%;"></div>                </div>                <div class="detail-line" id="processingStats">Stats will appear here</div>                <div class="detail-line" id="processingPath">Path: N/A</div>            </div>
 <div class="ai-conversation" id="aiConversation" style="display: none;">  
     <div class="ai-message ai" id="aiWelcome">AI: Hello! I have analyzed your capture. Ask me anything about it!</div>  
@@ -98,4 +94,9 @@
 <div class="ai-input-container" id="aiInputContainer" style="display: none;">  
     <input type="text" id="aiInput" class="ai-input" placeholder="Ask the AI about your capture...">  
     <button id="sendAiMessage" class="btn btn-info">Send</button>  
-</div> 
+</div></main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
