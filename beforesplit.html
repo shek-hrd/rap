@@ -1459,146 +1459,43 @@
         console.log('📸 Features: Screen capture, Video recording, AI analysis, Cloud upload');
         console.log('🔧 Usage: Click capture buttons to start, then analyze with AI or save/upload');
     </script>
-    <!-- Crypto Donation Widget - Place before </html> tag -->
-    <div id="crypto-donation-widget" style="
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 15px;
-    padding: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: white;
-    z-index: 1000;
-    max-width: 320px;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.1);
-">
-        <div style="text-align: center; margin-bottom: 15px; font-size: 14px; opacity: 0.9;">
-            by <strong>shekhrd</strong> for breakthrough Ideas
-        </div>
 
-        <div style="margin-bottom: 15px;">
-            <div style="font-size: 12px; opacity: 0.8; margin-bottom: 10px;">Choose amount:</div>
-            <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-                <button onclick="donate(3)" style="flex: 1; padding: 8px; border: none; border-radius: 8px; background: rgba(255,255,255,0.2); color: white; cursor: pointer; font-size: 12px; transition: all 0.3s ease;">$3</button>
-                <button onclick="donate(33)" style="flex: 1; padding: 8px; border: none; border-radius: 8px; background: rgba(255,255,255,0.2); color: white; cursor: pointer; font-size: 12px; transition: all 0.3s ease;">$33</button>
-                <button onclick="donate(333)" style="flex: 1; padding: 8px; border: none; border-radius: 8px; background: rgba(255,255,255,0.2); color: white; cursor: pointer; font-size: 12px; transition: all 0.3s ease;">$333</button>
-                <button onclick="donate(3333)" style="flex: 1; padding: 8px; border: none; border-radius: 8px; background: rgba(255,255,255,0.2); color: white; cursor: pointer; font-size: 12px; transition: all 0.3s ease;">$3333</button>
+</body>
+<link rel="stylesheet" href="crypto-donation-widget.css">
+<div id="crypto-donation-widget">
+    <!-- Copy the content from widget-include.html -->
+    <!-- Crypto Donation Widget - Include this before </html> tag -->
+    <link rel="stylesheet" href="crypto-donation-widget.css">
+    <div id="crypto-donation-widget">
+        <div class="widget-content">
+            <div class="crypto-donation-signature">
+                by <strong>shekhrd</strong> for breakthrough Ideas
+            </div>
+
+            <div class="crypto-donation-amounts">
+                <div class="crypto-donation-label">Choose amount:</div>
+                <div class="crypto-donation-buttons">
+                    <button class="amount-btn" onclick="donate(3)">$3</button>
+                    <button class="amount-btn" onclick="donate(33)">$33</button>
+                    <button class="amount-btn" onclick="donate(333)">$333</button>
+                    <button class="amount-btn" onclick="donate(3333)">$3333</button>
+                </div>
+            </div>
+
+            <div id="wallet-info">
+                <div class="network-label">Select network:</div>
+                <div id="networks"></div>
+                <div class="wallet-address-label">Click address to copy:</div>
+                <div id="wallet-address" onclick="copyToClipboard(this.textContent)" title="Click to copy"></div>
             </div>
         </div>
 
-        <div style="border-top: 1px solid rgba(255,255,255,0.2); padding-top: 15px;">
-            <div id="wallet-info" style="display: none; margin-top: 10px;">
-                <div style="font-size: 12px; opacity: 0.8; margin-bottom: 8px;">Select network:</div>
-                <div id="networks" style="display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px;"></div>
-                <div style="font-size: 11px; opacity: 0.7; margin-bottom: 5px;">Click address to copy:</div>
-                <div id="wallet-address" style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 5px; font-family: monospace; font-size: 10px; word-break: break-all; cursor: pointer;" onclick="copyToClipboard(this.textContent)" title="Click to copy"></div>
-            </div>
-        </div>
-
-        <div style="text-align: center; margin-top: 10px;">
-            <button onclick="toggleWidget()" id="toggle-btn" style="background: none; border: none; color: rgba(255,255,255,0.7); font-size: 12px; cursor: pointer; text-decoration: underline;">✕</button>
+        <div class="widget-controls">
+            <button id="toggle-btn">✕</button>
         </div>
     </div>
+    <script src="crypto-donation-widget.js"></script>
+</div>
+<script src="crypto-donation-widget.js"></script>
 
-    <script>
-        const wallets = {
-            '0x6f602be9fccf656c8c3e9f36d2064d580264b393': {
-                name: 'Main Wallet',
-                networks: {
-                    'ethereum': { name: 'Ethereum', symbol: 'ETH', address: '0x6f602be9fccf656c8c3e9f36d2064d580264b393' },
-                    'polygon': { name: 'Polygon', symbol: 'MATIC', address: '0x6f602be9fccf656c8c3e9f36d2064d580264b393' },
-                    'bsc': { name: 'BSC', symbol: 'BNB', address: '0x6f602be9fccf656c8c3e9f36d2064d580264b393' },
-                    'arbitrum': { name: 'Arbitrum', symbol: 'ETH', address: '0x6f602be9fccf656c8c3e9f36d2064d580264b393' }
-                }
-            },
-            '0x61e7081E11BBA442781f8676C78533441C52f075': {
-                name: 'Secondary Wallet',
-                networks: {
-                    'ethereum': { name: 'Ethereum', symbol: 'ETH', address: '0x61e7081E11BBA442781f8676C78533441C52f075' },
-                    'polygon': { name: 'Polygon', symbol: 'MATIC', address: '0x61e7081E11BBA442781f8676C78533441C52f075' },
-                    'bsc': { name: 'BSC', symbol: 'BNB', address: '0x61e7081E11BBA442781f8676C78533441C52f075' },
-                    'arbitrum': { name: 'Arbitrum', symbol: 'ETH', address: '0x61e7081E11BBA442781f8676C78533441C52f075' }
-                }
-            }
-        };
-
-        let currentAmount = 0;
-        let selectedWallet = '';
-
-        function donate(amount) {
-            currentAmount = amount;
-            const walletKeys = Object.keys(wallets);
-            selectedWallet = walletKeys[0]; // Default to first wallet
-
-            showWalletInfo();
-        }
-
-        function showWalletInfo() {
-            const widget = document.getElementById('wallet-info');
-            const networksDiv = document.getElementById('networks');
-            const addressDiv = document.getElementById('wallet-address');
-
-            widget.style.display = 'block';
-            networksDiv.innerHTML = '';
-
-            // Create network buttons
-            Object.keys(wallets[selectedWallet].networks).forEach(network => {
-                const btn = document.createElement('button');
-                btn.textContent = wallets[selectedWallet].networks[network].symbol;
-                btn.style.cssText = 'flex: 1; padding: 5px; border: none; border-radius: 5px; background: rgba(255,255,255,0.2); color: white; cursor: pointer; font-size: 10px; transition: all 0.3s ease;';
-                btn.onclick = () => selectNetwork(network);
-                networksDiv.appendChild(btn);
-            });
-
-            // Show first network by default
-            selectNetwork(Object.keys(wallets[selectedWallet].networks)[0]);
-        }
-
-        function selectNetwork(network) {
-            const address = wallets[selectedWallet].networks[network].address;
-            document.getElementById('wallet-address').textContent = address;
-
-            // Update button styles
-            const buttons = document.querySelectorAll('#networks button');
-            buttons.forEach(btn => {
-                btn.style.background = 'rgba(255,255,255,0.2)';
-            });
-            event.target.style.background = 'rgba(255,255,255,0.4)';
-        }
-
-        function selectWallet(walletKey) {
-            selectedWallet = walletKey;
-            showWalletInfo();
-        }
-
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                const original = event.target.textContent;
-                event.target.textContent = 'Copied!';
-                event.target.style.background = 'rgba(0,255,0,0.3)';
-                setTimeout(() => {
-                    event.target.textContent = original;
-                    event.target.style.background = 'rgba(0,0,0,0.3)';
-                }, 1000);
-            });
-        }
-
-        function toggleWidget() {
-            const widget = document.getElementById('crypto-donation-widget');
-            if (widget.style.display === 'none') {
-                widget.style.display = 'block';
-                document.getElementById('toggle-btn').textContent = '✕';
-            } else {
-                widget.style.display = 'none';
-                document.getElementById('toggle-btn').textContent = '💝';
-            }
-        }
-
-        // Add toggle functionality to the close button
-        document.getElementById('toggle-btn').onclick = toggleWidget;
-    </script>
-</body>
 </html>
