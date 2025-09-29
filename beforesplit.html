@@ -1601,4 +1601,40 @@
     // Add toggle functionality to the close button
     document.getElementById('toggle-btn').onclick = toggleWidget;
 </script>
+<link rel="stylesheet" href="crypto-donation-widget.css">
+<div id="crypto-donation-widget">
+    <!-- Crypto Donation Widget - Include this before </html> tag -->
+    <link rel="stylesheet" href="crypto-donation-widget.css">
+    <div id="crypto-donation-widget">
+        <div class="widget-content">
+            <div class="crypto-donation-signature">
+                by <strong>shekhrd</strong> for breakthrough Ideas
+            </div>
+
+            <div class="crypto-donation-amounts">
+                <div class="crypto-donation-label">Choose amount:</div>
+                <div class="crypto-donation-buttons">
+                    <button class="amount-btn" onclick="donate(3)">$3</button>
+                    <button class="amount-btn" onclick="donate(33)">$33</button>
+                    <button class="amount-btn" onclick="donate(333)">$333</button>
+                    <button class="amount-btn" onclick="donate(3333)">$3333</button>
+                </div>
+            </div>
+
+            <div id="wallet-info">
+                <div class="network-label">Select network:</div>
+                <div id="networks"></div>
+                <div class="wallet-address-label">Click address to copy:</div>
+                <div id="wallet-address" onclick="copyToClipboard(this.textContent)" title="Click to copy"></div>
+            </div>
+        </div>
+
+        <div class="widget-controls">
+            <button id="toggle-btn">✕</button>
+        </div>
+    </div>
+    <script src="crypto-donation-widget.js"></script><!-- Copy the content from widget-include.html -->
+</div>
+<script src="crypto-donation-widget.js"></script>
+
 </html>
