@@ -1,6 +1,5 @@
 // Storage and Cloud Upload functionality
-if (typeof StorageManager === 'undefined') {
-    class StorageManager {
+class StorageManager {
     constructor(raptureApp) {
         this.rapture = raptureApp;
     }
@@ -106,5 +105,4 @@ if (typeof StorageManager === 'undefined') {
         }
         return url;
     }
-}
 }
