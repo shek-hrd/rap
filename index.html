@@ -4,12 +4,524 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rapture - Screen Capture & AI Analysis</title>
-    <link rel="stylesheet" href="styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="capture.js"></script>
-    <script src="ai.js"></script>
-    <script src="storage.js"></script>
-    <script src="app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a2e1a;
+            height: 100vh;
+            width: 100vw;
+            color: #c0c0c0;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        .container {
+            width: 100vw;
+            height: 100vh;
+            margin: 0;
+            padding: 8px;
+            overflow-y: auto;
+        }
+
+        .stats-section {
+            background: #2a3a2a;
+            border: 1px solid #3a4a3a;
+            border-radius: 4px;
+            padding: 8px;
+            margin-bottom: 12px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 8px;
+        }
+
+        .stat-item {
+            background: #1a2a1a;
+            padding: 6px;
+            border-radius: 3px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #90d090;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: #a0a0a0;
+        }
+
+        .download-all-section {
+            background: #2a3a2a;
+            border: 1px solid #3a4a3a;
+            border-radius: 4px;
+            padding: 8px;
+            margin-bottom: 12px;
+        }
+
+        .download-all-buttons {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .capture-link {
+            color: #6aaa6a;
+            text-decoration: none;
+            font-size: 0.8rem;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .capture-link:hover {
+            text-decoration: underline;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #c0c0c0;
+        }
+
+        header h1 {
+            font-size: 1.3rem;
+            margin-bottom: 4px;
+            text-shadow: none;
+            color: #90d090;
+        }
+
+        header p {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            color: #a0a0a0;
+        }
+
+        main {
+            background: #2a3a2a;
+            border-radius: 5px;
+            padding: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            border: 1px solid #3a4a3a;
+        }
+
+        .capture-section, .preview-section, .ai-analysis-section, .storage-section, .captures-gallery, .explanation-section {
+            margin-bottom: 12px;
+            padding: 8px;
+            border: 1px solid #3a4a3a;
+            border-radius: 4px;
+            background: #223322;
+        }
+
+        .capture-section h2, .preview-section h2, .ai-analysis-section h2, .storage-section h2, .captures-gallery h2, .explanation-section h2 {
+            margin-bottom: 6px;
+            color: #b0d0b0;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .capture-buttons {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: 1px solid #5a6a5a;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            background: #3a4a3a;
+            color: #c0c0c0;
+        }
+
+        .btn:hover {
+            background: #4a5a4a;
+            border-color: #6a7a6a;
+        }
+
+        .btn-primary {
+            background: #2d3d2d;
+            color: #b0d0b0;
+            border-color: #4a5a4a;
+        }
+
+        .btn-primary:hover {
+            background: #3d4d3d;
+            border-color: #5a6a5a;
+        }
+
+        .btn-secondary {
+            background: #3a4a3a;
+            color: #c0c0c0;
+            border-color: #5a6a5a;
+        }
+
+        .btn-secondary:hover {
+            background: #4a5a4a;
+            border-color: #6a7a6a;
+        }
+
+        .btn-danger {
+            background: #4a2a2a;
+            color: #d0a0a0;
+            border-color: #6a4a4a;
+        }
+
+        .btn-danger:hover {
+            background: #5a3a3a;
+            border-color: #7a5a5a;
+        }
+
+        .btn-info {
+            background: #2a3a4a;
+            color: #a0c0d0;
+            border-color: #4a5a6a;
+        }
+
+        .btn-info:hover {
+            background: #3a4a5a;
+            border-color: #5a6a7a;
+        }
+
+        .btn-warning {
+            background: #4a4a2a;
+            color: #d0d0a0;
+            border-color: #6a6a4a;
+        }
+
+        .btn-warning:hover {
+            background: #5a5a3a;
+            border-color: #7a7a5a;
+        }
+
+        .btn-success {
+            background: #2a4a2a;
+            color: #a0d0a0;
+            border-color: #4a6a4a;
+        }
+
+        .btn-success:hover {
+            background: #3a5a3a;
+            border-color: #5a7a5a;
+        }
+
+        .preview-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 150px;
+            background: #1a2a1a;
+            border-radius: 4px;
+            border: 1px solid #3a4a3a;
+        }
+
+        .preview-container video, .preview-container canvas, .preview-container img {
+            max-width: 100%;
+            max-height: 250px;
+            border-radius: 3px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+        }
+
+        .ai-controls, .storage-controls {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+        }
+
+        select {
+            padding: 5px 8px;
+            border: 1px solid #5a6a5a;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            background: #3a4a3a;
+            color: #c0c0c0;
+            cursor: pointer;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #6a7a6a;
+            background: #4a5a4a;
+        }
+
+        .analysis-result textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 6px;
+            border: 1px solid #5a6a5a;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            font-family: 'Consolas', 'Courier New', monospace;
+            resize: vertical;
+            background: #1a2a1a;
+            color: #c0c0c0;
+        }
+
+        .captures-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 8px;
+        }
+
+        .capture-item {
+            background: #2a3a2a;
+            border-radius: 3px;
+            padding: 6px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+            text-align: center;
+            border: 1px solid #3a4a3a;
+        }
+
+        .capture-item img {
+            width: 100%;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 2px;
+            margin-bottom: 4px;
+        }
+
+        .capture-item video {
+            width: 100%;
+            height: 80px;
+            border-radius: 2px;
+            margin-bottom: 4px;
+        }
+
+        .capture-item .capture-info {
+            font-size: 0.7rem;
+            color: #a0a0a0;
+        }
+
+        .capture-item .capture-actions {
+            display: flex;
+            gap: 3px;
+            justify-content: center;
+            margin-top: 4px;
+        }
+
+        .capture-item .btn-small {
+            padding: 3px 6px;
+            font-size: 0.6rem;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            background: #2a3a2a;
+        }
+
+        .btn:disabled:hover {
+            transform: none;
+            box-shadow: none;
+            background: #2a3a2a;
+            border-color: #3a4a3a;
+        }
+
+        /* Processing details styles */
+        .processing-details {
+            background: #1a2a1a;
+            border: 1px solid #3a4a3a;
+            border-radius: 3px;
+            padding: 6px;
+            margin-top: 6px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.7rem;
+            color: #a0a0a0;
+        }
+
+        .processing-details .detail-line {
+            margin-bottom: 2px;
+        }
+
+        .processing-details .progress-bar {
+            width: 100%;
+            height: 3px;
+            background: #3a4a3a;
+            border-radius: 2px;
+            margin: 3px 0;
+            overflow: hidden;
+        }
+
+        .processing-details .progress-fill {
+            height: 100%;
+            background: #6a8a6a;
+            transition: width 0.3s ease;
+        }
+
+        /* Explanation section styles */
+        .explanation-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: #1a2a1a;
+            border-radius: 3px;
+            margin-top: 6px;
+        }
+
+        .explanation-content.expanded {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .explanation-text {
+            padding: 8px;
+            font-size: 0.8rem;
+            line-height: 1.3;
+            color: #b0b0b0;
+        }
+
+        .explanation-text h3 {
+            color: #90d090;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+
+        .explanation-text h4 {
+            color: #b0d0b0;
+            margin: 6px 0 3px 0;
+            font-size: 0.8rem;
+        }
+
+        .explanation-text ul {
+            margin-left: 15px;
+            margin-top: 3px;
+        }
+
+        .explanation-text li {
+            margin-bottom: 2px;
+        }
+
+        .explanation-toggle {
+            cursor: pointer;
+            color: #8a9a8a;
+            font-size: 0.8rem;
+            text-decoration: underline;
+        }
+
+        .explanation-toggle:hover {
+            color: #9aaa9a;
+        }
+
+        /* AI conversation styles */
+        .ai-conversation {
+            margin-top: 8px;
+            background: #1a2a1a;
+            border-radius: 3px;
+            padding: 6px;
+            border: 1px solid #3a4a3a;
+        }
+
+        .ai-message {
+            margin-bottom: 6px;
+            padding: 4px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+        }
+
+        .ai-message.user {
+            background: #2a4a3a;
+            text-align: right;
+            color: #d0e0d0;
+        }
+
+        .ai-message.ai {
+            background: #2a3a2a;
+            color: #c0c0c0;
+        }
+
+        .ai-thinking {
+            background: #4a4a2a;
+            border-left: 3px solid #8a8a4a;
+            font-style: italic;
+            color: #d0d0a0;
+        }
+
+        .ai-input-container {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .ai-input {
+            flex: 1;
+            padding: 4px;
+            border: 1px solid #5a6a5a;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            background: #2a3a2a;
+            color: #c0c0c0;
+        }
+
+        .ai-input:focus {
+            outline: none;
+            border-color: #6a7a6a;
+            background: #3a4a3a;
+        }
+
+        /* Download link styles */
+        .download-link {
+            color: #6aaa6a;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .download-link:hover {
+            text-decoration: underline;
+            color: #7aba7a;
+        }
+
+        .recording-indicator {
+            background: #4a2a2a;
+            color: #ff6666;
+            border: 1px solid #6a4a4a;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 4px;
+            }
+            
+            header h1 {
+                font-size: 1.1rem;
+            }
+            
+            .capture-buttons, .ai-controls, .storage-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .btn {
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body>
@@ -157,9 +669,26 @@
         </main>
     </div>
 
-    <script src="app.js"></script>
-</body>
-</html>
+    <script>
+        class RaptureCapture {
+            constructor() {
+                this.mediaRecorder = null;
+                this.recordedChunks = [];
+                this.currentCapture = null;
+                this.captures = JSON.parse(localStorage.getItem('raptureCaptures') || '[]');
+                this.isRecording = false;
+                this.storageQuota = 0;
+                this.storageUsed = 0;
+
+                this.initializeElements();
+                this.bindEvents();
+                this.loadCaptures();
+                this.initializeExplanationToggle();
+                this.updateStats();
+                this.startStatsMonitoring();
+            }
+
+            initializeElements() {
                 // Capture buttons
                 this.captureScreenBtn = document.getElementById('captureScreen');
                 this.startRecordingBtn = document.getElementById('startRecording');
@@ -330,14 +859,6 @@
                 if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
                     this.mediaRecorder.stop();
                     this.isRecording = false;
-                }
-
-                // Stop screen sharing by stopping all tracks
-                if (this.previewVideo && this.previewVideo.srcObject) {
-                    const stream = this.previewVideo.srcObject;
-                    const tracks = stream.getTracks();
-                    tracks.forEach(track => track.stop());
-                    this.previewVideo.srcObject = null;
                 }
             }
 
@@ -798,13 +1319,12 @@
                     this.updateStats();
                 }, 30000);
 
-                // Also update when localStorage changes (alternative to storage API)
-                window.addEventListener('storage', (e) => {
-                    if (e.key === 'raptureCaptures') {
-                        this.loadCaptures();
+                // Also update when storage changes
+                if ('storage' in navigator) {
+                    navigator.storage.addEventListener('storagechange', () => {
                         this.updateStats();
-                    }
-                });
+                    });
+                }
             }
 
             async downloadAllAsZip() {
