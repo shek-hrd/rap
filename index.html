@@ -1023,22 +1023,47 @@
                     const result = await response.json();
                     url = result.data.url;
                 } else if (provider === 'imgur') {
-                    const clientId = 'YOUR_IMGUR_CLIENT_ID';
+                    // Use CORS proxy to bypass Imgur API restrictions
                     const blob = this.dataUrlToBlob(dataUrl);
                     const formData = new FormData();
                     formData.append('image', blob);
-                    const response = await fetch('https://api.imgur.com/3/image', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Client-ID ${clientId}`
-                        },
-                        body: formData
-                    });
-                    const result = await response.json();
-                    if (result.success) {
-                        url = result.data.link;
-                    } else {
-                        throw new Error(result.data.error || 'Imgur upload failed');
+
+                    // First, try to use a CORS proxy
+                    try {
+                        const response = await fetch('https://cors-anywhere.herokuapp.com/https://api.imgur.com/3/image', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': 'Client-ID 546c25a59c58ad7'
+                            },
+                            body: formData
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+
+                        const result = await response.json();
+                        if (result.success) {
+                            url = result.data.link;
+                        } else {
+                            throw new Error(result.data.error || 'Imgur upload failed');
+                        }
+                    } catch (proxyError) {
+                        console.warn('CORS proxy failed, trying alternative method:', proxyError);
+                        // Fallback: try direct upload (may still fail due to CORS)
+                        const directResponse = await fetch('https://api.imgur.com/3/image', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': 'Client-ID 546c25a59c58ad7'
+                            },
+                            body: formData
+                        });
+                        const result = await directResponse.json();
+                        if (result.success) {
+                            url = result.data.link;
+                        } else {
+                            throw new Error(result.data.error || 'Imgur upload failed');
+                        }
                     }
                 } else if (provider === 'fileio') {
                     const blob = this.dataUrlToBlob(dataUrl);
