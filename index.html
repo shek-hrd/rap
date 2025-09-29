@@ -476,14 +476,8 @@
             <div class="capture-section">
                 <h2>Capture Options</h2>
                 <div class="capture-buttons">
-                    <button id="captureScreen" class="btn btn-primary">
-                        📸 Capture Screen
-                    </button>
-                    <button id="captureWindow" class="btn btn-primary">
-                        🪟 Capture Window
-                    </button>
-                    <button id="captureTab" class="btn btn-primary">
-                        📑 Capture Tab
+                    <button id="captureUnified" class="btn btn-primary">
+                        📸 Capture (Screen/Window/Tab)
                     </button>
                     <button id="startRecording" class="btn btn-secondary">
                         ⏺️ Start Recording
@@ -598,9 +592,7 @@
 
             initializeElements() {
                 // Capture buttons
-                this.captureScreenBtn = document.getElementById('captureScreen');
-                this.captureWindowBtn = document.getElementById('captureWindow');
-                this.captureTabBtn = document.getElementById('captureTab');
+                this.captureUnifiedBtn = document.getElementById('captureUnified');
                 this.startRecordingBtn = document.getElementById('startRecording');
                 this.stopRecordingBtn = document.getElementById('stopRecording');
                 
@@ -629,9 +621,7 @@
             }
 
             bindEvents() {
-                this.captureScreenBtn.addEventListener('click', () => this.captureScreen());
-                this.captureWindowBtn.addEventListener('click', () => this.captureWindow());
-                this.captureTabBtn.addEventListener('click', () => this.captureTab());
+                this.captureUnifiedBtn.addEventListener('click', () => this.captureUnified());
                 this.startRecordingBtn.addEventListener('click', () => this.startRecording());
                 this.stopRecordingBtn.addEventListener('click', () => this.stopRecording());
                 
@@ -655,23 +645,32 @@
                 });
             }
 
-            async captureScreen() {
+            async captureUnified() {
                 try {
+                    // No mediaSource specified - shows dialog for user to choose screen/window/tab
                     const stream = await navigator.mediaDevices.getDisplayMedia({
-                        video: { mediaSource: 'screen' },
+                        video: true,
                         audio: false
                     });
-                    
+
                     const track = stream.getVideoTracks()[0];
                     const imageCapture = new ImageCapture(track);
                     const bitmap = await imageCapture.grabFrame();
-                    
-                    this.displayCapture(bitmap, 'screen');
+
+                    // Determine the type based on the selected source
+                    let captureType = 'screen';
+                    if (track.getSettings().displaySurface === 'window') {
+                        captureType = 'window';
+                    } else if (track.getSettings().displaySurface === 'browser') {
+                        captureType = 'tab';
+                    }
+
+                    this.displayCapture(bitmap, captureType);
                     track.stop();
-                    
+
                 } catch (error) {
-                    console.error('Screen capture failed:', error);
-                    alert('Screen capture failed. Please ensure you have granted screen recording permissions.');
+                    console.error('Capture failed:', error);
+                    alert('Capture failed. Please ensure you have granted screen recording permissions.');
                 }
             }
 
@@ -797,6 +796,11 @@
                 if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
                     this.mediaRecorder.stop();
                     this.isRecording = false;
+
+                    // Stop all tracks in the stream to end screen sharing
+                    if (this.mediaRecorder.stream) {
+                        this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                    }
                 }
             }
 
@@ -1073,7 +1077,7 @@
                     
                     if (capture.type === 'image' && capture.thumbnail) {
                         item.innerHTML = `
-                            <img src="${capture.thumbnail}" alt="Capture ${type}">
+                            <img src="${capture.thumbnail}" alt="Capture ${type}" onclick="rapture.loadCapturePreview('${capture.id}')">
                             <div class="capture-info">${type} - ${date}</div>
                             <div class="capture-actions">
                                 <button class="btn btn-small btn-info" onclick="rapture.downloadCapture('${capture.id}')">Download</button>
@@ -1081,7 +1085,7 @@
                         `;
                     } else {
                         item.innerHTML = `
-                            <div class="capture-info">${type} - ${date}</div>
+                            <div class="capture-info" onclick="rapture.loadCapturePreview('${capture.id}')">${type} - ${date}</div>
                             <div class="capture-actions">
                                 <button class="btn btn-small btn-info" onclick="rapture.downloadCapture('${capture.id}')">Download</button>
                             </div>
@@ -1095,11 +1099,36 @@
             downloadCapture(captureId) {
                 const capture = this.captures.find(c => c.id == captureId);
                 if (!capture) return;
-                
+
                 const link = document.createElement('a');
                 link.download = capture.filename;
                 link.href = capture.dataUrl;
                 link.click();
+            }
+
+            loadCapturePreview(captureId) {
+                const capture = this.captures.find(c => c.id == captureId);
+                if (!capture) return;
+
+                // Load the capture into preview
+                if (capture.type === 'image') {
+                    this.previewImage.src = capture.dataUrl;
+                    this.previewImage.style.display = 'block';
+                    this.previewVideo.style.display = 'none';
+                    this.previewCanvas.style.display = 'none';
+                } else if (capture.type === 'video') {
+                    this.previewVideo.src = capture.dataUrl;
+                    this.previewVideo.controls = true;
+                    this.previewVideo.style.display = 'block';
+                    this.previewImage.style.display = 'none';
+                    this.previewCanvas.style.display = 'none';
+                }
+
+                // Set as current capture for analysis and saving
+                this.currentCapture = capture;
+
+                // Enable action buttons
+                this.enableActionButtons();
             }
 
             showAiConversation() {  
