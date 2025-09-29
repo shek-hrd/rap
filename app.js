@@ -290,33 +290,23 @@ if (typeof RaptureCapture === 'undefined') {
             const date = new Date(capture.timestamp).toLocaleString();
             const type = capture.type === 'image' ? capture.subtype : 'video';
 
-            // Debug logging
-            console.log('Loading capture:', {
-                type: capture.type,
-                thumbnail: capture.thumbnail ? capture.thumbnail.substring(0, 50) + '...' : null,
-                uploadUrl: capture.uploadUrl
-            });
-
             if (capture.type === 'image' && capture.thumbnail) {
-                const imgSrc = capture.thumbnail.replace(/"/g, '"');
-                const uploadLink = capture.uploadUrl ?
-                    '<a href="' + capture.uploadUrl.replace(/"/g, '"') + '" target="_blank" class="capture-link">' + capture.uploadProvider.toUpperCase() + ': ' + capture.uploadUrl.replace(/"/g, '"') + '</a>' : '';
-
-                item.innerHTML = '<img src="' + imgSrc + '" alt="Capture ' + type + '">' +
-                    '<div class="capture-info">' + type + ' - ' + date + '</div>' +
-                    uploadLink +
-                    '<div class="capture-actions">' +
-                    '<button class="btn btn-small btn-info download-btn" data-capture-id="' + capture.id + '">Download</button>' +
-                    '</div>';
+                item.innerHTML = `
+                    <img src="${capture.thumbnail}" alt="Capture ${type}">
+                    <div class="capture-info">${type} - ${date}</div>
+                    ${capture.uploadUrl ? `<a href="${capture.uploadUrl}" target="_blank" class="capture-link">${capture.uploadProvider.toUpperCase()}: ${capture.uploadUrl}</a>` : ''}
+                    <div class="capture-actions">
+                        <button class="btn btn-small btn-info download-btn" data-capture-id="${capture.id}">Download</button>
+                    </div>
+                `;
             } else {
-                const uploadLink = capture.uploadUrl ?
-                    '<a href="' + capture.uploadUrl.replace(/"/g, '"') + '" target="_blank" class="capture-link">' + capture.uploadProvider.toUpperCase() + ': ' + capture.uploadUrl.replace(/"/g, '"') + '</a>' : '';
-
-                item.innerHTML = '<div class="capture-info">' + type + ' - ' + date + '</div>' +
-                    uploadLink +
-                    '<div class="capture-actions">' +
-                    '<button class="btn btn-small btn-info download-btn" data-capture-id="' + capture.id + '">Download</button>' +
-                    '</div>';
+                item.innerHTML = `
+                    <div class="capture-info">${type} - ${date}</div>
+                    ${capture.uploadUrl ? `<a href="${capture.uploadUrl}" target="_blank" class="capture-link">${capture.uploadProvider.toUpperCase()}: ${capture.uploadUrl}</a>` : ''}
+                    <div class="capture-actions">
+                        <button class="btn btn-small btn-info download-btn" data-capture-id="${capture.id}">Download</button>
+                    </div>
+                `;
             }
 
             this.capturesList.appendChild(item);
@@ -420,8 +410,8 @@ if (typeof RaptureCapture === 'undefined') {
 <body>
     <div class="header">
         <h1>🎬 Rapture Captures</h1>
-        <p>Generated on ' + new Date().toLocaleString() + '</p>
-        <p>Total captures: ' + this.captures.length + '</p>
+        <p>Generated on ${new Date().toLocaleString()}</p>
+        <p>Total captures: ${this.captures.length}</p>
     </div>
     <div class="capture-grid">`;
 
@@ -429,20 +419,16 @@ if (typeof RaptureCapture === 'undefined') {
                 const date = new Date(capture.timestamp).toLocaleString();
                 const type = capture.type === 'image' ? capture.subtype : 'video';
 
-                const imgTag = capture.type === 'image' && capture.dataUrl ?
-                    '<img src="' + capture.dataUrl.replace(/"/g, '"') + '" alt="Capture ' + type + '" class="capture-image">' : '';
-                const uploadLink = capture.uploadUrl ?
-                    '<a href="' + capture.uploadUrl.replace(/"/g, '"') + '" target="_blank" class="capture-link">' + capture.uploadProvider.toUpperCase() + ': View Online</a>' : '';
-
-                htmlContent += '<div class="capture-item">' +
-                    imgTag +
-                    '<div class="capture-info">' +
-                    '<strong>Type:</strong> ' + type + '<br>' +
-                    '<strong>Date:</strong> ' + date + '<br>' +
-                    '<strong>Filename:</strong> ' + capture.filename +
-                    '</div>' +
-                    uploadLink +
-                    '</div>';
+                htmlContent += `
+    <div class="capture-item">
+        ${capture.type === 'image' && capture.dataUrl ? `<img src="${capture.dataUrl}" alt="Capture ${type}" class="capture-image">` : ''}
+        <div class="capture-info">
+            <strong>Type:</strong> ${type}<br>
+            <strong>Date:</strong> ${date}<br>
+            <strong>Filename:</strong> ${capture.filename}
+        </div>
+        ${capture.uploadUrl ? `<a href="${capture.uploadUrl}" target="_blank" class="capture-link">${capture.uploadProvider.toUpperCase()}: View Online</a>` : ''}
+    </div>`;
             }
 
             htmlContent += `
@@ -469,7 +455,6 @@ if (typeof RaptureCapture === 'undefined') {
             this.downloadHtmlBtn.textContent = '🌐 Download HTML';
         }
     }
-}
 }
 
 // Initialize the application

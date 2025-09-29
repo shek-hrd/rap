@@ -92,4 +92,3 @@ if (typeof CaptureManager === 'undefined') {
         }
     }
 }
-}
