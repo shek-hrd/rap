@@ -1321,7 +1321,7 @@
 
                 // Also update when storage changes
                 if ('storage' in navigator) {
-                    navigator.storage.addEventListener('storagechange', () => {
+                    window.addEventListener('storage', () => {
                         this.updateStats();
                     });
                 }
