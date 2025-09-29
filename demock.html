@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapture - Screen Capture & AI Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a2e1a;
+            height: 100vh;
+            width: 100vw;
+            color: #c0c0c0;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        .container {
+            width: 100vw;
+            height: 100vh;
+            margin: 0;
+            padding: 8px;
+            overflow-y: auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #c0c0c0;
+        }
+
+        header h1 {
+            font-size: 1.3rem;
+            margin-bottom: 4px;
+            text-shadow: none;
+            color: #90d090;
+        }
+
+        header p {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            color: #a0a0a0;
+        }
+
+        main {
+            background: #2a3a2a;
+            border-radius: 5px;
+            padding: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            border: 1px solid #3a4a3a;
+        }
+
+        .capture-section, .preview-section, .ai-analysis-section, .storage-section, .captures-gallery, .explanation-section {
+            margin-bottom: 12px;
+            padding: 8px;
+            border: 1px solid #3a4a3a;
+            border-radius: 4px;
+            background: #223322;
+        }
+
+        .capture-section h2, .preview-section h2, .ai-analysis-section h2, .storage-section h2, .captures-gallery h2, .explanation-section h2 {
+            margin-bottom: 6px;
+            color: #b0d0b0;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .capture-buttons {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: 1px solid #5a6a5a;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            background: #3a4a3a;
+            color: #c0c0c0;
+        }
+
+        .btn:hover {
+            background: #4a5a4a;
+            border-color: #6a7a6a;
+        }
+
+        .btn-primary {
+            background: #2d3d2d;
+            color: #b0d0b0;
+            border-color: #4a5a4a;
+        }
+
+        .btn-primary:hover {
+            background: #3d4d3d;
+            border-color: #5a6a5a;
+        }
+
+        .btn-secondary {
+            background: #3a4a3a;
+            color: #c0c0c0;
+            border-color: #5a6a5a;
+        }
+
+        .btn-secondary:hover {
+            background: #4a5a4a;
+            border-color: #6a7a6a;
+        }
+
+        .btn-danger {
+            background: #4a2a2a;
+            color: #d0a0a0;
+            border-color: #6a4a4a;
+        }
+
+        .btn-danger:hover {
+            background: #5a3a3a;
+            border-color: #7a5a5a;
+        }
+
+        .btn-info {
+            background: #2a3a4a;
+            color: #a0c0d0;
+            border-color: #4a5a6a;
+        }
+
+        .btn-info:hover {
+            background: #3a4a5a;
+            border-color: #5a6a7a;
+        }
+
+        .btn-warning {
+            background: #4a4a2a;
+            color: #d0d0a0;
+            border-color: #6a6a4a;
+        }
+
+        .btn-warning:hover {
+            background: #5a5a3a;
+            border-color: #7a7a5a;
+        }
+
+        .btn-success {
+            background: #2a4a2a;
+            color: #a0d0a0;
+            border-color: #4a6a4a;
+        }
+
+        .btn-success:hover {
+            background: #3a5a3a;
+            border-color: #5a7a5a;
+        }
+
+        .preview-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 150px;
+            background: #1a2a1a;
+            border-radius: 4px;
+            border: 1px solid #3a4a3a;
+        }
+
+        .preview-container video, .preview-container canvas, .preview-container img {
+            max-width: 100%;
+            max-height: 250px;
+            border-radius: 3px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+        }
+
+        .ai-controls, .storage-controls {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+        }
+
+        select {
+            padding: 5px 8px;
+            border: 1px solid #5a6a5a;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            background: #3a4a3a;
+            color: #c0c0c0;
+            cursor: pointer;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #6a7a6a;
+            background: #4a5a4a;
+        }
+
+        .analysis-result textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 6px;
+            border: 1px solid #5a6a5a;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            font-family: 'Consolas', 'Courier New', monospace;
+            resize: vertical;
+            background: #1a2a1a;
+            color: #c0c0c0;
+        }
+
+        .captures-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 8px;
+        }
+
+        .capture-item {
+            background: #2a3a2a;
+            border-radius: 3px;
+            padding: 6px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+            text-align: center;
+            border: 1px solid #3a4a3a;
+        }
+
+        .capture-item img {
+            width: 100%;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 2px;
+            margin-bottom: 4px;
+        }
+
+        .capture-item video {
+            width: 100%;
+            height: 80px;
+            border-radius: 2px;
+            margin-bottom: 4px;
+        }
+
+        .capture-item .capture-info {
+            font-size: 0.7rem;
+            color: #a0a0a0;
+        }
+
+        .capture-item .capture-actions {
+            display: flex;
+            gap: 3px;
+            justify-content: center;
+            margin-top: 4px;
+        }
+
+        .capture-item .btn-small {
+            padding: 3px 6px;
+            font-size: 0.6rem;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            background: #2a3a2a;
+        }
+
+        .btn:disabled:hover {
+            transform: none;
+            box-shadow: none;
+            background: #2a3a2a;
+            border-color: #3a4a3a;
+        }
+
+        /* Processing details styles */
+        .processing-details {
+            background: #1a2a1a;
+            border: 1px solid #3a4a3a;
+            border-radius: 3px;
+            padding: 6px;
+            margin-top: 6px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.7rem;
+            color: #a0a0a0;
+        }
+
+        .processing-details .detail-line {
+            margin-bottom: 2px;
+        }
+
+        .processing-details .progress-bar {
+            width: 100%;
+            height: 3px;
+            background: #3a4a3a;
+            border-radius: 2px;
+            margin: 3px 0;
+            overflow: hidden;
+        }
+
+        .processing-details .progress-fill {
+            height: 100%;
+            background: #6a8a6a;
+            transition: width 0.3s ease;
+        }
+
+        /* Explanation section styles */
+        .explanation-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: #1a2a1a;
+            border-radius: 3px;
+            margin-top: 6px;
+        }
+
+        .explanation-content.expanded {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .explanation-text {
+            padding: 8px;
+            font-size: 0.8rem;
+            line-height: 1.3;
+            color: #b0b0b0;
+        }
+
+        .explanation-text h3 {
+            color: #90d090;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+
+        .explanation-text h4 {
+            color: #b0d0b0;
+            margin: 6px 0 3px 0;
+            font-size: 0.8rem;
+        }
+
+        .explanation-text ul {
+            margin-left: 15px;
+            margin-top: 3px;
+        }
+
+        .explanation-text li {
+            margin-bottom: 2px;
+        }
+
+        .explanation-toggle {
+            cursor: pointer;
+            color: #8a9a8a;
+            font-size: 0.8rem;
+            text-decoration: underline;
+        }
+
+        .explanation-toggle:hover {
+            color: #9aaa9a;
+        }
+
+        /* AI conversation styles */
+        .ai-conversation {
+            margin-top: 8px;
+            background: #1a2a1a;
+            border-radius: 3px;
+            padding: 6px;
+            border: 1px solid #3a4a3a;
+        }
+
+        .ai-message {
+            margin-bottom: 6px;
+            padding: 4px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+        }
+
+        .ai-message.user {
+            background: #2a4a3a;
+            text-align: right;
+            color: #d0e0d0;
+        }
+
+        .ai-message.ai {
+            background: #2a3a2a;
+            color: #c0c0c0;
+        }
+
+        .ai-thinking {
+            background: #4a4a2a;
+            border-left: 3px solid #8a8a4a;
+            font-style: italic;
+            color: #d0d0a0;
+        }
+
+        .ai-input-container {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .ai-input {
+            flex: 1;
+            padding: 4px;
+            border: 1px solid #5a6a5a;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            background: #2a3a2a;
+            color: #c0c0c0;
+        }
+
+        .ai-input:focus {
+            outline: none;
+            border-color: #6a7a6a;
+            background: #3a4a3a;
+        }
+
+        /* Download link styles */
+        .download-link {
+            color: #6aaa6a;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .download-link:hover {
+            text-decoration: underline;
+            color: #7aba7a;
+        }
+
+        .recording-indicator {
+            background: #4a2a2a;
+            color: #ff6666;
+            border: 1px solid #6a4a4a;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 4px;
+            }
+
+            header h1 {
+                font-size: 1.1rem;
+            }
+
+            .capture-buttons, .ai-controls, .storage-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .btn {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>🎬 Rapture</h1>
+        <p>Screen Capture & AI Analysis Tool</p>
+    </header>
+
+    <main>
+        <div class="capture-section">
+            <h2>Capture Options</h2>
+            <div class="capture-buttons">
+                <button id="captureScreen" class="btn btn-primary">
+                    📸 Capture Screen
+                </button>
+                <button id="captureWindow" class="btn btn-primary">
+                    🪟 Capture Window
+                </button>
+                <button id="captureTab" class="btn btn-primary">
+                    📑 Capture Tab
+                </button>
+                <button id="startRecording" class="btn btn-secondary">
+                    ⏺️ Start Recording
+                </button>
+                <button id="stopRecording" class="btn btn-danger" style="display: none;">
+                    ⏹️ Stop Recording
+                </button>
+            </div>
+        </div>
+
+        <div class="preview-section">
+            <h2>Preview</h2>
+            <div class="preview-container">
+                <video id="previewVideo" autoplay muted style="display: none;"></video>
+                <canvas id="previewCanvas" style="display: none;"></canvas>
+                <img id="previewImage" alt="Capture preview" style="display: none;">
+            </div>
+        </div>
+
+        <div class="ai-analysis-section">
+            <h2>AI Analysis</h2>
+            <div class="ai-controls">
+                <button id="analyzeCapture" class="btn btn-info" disabled>
+                    🤖 Analyze with AI
+                </button>
+                <button id="readAloud" class="btn btn-warning" disabled>
+                    🔊 Read Description Aloud
+                </button>
+                <select id="aiProvider">
+                    <option value="gemini">Gemini (Free)</option>
+                    <option value="openai">OpenAI GPT-4</option>
+                    <option value="claude">Claude</option>
+                </select>
+            </div>
+            <div class="analysis-result">
+                <textarea id="aiDescription" placeholder="AI analysis will appear here..." readonly></textarea>
+            </div>
+        </div>
+
+        <div class="storage-section">
+            <h2>Storage Options</h2>
+            <div class="storage-controls">
+                <button id="saveLocal" class="btn btn-success" disabled>
+                    💾 Save Locally
+                </button>
+                <button id="uploadCloud" class="btn btn-info" disabled>
+                    ☁️ Upload to Cloud
+                </button>
+                <select id="cloudProvider">
+                    <option value="imgbb">ImgBB (Free)</option>
+                    <option value="fileio">File.io (Free)</option>
+                    <option value="anonfiles">AnonFiles (Free)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="captures-gallery">
+            <h2>Recent Captures</h2>
+            <div id="capturesList" class="captures-grid"></div>
+        </div>
+
+        <div class="explanation-section">
+            <h2>What is RAP? <span class="explanation-toggle" id="explanationToggle">[Click to expand]</span></h2>
+            <div class="explanation-content" id="explanationContent">
+                <div class="explanation-text">
+                    <h3>🎬 RAP - Advanced Screen Capture & AI Analysis Tool</h3>
+                    <p><strong>Overview:</strong> RAP is a comprehensive web-based application designed for capturing, recording, and analyzing screen content using advanced AI technologies. Built with modern web standards, it provides a complete solution for screen capture workflows.</p>
+                    <h4>🎬 Core Functionality:</h4>
+                    <ul>
+                        <li><strong>Screen Capture:</strong> Capture entire screens, specific windows, or browser tabs</li>
+                        <li><strong>Video Recording:</strong> Record screen activity with audio</li>
+                        <li><strong>AI Analysis:</strong> Intelligent content analysis using multiple AI providers</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="processing-details" id="processingDetails" style="display: none;">
+            <div class="detail-line" id="processingStatus">Initializing...</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="processingProgress" style="width: 0%;"></div>
+            </div>
+            <div class="detail-line" id="processingStats">Stats will appear here</div>
+            <div class="detail-line" id="processingPath">Path: N/A</div>
+        </div>
+
+        <div class="ai-conversation" id="aiConversation" style="display: none;">
+            <div class="ai-message ai" id="aiWelcome">AI: Hello! I have analyzed your capture. Ask me anything about it!</div>
+        </div>
+
+        <div class="ai-input-container" id="aiInputContainer" style="display: none;">
+            <input type="text" id="aiInput" class="ai-input" placeholder="Ask the AI about your capture...">
+            <button id="sendAiMessage" class="btn btn-info">Send</button>
+        </div>
+    </main>
+</div>
+
+<script>
+    class RaptureCapture {
+        constructor() {
+            this.mediaRecorder = null;
+            this.recordedChunks = [];
+            this.currentCapture = null;
+            this.captures = JSON.parse(localStorage.getItem('raptureCaptures') || '[]');
+            this.isRecording = false;
+
+            this.initializeElements();
+            this.bindEvents();
+            this.loadCaptures();
+            this.initializeExplanationToggle();
+        }
+
+        initializeElements() {
+            // Capture buttons
+            this.captureScreenBtn = document.getElementById('captureScreen');
+            this.captureWindowBtn = document.getElementById('captureWindow');
+            this.captureTabBtn = document.getElementById('captureTab');
+            this.startRecordingBtn = document.getElementById('startRecording');
+            this.stopRecordingBtn = document.getElementById('stopRecording');
+
+            // Preview elements
+            this.previewVideo = document.getElementById('previewVideo');
+            this.previewCanvas = document.getElementById('previewCanvas');
+            this.previewImage = document.getElementById('previewImage');
+
+            // AI elements
+            this.analyzeBtn = document.getElementById('analyzeCapture');
+            this.readAloudBtn = document.getElementById('readAloud');
+            this.aiDescription = document.getElementById('aiDescription');
+            this.aiProvider = document.getElementById('aiProvider');
+
+            // Storage elements
+            this.saveLocalBtn = document.getElementById('saveLocal');
+            this.uploadCloudBtn = document.getElementById('uploadCloud');
+            this.cloudProvider = document.getElementById('cloudProvider');
+
+            // Gallery
+            this.capturesList = document.getElementById('capturesList');
+
+            // Explanation elements
+            this.explanationToggle = document.getElementById('explanationToggle');
+            this.explanationContent = document.getElementById('explanationContent');
+        }
+
+        bindEvents() {
+            this.captureScreenBtn.addEventListener('click', () => this.captureScreen());
+            this.captureWindowBtn.addEventListener('click', () => this.captureWindow());
+            this.captureTabBtn.addEventListener('click', () => this.captureTab());
+            this.startRecordingBtn.addEventListener('click', () => this.startRecording());
+            this.stopRecordingBtn.addEventListener('click', () => this.stopRecording());
+
+            this.analyzeBtn.addEventListener('click', () => this.analyzeWithAI());
+            this.readAloudBtn.addEventListener('click', () => this.readDescriptionAloud());
+
+            this.saveLocalBtn.addEventListener('click', () => this.saveLocal());
+            this.uploadCloudBtn.addEventListener('click', () => this.uploadToCloud());
+        }
+
+        initializeExplanationToggle() {
+            this.explanationToggle.addEventListener('click', () => {
+                const isExpanded = this.explanationContent.classList.contains('expanded');
+                if (isExpanded) {
+                    this.explanationContent.classList.remove('expanded');
+                    this.explanationToggle.textContent = '[Click to expand]';
+                } else {
+                    this.explanationContent.classList.add('expanded');
+                    this.explanationToggle.textContent = '[Click to collapse]';
+                }
+            });
+        }
+
+        async captureScreen() {
+            try {
+                const stream = await navigator.mediaDevices.getDisplayMedia({
+                    video: { mediaSource: 'screen' },
+                    audio: false
+                });
+
+                const track = stream.getVideoTracks()[0];
+                const imageCapture = new ImageCapture(track);
+                const bitmap = await imageCapture.grabFrame();
+
+                this.displayCapture(bitmap, 'screen');
+                track.stop();
+
+            } catch (error) {
+                console.error('Screen capture failed:', error);
+                alert('Screen capture failed. Please ensure you have granted screen recording permissions.');
+            }
+        }
+
+        async captureWindow() {
+            try {
+                const stream = await navigator.mediaDevices.getDisplayMedia({
+                    video: { mediaSource: 'window' },
+                    audio: false
+                });
+
+                const track = stream.getVideoTracks()[0];
+                const imageCapture = new ImageCapture(track);
+                const bitmap = await imageCapture.grabFrame();
+
+                this.displayCapture(bitmap, 'window');
+                track.stop();
+
+            } catch (error) {
+                console.error('Window capture failed:', error);
+                alert('Window capture failed. Please ensure you have granted screen recording permissions.');
+            }
+        }
+
+        async captureTab() {
+            try {
+                const stream = await navigator.mediaDevices.getDisplayMedia({
+                    video: { mediaSource: 'browser' },
+                    audio: false
+                });
+
+                const track = stream.getVideoTracks()[0];
+                const imageCapture = new ImageCapture(track);
+                const bitmap = await imageCapture.grabFrame();
+
+                this.displayCapture(bitmap, 'tab');
+                track.stop();
+
+            } catch (error) {
+                console.error('Tab capture failed:', error);
+                alert('Tab capture failed. Please ensure you have granted screen recording permissions.');
+            }
+        }
+
+        displayCapture(bitmap, type) {
+            const canvas = document.createElement('canvas');
+            canvas.width = bitmap.width;
+            canvas.height = bitmap.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(bitmap, 0, 0);
+
+            const dataUrl = canvas.toDataURL('image/png');
+
+            this.previewImage.src = dataUrl;
+            this.previewImage.style.display = 'block';
+            this.previewVideo.style.display = 'none';
+            this.previewCanvas.style.display = 'none';
+
+            this.currentCapture = {
+                type: 'image',
+                subtype: type,
+                dataUrl: dataUrl,
+                timestamp: new Date().toISOString(),
+                filename: `capture_${type}_${Date.now()}.png`
+            };
+
+            this.enableActionButtons();
+            this.saveToHistory();
+        }
+
+        async startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getDisplayMedia({
+                    video: true,
+                    audio: true
+                });
+
+                this.previewVideo.srcObject = stream;
+                this.previewVideo.style.display = 'block';
+                this.previewImage.style.display = 'none';
+                this.previewCanvas.style.display = 'none';
+
+                this.mediaRecorder = new MediaRecorder(stream);
+                this.recordedChunks = [];
+
+                this.mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        this.recordedChunks.push(event.data);
+                    }
+                };
+
+                this.mediaRecorder.onstop = () => {
+                    const blob = new Blob(this.recordedChunks, { type: 'video/webm' });
+                    const url = URL.createObjectURL(blob);
+
+                    this.currentCapture = {
+                        type: 'video',
+                        dataUrl: url,
+                        blob: blob,
+                        timestamp: new Date().toISOString(),
+                        filename: `recording_${Date.now()}.webm`
+                    };
+
+                    this.previewVideo.srcObject = null;
+                    this.previewVideo.src = url;
+                    this.previewVideo.controls = true;
+
+                    this.enableActionButtons();
+                    this.saveToHistory();
+                    this.showRecordingButtons(false);
+                };
+
+                this.mediaRecorder.start();
+                this.isRecording = true;
+                this.showRecordingButtons(true);
+
+            } catch (error) {
+                console.error('Recording start failed:', error);
+                alert('Recording start failed. Please ensure you have granted screen recording permissions.');
+            }
+        }
+
+        stopRecording() {
+            if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+                this.mediaRecorder.stop();
+                this.isRecording = false;
+            }
+        }
+
+        showRecordingButtons(recording) {
+            if (recording) {
+                this.startRecordingBtn.style.display = 'none';
+                this.stopRecordingBtn.style.display = 'inline-flex';
+                this.stopRecordingBtn.classList.add('recording-indicator');
+            } else {
+                this.startRecordingBtn.style.display = 'inline-flex';
+                this.stopRecordingBtn.style.display = 'none';
+                this.stopRecordingBtn.classList.remove('recording-indicator');
+            }
+        }
+
+        enableActionButtons() {
+            this.analyzeBtn.disabled = false;
+            this.saveLocalBtn.disabled = false;
+            this.uploadCloudBtn.disabled = false;
+        }
+
+        async analyzeWithAI() {
+            if (!this.currentCapture) return;
+
+            this.analyzeBtn.disabled = true;
+            this.analyzeBtn.textContent = '🤖 Analyzing...';
+
+            try {
+                const provider = this.aiProvider.value;
+                let analysis = '';
+
+                if (this.currentCapture.type === 'image') {
+                    analysis = await this.analyzeImage(this.currentCapture.dataUrl, provider);
+                } else if (this.currentCapture.type === 'video') {
+                    analysis = await this.analyzeVideo(this.currentCapture.dataUrl, provider);
+                }
+
+                this.aiDescription.value = analysis;
+                this.showAiConversation();
+                this.readAloudBtn.disabled = false;
+
+            } catch (error) {
+                console.error('AI analysis failed:', error);
+                this.aiDescription.value = 'AI analysis failed. Please try again or check your API key.';
+            } finally {
+                this.analyzeBtn.disabled = false;
+                this.analyzeBtn.textContent = '🤖 Analyze with AI';
+            }
+        }
+
+        async analyzeImage(dataUrl, provider) {
+            // Implement real AI analysis using provider's API
+            let analysis = '';
+            if (provider === 'openai') {
+                // OpenAI API call
+                analysis = await fetch('https://api.openai.com/v1/images/analyses', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer YOUR_OPENAI_API_KEY`
+                    },
+                    body: JSON.stringify({
+                        image: dataUrl,
+                        // Add other required parameters
+                    })
+                }).then(response => response.json()).then(data => data.description);
+            } else if (provider === 'gemini') {
+                // Gemini API call
+                analysis = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer YOUR_GEMINI_API_KEY`
+                    },
+                    body: JSON.stringify({
+                        contents: [
+                            {
+                                parts: [
+                                    {
+                                        text: dataUrl // Need to process data URL
+                                    }
+                                ]
+                            }
+                        ]
+                    })
+                }).then(response => response.json()).then(data => data.candidates[0].content.parts[0].text);
+            } else if (provider === 'claude') {
+                // Claude API call
+                analysis = await fetch('https://api.anthropic.com/v1/complete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': 'YOUR_CLAUDE_API_KEY'
+                    },
+                    body: JSON.stringify({
+                        prompt: `Analyze this image: ${dataUrl}`,
+                        max_tokens: 1000
+                    })
+                }).then(response => response.json()).then(data => data.completion);
+            }
+            return analysis;
+        }
+
+        async analyzeVideo(dataUrl, provider) {
+            // Implement real video analysis using provider's API
+            let analysis = '';
+            if (provider === 'openai') {
+                // OpenAI video analysis API call (hypothetical)
+                analysis = await fetch('https://api.openai.com/v1/videos/analyses', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer YOUR_OPENAI_API_KEY`
+                    },
+                    body: JSON.stringify({
+                        video: dataUrl,
+                        // Add other required parameters
+                    })
+                }).then(response => response.json()).then(data => data.description);
+            } else if (provider === 'gemini') {
+                // Gemini video analysis API call (hypothetical)
+                analysis = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateVideoContent', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer YOUR_GEMINI_API_KEY`
+                    },
+                    body: JSON.stringify({
+                        video: dataUrl,
+                        // parameters
+                    })
+                }).then(response => response.json()).then(data => data.description);
+            } else if (provider === 'claude') {
+                // Claude video analysis via text prompt
+                analysis = await fetch('https://api.anthropic.com/v1/complete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': 'YOUR_CLAUDE_API_KEY'
+                    },
+                    body: JSON.stringify({
+                        prompt: `Analyze this video: ${dataUrl}`,
+                        max_tokens: 1000
+                    })
+                }).then(response => response.json()).then(data => data.completion);
+            }
+            return analysis;
+        }
+
+        readDescriptionAloud() {
+            if (!this.aiDescription.value) return;
+
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(this.aiDescription.value);
+                utterance.rate = 0.8;
+                utterance.pitch = 1;
+                speechSynthesis.speak(utterance);
+            } else {
+                alert('Speech synthesis is not supported in your browser.');
+            }
+        }
+
+        saveLocal() {
+            if (!this.currentCapture) return;
+
+            const link = document.createElement('a');
+            link.download = this.currentCapture.filename;
+
+            if (this.currentCapture.type === 'video' && this.currentCapture.blob) {
+                link.href = URL.createObjectURL(this.currentCapture.blob);
+            } else {
+                link.href = this.currentCapture.dataUrl;
+            }
+
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+
+        async uploadToCloud() {
+            if (!this.currentCapture) return;
+
+            this.uploadCloudBtn.disabled = true;
+            this.uploadCloudBtn.textContent = '☁️ Uploading...';
+
+            try {
+                const provider = this.cloudProvider.value;
+                const uploadUrl = await this.uploadToCloudProvider(provider, this.currentCapture.dataUrl);
+                alert(`Successfully uploaded to ${provider}! URL: ${uploadUrl}`);
+
+            } catch (error) {
+                console.error('Cloud upload failed:', error);
+                alert('Cloud upload failed. Please try again.');
+            } finally {
+                this.uploadCloudBtn.disabled = false;
+                this.uploadCloudBtn.textContent = '☁️ Upload to Cloud';
+            }
+        }
+
+        dataUrlToBlob(dataUrl) {
+            const parts = dataUrl.split(';base64,');
+            const mimeType = parts[0].split(':')[1];
+            const base64 = parts[1];
+            const byteCharacters = atob(base64);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            return new Blob([byteArray], { type: mimeType });
+        }
+
+        async uploadToCloudProvider(provider, dataUrl) {
+            let url = '';
+            if (provider === 'imgbb') {
+                const apiKey = 'YOUR_IMGBB_API_KEY';
+                const blob = this.dataUrlToBlob(dataUrl);
+                const formData = new FormData();
+                formData.append('image', blob);
+                const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                url = result.data.url;
+            } else if (provider === 'fileio') {
+                const blob = this.dataUrlToBlob(dataUrl);
+                const formData = new FormData();
+                formData.append('file', blob);
+                const response = await fetch('https://file.io/', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                url = result.link;
+            } else if (provider === 'anonfiles') {
+                const blob = this.dataUrlToBlob(dataUrl);
+                const formData = new FormData();
+                formData.append('file', blob);
+                const response = await fetch('https://api.anonfiles.com/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                url = `https://${result.files[0].url.short}`;
+            }
+            return url;
+        }
+
+        saveToHistory() {
+            if (!this.currentCapture) return;
+
+            const capture = {
+                ...this.currentCapture,
+                id: Date.now(),
+                thumbnail: this.currentCapture.type === 'image' ? this.currentCapture.dataUrl : null
+            };
+
+            this.captures.unshift(capture);
+            this.captures = this.captures.slice(0, 10); // Keep only last 10 captures
+
+            localStorage.setItem('raptureCaptures', JSON.stringify(this.captures));
+            this.loadCaptures();
+        }
+
+        loadCaptures() {
+            this.capturesList.innerHTML = '';
+
+            this.captures.forEach(capture => {
+                const item = document.createElement('div');
+                item.className = 'capture-item';
+
+                const date = new Date(capture.timestamp).toLocaleString();
+                const type = capture.type === 'image' ? capture.subtype : 'video';
+
+                if (capture.type === 'image' && capture.thumbnail) {
+                    item.innerHTML = `
+                        <img src="${capture.thumbnail}" alt="Capture ${type}">
+                        <div class="capture-info">${type} - ${date}</div>
+                        <div class="capture-actions">
+                            <button class="btn btn-small btn-info" onclick="rapture.downloadCapture('${capture.id}')">Download</button>
+                        </div>
+                    `;
+                } else {
+                    item.innerHTML = `
+                        <div class="capture-info">${type} - ${date}</div>
+                        <div class="capture-actions">
+                            <button class="btn btn-small btn-info" onclick="rapture.downloadCapture('${capture.id}')">Download</button>
+                        </div>
+                    `;
+                }
+
+                this.capturesList.appendChild(item);
+            });
+        }
+
+        downloadCapture(captureId) {
+            const capture = this.captures.find(c => c.id == captureId);
+            if (!capture) return;
+
+            const link = document.createElement('a');
+            link.download = capture.filename;
+            link.href = capture.dataUrl;
+            link.click();
+        }
+
+        showAiConversation() {
+            // Show AI conversation interface
+            const conversation = document.getElementById('aiConversation');
+            const inputContainer = document.getElementById('aiInputContainer');
+
+            if (conversation) conversation.style.display = 'block';
+            if (inputContainer) inputContainer.style.display = 'flex';
+
+            console.log('AI conversation interface activated');
+        }
+    }
+
+    // Initialize the application
+    const rapture = new RaptureCapture();
+
+    console.log('🎬 Rapture Screen Capture & AI Analysis Tool initialized!');
+    console.log('📸 Features: Screen capture, Video recording, AI analysis, Cloud upload');
+    console.log('🔧 Usage: Click capture buttons to start, then analyze with AI or save/upload');
+</script>
+</body>
+</html>
