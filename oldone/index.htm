@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapture - Screen Capture & AI Analysis</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎬 Rapture</h1>
+            <p>Screen Capture & AI Analysis Tool</p>
+        </header>
+
+        <main>
+            <div class="capture-section">
+                <h2>Capture Options</h2>
+                <div class="capture-buttons">
+                    <button id="captureScreen" class="btn btn-primary">
+                        📸 Capture Screen
+                    </button>
+                    <button id="captureWindow" class="btn btn-primary">
+                        🪟 Capture Window
+                    </button>
+                    <button id="captureTab" class="btn btn-primary">
+                        📑 Capture Tab
+                    </button>
+                    <button id="startRecording" class="btn btn-secondary">
+                        ⏺️ Start Recording
+                    </button>
+                    <button id="stopRecording" class="btn btn-danger" disabled>
+                        ⏹️ Stop Recording
+                    </button>
+                </div>
+            </div>
+
+            <div class="preview-section">
+                <h2>Preview</h2>
+                <div class="preview-container">
+                    <video id="previewVideo" autoplay muted style="display: none;"></video>
+                    <canvas id="previewCanvas" style="display: none;"></canvas>
+                    <img id="previewImage" alt="Capture preview" style="display: none;">
+                </div>
+            </div>
+
+            <div class="ai-analysis-section">
+                <h2>AI Analysis</h2>
+                <div class="ai-controls">
+                    <button id="analyzeCapture" class="btn btn-info" disabled>
+                        🤖 Analyze with AI
+                    </button>
+                    <button id="readAloud" class="btn btn-warning" disabled>
+                        🔊 Read Description Aloud
+                    </button>
+                    <select id="aiProvider">
+                        <option value="gemini">Gemini (Free)</option>
+                        <option value="openai">OpenAI GPT-4</option>
+                        <option value="claude">Claude</option>
+                    </select>
+                </div>
+                <div class="analysis-result">
+                    <textarea id="aiDescription" placeholder="AI analysis will appear here..." readonly></textarea>
+                </div>
+            </div>
+
+            <div class="storage-section">
+                <h2>Storage Options</h2>
+                <div class="storage-controls">
+                    <button id="saveLocal" class="btn btn-success" disabled>
+                        💾 Save Locally
+                    </button>
+                    <button id="uploadCloud" class="btn btn-info" disabled>
+                        ☁️ Upload to Cloud
+                    </button>
+                    <select id="cloudProvider">
+                        <option value="imgbb">ImgBB (Free)</option>
+                        <option value="fileio">File.io (Free)</option>
+                        <option value="anonfiles">AnonFiles (Free)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="captures-gallery">
+                <h2>Recent Captures</h2>
+                <div id="capturesList" class="captures-grid"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>            <div class="explanation-section">                <h2>What is RAP? <span class="explanation-toggle" id="explanationToggle">[Click to expand]</span></h2>                <div class="explanation-content" id="explanationContent">                    <div class="explanation-text">                        <h3>?? RAP - Advanced Screen Capture & AI Analysis Tool</h3>                        <p><strong>Overview:</strong> RAP is a comprehensive web-based application designed for capturing, recording, and analyzing screen content using advanced AI technologies. Built with modern web standards, it provides a complete solution for screen capture workflows.</p>                        <h4>?? Core Functionality:</h4>                        <ul>                            <li><strong>Screen Capture:</strong> Capture entire screens, specific windows, or browser tabs</li>                            <li><strong>Video Recording:</strong> Record screen activity with audio</li>                            <li><strong>AI Analysis:</strong> Intelligent content analysis using multiple AI providers</li>                        </ul>                    </div>                </div>            </div>
+            <div class="processing-details" id="processingDetails" style="display: none;">                <div class="detail-line" id="processingStatus">Initializing...</div>                <div class="progress-bar">                    <div class="progress-fill" id="processingProgress" style="width: 0%;"></div>                </div>                <div class="detail-line" id="processingStats">Stats will appear here</div>                <div class="detail-line" id="processingPath">Path: N/A</div>            </div>
+<div class="ai-conversation" id="aiConversation" style="display: none;">  
+    <div class="ai-message ai" id="aiWelcome">AI: Hello! I have analyzed your capture. Ask me anything about it!</div>  
+</div>  
+<div class="ai-input-container" id="aiInputContainer" style="display: none;">  
+    <input type="text" id="aiInput" class="ai-input" placeholder="Ask the AI about your capture...">  
+    <button id="sendAiMessage" class="btn btn-info">Send</button>  
+</div> 

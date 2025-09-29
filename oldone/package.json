@@ -1,0 +1,46 @@
+{
+  "name": "rap-screen-capture",
+  "version": "2.0.0",
+  "description": "RAP - Advanced screen capture tool with AI analysis, full-screen design, and detailed processing information",
+  "main": "index.html",
+  "scripts": {
+    "start": "http-server . -p 8080 --cors",
+    "serve": "http-server . -p 8080 --cors",
+    "dev": "http-server . -p 8080 --cors -o",
+    "build": "echo 'No build process needed for vanilla JS project'",
+    "test": "echo 'No tests specified'"
+  },
+  "keywords": [
+    "screen-capture",
+    "screen-recording",
+    "ai-analysis",
+    "web-app",
+    "html5",
+    "javascript",
+    "media-api",
+    "image-capture",
+    "video-recording"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  },
+  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/rapture-screen-capture.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/rapture-screen-capture/issues"
+  },
+  "homepage": "https://github.com/yourusername/rapture-screen-capture#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}
