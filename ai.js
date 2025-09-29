@@ -1,5 +1,6 @@
 // AI Analysis functionality
-class AIAnalyzer {
+if (typeof AIAnalyzer === 'undefined') {
+    class AIAnalyzer {
     constructor(raptureApp) {
         this.rapture = raptureApp;
     }
@@ -103,5 +104,5 @@ class AIAnalyzer {
         }
         return analysis;
     }
-
+}
 }

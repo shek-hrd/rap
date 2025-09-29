@@ -1,5 +1,7 @@
 // Main Rapture Application
-class RaptureCapture {
+// Check if class already exists to prevent redeclaration
+if (typeof RaptureCapture === 'undefined') {
+    class RaptureCapture {
     constructor() {
         this.mediaRecorder = null;
         this.recordedChunks = [];
@@ -23,58 +25,86 @@ class RaptureCapture {
     }
 
     initializeElements() {
-        // Capture buttons
-        this.captureScreenBtn = document.getElementById('captureScreen');
-        this.startRecordingBtn = document.getElementById('startRecording');
-        this.stopRecordingBtn = document.getElementById('stopRecording');
+        try {
+            // Capture buttons
+            this.captureScreenBtn = document.getElementById('captureScreen');
+            this.startRecordingBtn = document.getElementById('startRecording');
+            this.stopRecordingBtn = document.getElementById('stopRecording');
 
-        // Preview elements
-        this.previewVideo = document.getElementById('previewVideo');
-        this.previewCanvas = document.getElementById('previewCanvas');
-        this.previewImage = document.getElementById('previewImage');
+            // Preview elements
+            this.previewVideo = document.getElementById('previewVideo');
+            this.previewCanvas = document.getElementById('previewCanvas');
+            this.previewImage = document.getElementById('previewImage');
 
-        // AI elements
-        this.analyzeBtn = document.getElementById('analyzeCapture');
-        this.readAloudBtn = document.getElementById('readAloud');
-        this.aiDescription = document.getElementById('aiDescription');
-        this.aiProvider = document.getElementById('aiProvider');
+            // AI elements
+            this.analyzeBtn = document.getElementById('analyzeCapture');
+            this.readAloudBtn = document.getElementById('readAloud');
+            this.aiDescription = document.getElementById('aiDescription');
+            this.aiProvider = document.getElementById('aiProvider');
 
-        // Storage elements
-        this.saveLocalBtn = document.getElementById('saveLocal');
-        this.uploadCloudBtn = document.getElementById('uploadCloud');
-        this.cloudProvider = document.getElementById('cloudProvider');
+            // Storage elements
+            this.saveLocalBtn = document.getElementById('saveLocal');
+            this.uploadCloudBtn = document.getElementById('uploadCloud');
+            this.cloudProvider = document.getElementById('cloudProvider');
 
-        // Gallery
-        this.capturesList = document.getElementById('capturesList');
+            // Gallery
+            this.capturesList = document.getElementById('capturesList');
 
-        // Stats elements
-        this.storageUsedEl = document.getElementById('storageUsed');
-        this.storageQuotaEl = document.getElementById('storageQuota');
-        this.memoryUsageEl = document.getElementById('memoryUsage');
-        this.capturesCountEl = document.getElementById('capturesCount');
+            // Stats elements
+            this.storageUsedEl = document.getElementById('storageUsed');
+            this.storageQuotaEl = document.getElementById('storageQuota');
+            this.memoryUsageEl = document.getElementById('memoryUsage');
+            this.capturesCountEl = document.getElementById('capturesCount');
 
-        // Download all elements
-        this.downloadZipBtn = document.getElementById('downloadZip');
-        this.downloadHtmlBtn = document.getElementById('downloadHtml');
+            // Download all elements
+            this.downloadZipBtn = document.getElementById('downloadZip');
+            this.downloadHtmlBtn = document.getElementById('downloadHtml');
 
-        // Explanation elements
-        this.explanationToggle = document.getElementById('explanationToggle');
-        this.explanationContent = document.getElementById('explanationContent');
+            // Explanation elements
+            this.explanationToggle = document.getElementById('explanationToggle');
+            this.explanationContent = document.getElementById('explanationContent');
+
+            console.log('Elements initialized successfully');
+        } catch (error) {
+            console.error('Error initializing elements:', error);
+        }
     }
 
     bindEvents() {
-        this.captureScreenBtn.addEventListener('click', () => this.captureManager.captureScreen());
-        this.startRecordingBtn.addEventListener('click', () => this.captureManager.startRecording());
-        this.stopRecordingBtn.addEventListener('click', () => this.captureManager.stopRecording());
+        // Bind capture events
+        if (this.captureScreenBtn) {
+            this.captureScreenBtn.addEventListener('click', () => this.captureManager.captureScreen());
+        }
+        if (this.startRecordingBtn) {
+            this.startRecordingBtn.addEventListener('click', () => this.captureManager.startRecording());
+        }
+        if (this.stopRecordingBtn) {
+            this.stopRecordingBtn.addEventListener('click', () => this.captureManager.stopRecording());
+        }
 
-        this.analyzeBtn.addEventListener('click', () => this.aiAnalyzer.analyzeWithAI());
-        this.readAloudBtn.addEventListener('click', () => this.aiAnalyzer.readDescriptionAloud());
+        // Bind AI events
+        if (this.analyzeBtn) {
+            this.analyzeBtn.addEventListener('click', () => this.aiAnalyzer.analyzeWithAI());
+        }
+        if (this.readAloudBtn) {
+            this.readAloudBtn.addEventListener('click', () => this.aiAnalyzer.readDescriptionAloud());
+        }
 
-        this.saveLocalBtn.addEventListener('click', () => this.storageManager.saveLocal());
-        this.uploadCloudBtn.addEventListener('click', () => this.storageManager.uploadToCloud());
+        // Bind storage events
+        if (this.saveLocalBtn) {
+            this.saveLocalBtn.addEventListener('click', () => this.storageManager.saveLocal());
+        }
+        if (this.uploadCloudBtn) {
+            this.uploadCloudBtn.addEventListener('click', () => this.storageManager.uploadToCloud());
+        }
 
-        this.downloadZipBtn.addEventListener('click', () => this.downloadAllAsZip());
-        this.downloadHtmlBtn.addEventListener('click', () => this.downloadAllAsHtml());
+        // Bind download events
+        if (this.downloadZipBtn) {
+            this.downloadZipBtn.addEventListener('click', () => this.downloadAllAsZip());
+        }
+        if (this.downloadHtmlBtn) {
+            this.downloadHtmlBtn.addEventListener('click', () => this.downloadAllAsHtml());
+        }
     }
 
     initializeExplanationToggle() {
@@ -266,7 +296,7 @@ class RaptureCapture {
                     <div class="capture-info">${type} - ${date}</div>
                     ${capture.uploadUrl ? `<a href="${capture.uploadUrl}" target="_blank" class="capture-link">${capture.uploadProvider.toUpperCase()}: ${capture.uploadUrl}</a>` : ''}
                     <div class="capture-actions">
-                        <button class="btn btn-small btn-info" onclick="rapture.downloadCapture('${capture.id}')">Download</button>
+                        <button class="btn btn-small btn-info download-btn" data-capture-id="${capture.id}">Download</button>
                     </div>
                 `;
             } else {
@@ -274,12 +304,21 @@ class RaptureCapture {
                     <div class="capture-info">${type} - ${date}</div>
                     ${capture.uploadUrl ? `<a href="${capture.uploadUrl}" target="_blank" class="capture-link">${capture.uploadProvider.toUpperCase()}: ${capture.uploadUrl}</a>` : ''}
                     <div class="capture-actions">
-                        <button class="btn btn-small btn-info" onclick="rapture.downloadCapture('${capture.id}')">Download</button>
+                        <button class="btn btn-small btn-info download-btn" data-capture-id="${capture.id}">Download</button>
                     </div>
                 `;
             }
 
             this.capturesList.appendChild(item);
+        });
+
+        // Bind download events for all buttons
+        const downloadButtons = this.capturesList.querySelectorAll('.download-btn');
+        downloadButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const captureId = e.target.getAttribute('data-capture-id');
+                this.downloadCapture(captureId);
+            });
         });
     }
 

@@ -1,5 +1,6 @@
 // Screen Capture and Recording functionality
-class CaptureManager {
+if (typeof CaptureManager === 'undefined') {
+    class CaptureManager {
     constructor(raptureApp) {
         this.rapture = raptureApp;
     }
@@ -15,7 +16,7 @@ class CaptureManager {
             const imageCapture = new ImageCapture(track);
             const bitmap = await imageCapture.grabFrame();
 
-            this.rapture.captureManager.displayCapture(bitmap, 'screen');
+            this.rapture.displayCapture(bitmap, 'screen');
             track.stop();
 
         } catch (error) {
@@ -90,5 +91,4 @@ class CaptureManager {
             this.rapture.previewVideo.srcObject = null;
         }
     }
-
 }
