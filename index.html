@@ -476,8 +476,14 @@
             <div class="capture-section">
                 <h2>Capture Options</h2>
                 <div class="capture-buttons">
-                    <button id="captureBtn" class="btn btn-primary">
-                        📸 Capture
+                    <button id="captureScreen" class="btn btn-primary">
+                        📸 Capture Screen
+                    </button>
+                    <button id="captureWindow" class="btn btn-primary">
+                        🪟 Capture Window
+                    </button>
+                    <button id="captureTab" class="btn btn-primary">
+                        📑 Capture Tab
                     </button>
                     <button id="startRecording" class="btn btn-secondary">
                         ⏺️ Start Recording
@@ -538,15 +544,6 @@
                 <h2>Recent Captures</h2>
                 <div id="capturesList" class="captures-grid"></div>
             </div>
-            <div id="captureDialog" class="modal" style="display: none;">
-                <div class="modal-content">
-                    <h3>Capture Options</h3>
-                    <button class="btn btn-primary" onclick="rapture.captureScreen()">Capture Screen</button>
-                    <button class="btn btn-primary" onclick="rapture.captureWindow()">Capture Window</button>
-                    <button class="btn btn-primary" onclick="rapture.captureTab()">Capture Tab</button>
-                    <button class="btn btn-primary" onclick="rapture.startRecording()">Start Recording</button>
-                </div>
-            </div>
 
             <div class="explanation-section">
                 <h2>What is RAP? <span class="explanation-toggle" id="explanationToggle">[Click to expand]</span></h2>
@@ -601,7 +598,9 @@
 
             initializeElements() {
                 // Capture buttons
-                this.captureBtn = document.getElementById('captureBtn');
+                this.captureScreenBtn = document.getElementById('captureScreen');
+                this.captureWindowBtn = document.getElementById('captureWindow');
+                this.captureTabBtn = document.getElementById('captureTab');
                 this.startRecordingBtn = document.getElementById('startRecording');
                 this.stopRecordingBtn = document.getElementById('stopRecording');
                 
@@ -630,13 +629,10 @@
             }
 
             bindEvents() {
-                this.captureBtn.addEventListener('click', () => this.showCaptureDialog());
+                this.captureScreenBtn.addEventListener('click', () => this.captureScreen());
+                this.captureWindowBtn.addEventListener('click', () => this.captureWindow());
+                this.captureTabBtn.addEventListener('click', () => this.captureTab());
                 this.startRecordingBtn.addEventListener('click', () => this.startRecording());
-            }
-
-            showCaptureDialog() {
-                document.getElementById('captureDialog').style.display = 'block';
-            }
                 this.stopRecordingBtn.addEventListener('click', () => this.stopRecording());
                 
                 this.analyzeBtn.addEventListener('click', () => this.analyzeWithAI());
@@ -1083,7 +1079,6 @@
                                 <button class="btn btn-small btn-info" onclick="rapture.downloadCapture('${capture.id}')">Download</button>
                             </div>
                         `;
-                        item.addEventListener('click', () => rapture.loadPreview(capture.id));
                     } else {
                         item.innerHTML = `
                             <div class="capture-info">${type} - ${date}</div>
@@ -1100,23 +1095,11 @@
             downloadCapture(captureId) {
                 const capture = this.captures.find(c => c.id == captureId);
                 if (!capture) return;
-
+                
                 const link = document.createElement('a');
                 link.download = capture.filename;
                 link.href = capture.dataUrl;
                 link.click();
-            }
-
-            loadPreview(captureId) {
-                const capture = this.captures.find(c => c.id == captureId);
-                if (!capture) return;
-                const previewSection = document.querySelector('.preview-section');
-                previewSection.innerHTML = `
-                    <h2>Preview</h2>
-                    <img src="${capture.thumbnail}" alt="Preview">
-                    <p>${capture.type} - ${capture.timestamp}</p>
-                `;
-            }
             }
 
             showAiConversation() {  
