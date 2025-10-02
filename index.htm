@@ -1,559 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rapture - Screen Capture & AI Analysis</title>
-    <script src="https://js.puter.com/v2/"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #1a2e1a;
-            height: 100vh;
-            width: 100vw;
-            color: #c0c0c0;
-            font-size: 11px;
-            line-height: 1.4;
-        }
-
-        .container {
-            width: 100vw;
-            height: 100vh;
-            margin: 0;
-            padding: 8px;
-            overflow-y: auto;
-        }
-
-        .stats-section {
-            background: #2a3a2a;
-            border: 1px solid #3a4a3a;
-            border-radius: 4px;
-            padding: 8px;
-            margin-bottom: 12px;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 8px;
-        }
-
-        .stat-item {
-            background: #1a2a1a;
-            padding: 6px;
-            border-radius: 3px;
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: #90d090;
-        }
-
-        .stat-label {
-            font-size: 0.7rem;
-            color: #a0a0a0;
-        }
-
-        .download-all-section {
-            background: #2a3a2a;
-            border: 1px solid #3a4a3a;
-            border-radius: 4px;
-            padding: 8px;
-            margin-bottom: 12px;
-        }
-
-        .download-all-buttons {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-
-        .capture-link {
-            color: #6aaa6a;
-            text-decoration: none;
-            font-size: 0.8rem;
-            display: block;
-            margin-top: 2px;
-        }
-
-        .capture-link:hover {
-            text-decoration: underline;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 15px;
-            color: #c0c0c0;
-        }
-
-        header h1 {
-            font-size: 1.3rem;
-            margin-bottom: 4px;
-            text-shadow: none;
-            color: #90d090;
-        }
-
-        header p {
-            font-size: 0.8rem;
-            opacity: 0.8;
-            color: #a0a0a0;
-        }
-
-        main {
-            background: #2a3a2a;
-            border-radius: 5px;
-            padding: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            border: 1px solid #3a4a3a;
-        }
-
-        .capture-section, .preview-section, .ai-analysis-section, .storage-section, .captures-gallery, .explanation-section {
-            margin-bottom: 12px;
-            padding: 8px;
-            border: 1px solid #3a4a3a;
-            border-radius: 4px;
-            background: #223322;
-        }
-
-        .capture-section h2, .preview-section h2, .ai-analysis-section h2, .storage-section h2, .captures-gallery h2, .explanation-section h2 {
-            margin-bottom: 6px;
-            color: #b0d0b0;
-            font-size: 1rem;
-            font-weight: 600;
-        }
-
-        .capture-buttons {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 6px 12px;
-            border: 1px solid #5a6a5a;
-            border-radius: 3px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 3px;
-            background: #3a4a3a;
-            color: #c0c0c0;
-        }
-
-        .btn:hover {
-            background: #4a5a4a;
-            border-color: #6a7a6a;
-        }
-
-        .btn-primary {
-            background: #2d3d2d;
-            color: #b0d0b0;
-            border-color: #4a5a4a;
-        }
-
-        .btn-primary:hover {
-            background: #3d4d3d;
-            border-color: #5a6a5a;
-        }
-
-        .btn-secondary {
-            background: #3a4a3a;
-            color: #c0c0c0;
-            border-color: #5a6a5a;
-        }
-
-        .btn-secondary:hover {
-            background: #4a5a4a;
-            border-color: #6a7a6a;
-        }
-
-        .btn-danger {
-            background: #4a2a2a;
-            color: #d0a0a0;
-            border-color: #6a4a4a;
-        }
-
-        .btn-danger:hover {
-            background: #5a3a3a;
-            border-color: #7a5a5a;
-        }
-
-        .btn-info {
-            background: #2a3a4a;
-            color: #a0c0d0;
-            border-color: #4a5a6a;
-        }
-
-        .btn-info:hover {
-            background: #3a4a5a;
-            border-color: #5a6a7a;
-        }
-
-        .btn-warning {
-            background: #4a4a2a;
-            color: #d0d0a0;
-            border-color: #6a6a4a;
-        }
-
-        .btn-warning:hover {
-            background: #5a5a3a;
-            border-color: #7a7a5a;
-        }
-
-        .btn-success {
-            background: #2a4a2a;
-            color: #a0d0a0;
-            border-color: #4a6a4a;
-        }
-
-        .btn-success:hover {
-            background: #3a5a3a;
-            border-color: #5a7a5a;
-        }
-
-        .preview-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 150px;
-            background: #1a2a1a;
-            border-radius: 4px;
-            border: 1px solid #3a4a3a;
-        }
-
-        .preview-container video, .preview-container canvas, .preview-container img {
-            max-width: 100%;
-            max-height: 250px;
-            border-radius: 3px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-        }
-
-        .ai-controls, .storage-controls {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-            margin-bottom: 6px;
-            flex-wrap: wrap;
-        }
-
-        select {
-            padding: 5px 8px;
-            border: 1px solid #5a6a5a;
-            border-radius: 3px;
-            font-size: 0.8rem;
-            background: #3a4a3a;
-            color: #c0c0c0;
-            cursor: pointer;
-        }
-
-        select:focus {
-            outline: none;
-            border-color: #6a7a6a;
-            background: #4a5a4a;
-        }
-
-        .analysis-result textarea {
-            width: 100%;
-            min-height: 120px;
-            padding: 6px;
-            border: 1px solid #5a6a5a;
-            border-radius: 3px;
-            font-size: 0.8rem;
-            font-family: 'Consolas', 'Courier New', monospace;
-            resize: vertical;
-            background: #1a2a1a;
-            color: #c0c0c0;
-        }
-
-        .captures-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 8px;
-        }
-
-        .capture-item {
-            background: #2a3a2a;
-            border-radius: 3px;
-            padding: 6px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-            text-align: center;
-            border: 1px solid #3a4a3a;
-        }
-
-        .capture-item img {
-            width: 100%;
-            height: 80px;
-            object-fit: cover;
-            border-radius: 2px;
-            margin-bottom: 4px;
-        }
-
-        .capture-item video {
-            width: 100%;
-            height: 80px;
-            border-radius: 2px;
-            margin-bottom: 4px;
-        }
-
-        .capture-item .capture-info {
-            font-size: 0.7rem;
-            color: #a0a0a0;
-        }
-
-        .capture-item .capture-actions {
-            display: flex;
-            gap: 3px;
-            justify-content: center;
-            margin-top: 4px;
-        }
-
-        .capture-item .btn-small {
-            padding: 3px 6px;
-            font-size: 0.6rem;
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-            background: #2a3a2a;
-        }
-
-        .btn:disabled:hover {
-            transform: none;
-            box-shadow: none;
-            background: #2a3a2a;
-            border-color: #3a4a3a;
-        }
-
-        /* Processing details styles */
-        .processing-details {
-            background: #1a2a1a;
-            border: 1px solid #3a4a3a;
-            border-radius: 3px;
-            padding: 6px;
-            margin-top: 6px;
-            font-family: 'Consolas', monospace;
-            font-size: 0.7rem;
-            color: #a0a0a0;
-        }
-
-        .processing-details .detail-line {
-            margin-bottom: 2px;
-        }
-
-        .processing-details .progress-bar {
-            width: 100%;
-            height: 3px;
-            background: #3a4a3a;
-            border-radius: 2px;
-            margin: 3px 0;
-            overflow: hidden;
-        }
-
-        .processing-details .progress-fill {
-            height: 100%;
-            background: #6a8a6a;
-            transition: width 0.3s ease;
-        }
-
-        /* Explanation section styles */
-        .explanation-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease;
-            background: #1a2a1a;
-            border-radius: 3px;
-            margin-top: 6px;
-        }
-
-        .explanation-content.expanded {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .explanation-text {
-            padding: 8px;
-            font-size: 0.8rem;
-            line-height: 1.3;
-            color: #b0b0b0;
-        }
-
-        .explanation-text h3 {
-            color: #90d090;
-            margin-bottom: 6px;
-            font-size: 0.9rem;
-        }
-
-        .explanation-text h4 {
-            color: #b0d0b0;
-            margin: 6px 0 3px 0;
-            font-size: 0.8rem;
-        }
-
-        .explanation-text ul {
-            margin-left: 15px;
-            margin-top: 3px;
-        }
-
-        .explanation-text li {
-            margin-bottom: 2px;
-        }
-
-        .explanation-toggle {
-            cursor: pointer;
-            color: #8a9a8a;
-            font-size: 0.8rem;
-            text-decoration: underline;
-        }
-
-        .explanation-toggle:hover {
-            color: #9aaa9a;
-        }
-
-        /* AI conversation styles */
-        .ai-conversation {
-            margin-top: 8px;
-            background: #1a2a1a;
-            border-radius: 3px;
-            padding: 6px;
-            border: 1px solid #3a4a3a;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .ai-message {
-            margin-bottom: 6px;
-            padding: 4px 6px;
-            border-radius: 3px;
-            font-size: 0.7rem;
-            line-height: 1.3;
-        }
-
-        .ai-message.user {
-            background: #2a4a3a;
-            text-align: right;
-            color: #d0e0d0;
-            border-left: 3px solid #6a8a6a;
-        }
-
-        .ai-message.ai {
-            background: #2a3a2a;
-            color: #c0c0c0;
-            border-left: 3px solid #4a6a8a;
-        }
-
-        .ai-message.ai.typing {
-            background: #2a2e1a;
-            color: #888;
-            font-style: italic;
-            border-left: 3px solid #6a6a4a;
-        }
-
-        .ai-message.ai.error {
-            background: #2a1a1a;
-            color: #ff8888;
-            border-left: 3px solid #8a4a4a;
-        }
-
-        .ai-input-container {
-            display: flex;
-            gap: 6px;
-            margin-top: 6px;
-        }
-
-        .ai-input {
-            flex: 1;
-            padding: 4px;
-            border: 1px solid #5a6a5a;
-            border-radius: 3px;
-            font-size: 0.8rem;
-            background: #2a3a2a;
-            color: #c0c0c0;
-        }
-
-        .ai-input:focus {
-            outline: none;
-            border-color: #6a7a6a;
-            background: #3a4a3a;
-        }
-
-        /* Scrollbar styling for AI conversation */
-        .ai-conversation::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .ai-conversation::-webkit-scrollbar-track {
-            background: #1a2a1a;
-            border-radius: 3px;
-        }
-
-        .ai-conversation::-webkit-scrollbar-thumb {
-            background: #4a5a4a;
-            border-radius: 3px;
-        }
-
-        .ai-conversation::-webkit-scrollbar-thumb:hover {
-            background: #5a6a5a;
-        }
-
-        /* Download link styles */
-        .download-link {
-            color: #6aaa6a;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .download-link:hover {
-            text-decoration: underline;
-            color: #7aba7a;
-        }
-
-        .recording-indicator {
-            background: #4a2a2a;
-            color: #ff6666;
-            border: 1px solid #6a4a4a;
-            font-weight: bold;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 4px;
-            }
-            
-            header h1 {
-                font-size: 1.1rem;
-            }
-            
-            .capture-buttons, .ai-controls, .storage-controls {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            
-            .btn {
-                justify-content: center;
-            }
-        }
-    </style>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Rapture - Screen Capture & AI Analysis</title>
+   <link rel="stylesheet" href="styles.css">
+   <script src="https://js.puter.com/v2/"></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+   <script src="capture.js"></script>
+   <script src="ai.js"></script>
+   <script src="storage.js"></script>
+   <script src="app.js"></script>
+</head>
 </head>
 <body>
     <div class="container">
@@ -700,121 +158,9 @@
         </main>
     </div>
 
-    <script>
-        class RaptureCapture {
-            constructor() {
-                this.mediaRecorder = null;
-                this.recordedChunks = [];
-                this.currentCapture = null;
-                this.captures = JSON.parse(localStorage.getItem('raptureCaptures') || '[]');
-                this.isRecording = false;
-                this.storageQuota = 0;
-                this.storageUsed = 0;
-                this.puterAuthenticated = false;
-
-                this.initializePuter();
-            }
-
-            async initializePuter() {
-                try {
-                    // Initialize Puter.js authentication
-                    await puter.auth.init();
-
-                    // Try anonymous authentication first
-                    try {
-                        await puter.auth.signInAnonymously();
-                        this.puterAuthenticated = true;
-                        console.log('✅ Puter.js initialized with anonymous access');
-                    } catch (anonError) {
-                        console.log('Anonymous access failed, user may need to authenticate manually');
-                        // Show authentication UI or prompt user to login
-                        this.showAuthPrompt();
-                    }
-                } catch (error) {
-                    console.error('❌ Puter.js initialization failed:', error);
-                    this.showAuthPrompt();
-                }
-
-                // Continue with app initialization after auth attempt
-                this.initializeElements();
-                this.bindEvents();
-                this.loadCaptures();
-                this.initializeExplanationToggle();
-                this.updateStats();
-                this.startStatsMonitoring();
-            }
-
-            showAuthPrompt() {
-                // Create a simple auth prompt
-                const authDiv = document.createElement('div');
-                authDiv.id = 'puter-auth-prompt';
-                authDiv.style.cssText = `
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(0,0,0,0.8);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    z-index: 10000;
-                    font-family: Arial, sans-serif;
-                `;
-
-                authDiv.innerHTML = `
-                    <div style="background: #2a3a2a; padding: 30px; border-radius: 10px; text-align: center; color: white;">
-                        <h3>🔐 Puter Authentication Required</h3>
-                        <p style="margin: 15px 0; color: #ccc;">AI features require Puter.js authentication.</p>
-                        <button id="puter-auth-btn" style="
-                            background: #4a5a4a;
-                            color: white;
-                            border: none;
-                            padding: 12px 24px;
-                            border-radius: 5px;
-                            cursor: pointer;
-                            font-size: 14px;
-                            margin-right: 10px;
-                        ">Authenticate with Puter</button>
-                        <button id="puter-skip-btn" style="
-                            background: #3a2a2a;
-                            color: #ccc;
-                            border: 1px solid #5a4a4a;
-                            padding: 12px 24px;
-                            border-radius: 5px;
-                            cursor: pointer;
-                            font-size: 14px;
-                        ">Use Without AI</button>
-                    </div>
-                `;
-
-                document.body.appendChild(authDiv);
-
-                // Handle auth button
-                document.getElementById('puter-auth-btn').addEventListener('click', async () => {
-                    try {
-                        await puter.auth.signIn();
-                        this.puterAuthenticated = true;
-                        document.body.removeChild(authDiv);
-                        console.log('✅ User authenticated with Puter');
-                    } catch (error) {
-                        console.error('Authentication failed:', error);
-                        alert('Authentication failed. Please try again or use the app without AI features.');
-                    }
-                });
-
-                // Handle skip button
-                document.getElementById('puter-skip-btn').addEventListener('click', () => {
-                    this.puterAuthenticated = false;
-                    document.body.removeChild(authDiv);
-                    console.log('ℹ️ Using app without AI features');
-                });
-            }
-
-            initializeElements() {
-                // Capture buttons
-                this.captureScreenBtn = document.getElementById('captureScreen');
-                this.startRecordingBtn = document.getElementById('startRecording');
+    <script src="app.js"></script>
+</body>
+</html>
                 this.stopRecordingBtn = document.getElementById('stopRecording');
 
                 // Preview elements
@@ -864,9 +210,6 @@
 
                 this.downloadZipBtn.addEventListener('click', () => this.downloadAllAsZip());
                 this.downloadHtmlBtn.addEventListener('click', () => this.downloadAllAsHtml());
-
-                // Bind AI conversation events
-                this.bindAiConversationEvents();
             }
 
             initializeExplanationToggle() {
@@ -986,6 +329,14 @@
                     this.mediaRecorder.stop();
                     this.isRecording = false;
                 }
+
+                // Stop screen sharing by stopping all tracks
+                if (this.previewVideo && this.previewVideo.srcObject) {
+                    const stream = this.previewVideo.srcObject;
+                    const tracks = stream.getTracks();
+                    tracks.forEach(track => track.stop());
+                    this.previewVideo.srcObject = null;
+                }
             }
 
             showRecordingButtons(recording) {
@@ -1036,77 +387,102 @@
             }
 
             async analyzeImage(dataUrl, provider) {
-                try {
-                    let analysis = '';
-
-                    if (provider === 'gemini') {
-                        if (!this.puterAuthenticated) {
-                            return 'AI analysis requires Puter authentication. Please authenticate first or use the app without AI features.';
-                        }
-
-                        try {
-                            // Use Puter.js with Gemini for free unlimited API access
-                            const response = await puter.ai.chat(
-                                "Analyze this image in detail. Describe what you see, including any text, objects, people, and context.",
-                                dataUrl, // Pass the image data URL directly
+                // Implement real AI analysis using provider's API
+                let analysis = '';
+                if (provider === 'openai') {
+                    // OpenAI API call
+                    analysis = await fetch('https://api.openai.com/v1/images/analyses', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer YOUR_OPENAI_API_KEY`
+                        },
+                        body: JSON.stringify({
+                            image: dataUrl,
+                            // Add other required parameters
+                        })
+                    }).then(response => response.json()).then(data => data.description);
+                } else if (provider === 'gemini') {
+                    // Gemini API call
+                    analysis = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer YOUR_GEMINI_API_KEY`
+                        },
+                        body: JSON.stringify({
+                            contents: [
                                 {
-                                    model: 'google/gemini-2.0-flash-lite-001'
+                                    parts: [
+                                        {
+                                            text: dataUrl // Need to process data URL
+                                        }
+                                    ]
                                 }
-                            );
-                            analysis = response.message?.content || 'Analysis completed but no response text was returned.';
-                        } catch (puterError) {
-                            console.error('Puter AI analysis failed:', puterError);
-                            return `AI analysis failed: ${puterError.message}. Please check your authentication and try again.`;
-                        }
-                    } else if (provider === 'openai') {
-                        // Fallback to OpenAI if needed (requires API key)
-                        analysis = 'OpenAI analysis requires API key configuration. Please use Gemini for free analysis.';
-                    } else if (provider === 'claude') {
-                        // Fallback to Claude if needed (requires API key)
-                        analysis = 'Claude analysis requires API key configuration. Please use Gemini for free analysis.';
-                    }
-
-                    return analysis;
-                } catch (error) {
-                    console.error('AI analysis failed:', error);
-                    return `AI analysis failed: ${error.message}. Please try again.`;
+                            ]
+                        })
+                    }).then(response => response.json()).then(data => data.candidates[0].content.parts[0].text);
+                } else if (provider === 'claude') {
+                    // Claude API call
+                    analysis = await fetch('https://api.anthropic.com/v1/complete', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-api-key': 'YOUR_CLAUDE_API_KEY'
+                        },
+                        body: JSON.stringify({
+                            prompt: `Analyze this image: ${dataUrl}`,
+                            max_tokens: 1000
+                        })
+                    }).then(response => response.json()).then(data => data.completion);
                 }
+                return analysis;
             }
 
             async analyzeVideo(dataUrl, provider) {
-                try {
-                    let analysis = '';
-
-                    if (provider === 'gemini') {
-                        if (!this.puterAuthenticated) {
-                            return 'AI analysis requires Puter authentication. Please authenticate first or use the app without AI features.';
-                        }
-
-                        try {
-                            // For video analysis, we'll provide a description since Gemini doesn't directly support video URLs
-                            // In a real implementation, you might want to extract frames or provide video context
-                            const response = await puter.ai.chat(
-                                "This is a screen recording/video capture. Please provide an analysis based on the content that would typically be found in such captures, including potential use cases and common elements.",
-                                {
-                                    model: 'google/gemini-2.0-flash-lite-001'
-                                }
-                            );
-                            analysis = response.message?.content || 'Video analysis completed but no response text was returned.';
-                        } catch (puterError) {
-                            console.error('Puter AI video analysis failed:', puterError);
-                            return `AI video analysis failed: ${puterError.message}. Please check your authentication and try again.`;
-                        }
-                    } else if (provider === 'openai') {
-                        analysis = 'OpenAI video analysis requires API key configuration. Please use Gemini for free analysis.';
-                    } else if (provider === 'claude') {
-                        analysis = 'Claude video analysis requires API key configuration. Please use Gemini for free analysis.';
-                    }
-
-                    return analysis;
-                } catch (error) {
-                    console.error('Video analysis failed:', error);
-                    return `Video analysis failed: ${error.message}. Please try again.`;
+                // Implement real video analysis using provider's API
+                let analysis = '';
+                if (provider === 'openai') {
+                    // OpenAI video analysis API call (hypothetical)
+                    analysis = await fetch('https://api.openai.com/v1/videos/analyses', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer YOUR_OPENAI_API_KEY`
+                        },
+                        body: JSON.stringify({
+                            video: dataUrl,
+                            // Add other required parameters
+                        })
+                    }).then(response => response.json()).then(data => data.description);
+                } else if (provider === 'gemini') {
+                    // Gemini video analysis API call (hypothetical)
+                    analysis = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateVideoContent', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer YOUR_GEMINI_API_KEY`
+                        },
+                        body: JSON.stringify({
+                            video: dataUrl,
+                            // parameters
+                        })
+                    }).then(response => response.json()).then(data => data.description);
+                } else if (provider === 'claude') {
+                    // Claude video analysis via text prompt
+                    analysis = await fetch('https://api.anthropic.com/v1/complete', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-api-key': 'YOUR_CLAUDE_API_KEY'
+                        },
+                        body: JSON.stringify({
+                            prompt: `Analyze this video: ${dataUrl}`,
+                            max_tokens: 1000
+                        })
+                    }).then(response => response.json()).then(data => data.completion);
                 }
+                return analysis;
             }
 
             readDescriptionAloud() {
@@ -1342,118 +718,6 @@
                 console.log('AI conversation interface activated');
             }
 
-            bindAiConversationEvents() {
-                const aiInput = document.getElementById('aiInput');
-                const sendAiMessageBtn = document.getElementById('sendAiMessage');
-                const aiConversation = document.getElementById('aiConversation');
-
-                if (sendAiMessageBtn && aiInput) {
-                    // Handle send button click
-                    sendAiMessageBtn.addEventListener('click', () => this.handleAiMessage());
-
-                    // Handle Enter key press
-                    aiInput.addEventListener('keypress', (e) => {
-                        if (e.key === 'Enter') {
-                            this.handleAiMessage();
-                        }
-                    });
-                }
-            }
-
-            async handleAiMessage() {
-                const aiInput = document.getElementById('aiInput');
-                const aiConversation = document.getElementById('aiConversation');
-
-                const message = aiInput.value.trim();
-                if (!message) return;
-
-                // Add user message to conversation
-                const userMessageDiv = document.createElement('div');
-                userMessageDiv.className = 'ai-message user';
-                userMessageDiv.textContent = `You: ${message}`;
-                aiConversation.appendChild(userMessageDiv);
-
-                // Clear input
-                aiInput.value = '';
-
-                try {
-                    // Show typing indicator
-                    const typingDiv = document.createElement('div');
-                    typingDiv.className = 'ai-message ai typing';
-                    typingDiv.textContent = 'AI: Thinking...';
-                    aiConversation.appendChild(typingDiv);
-
-                    // Get AI response
-                    const response = await this.chatWithAI(
-                        message,
-                        this.currentCapture ? this.currentCapture.dataUrl : null
-                    );
-
-                    // Remove typing indicator
-                    aiConversation.removeChild(typingDiv);
-
-                    // Add AI response to conversation
-                    const aiMessageDiv = document.createElement('div');
-                    aiMessageDiv.className = 'ai-message ai';
-                    aiMessageDiv.textContent = `AI: ${response}`;
-                    aiConversation.appendChild(aiMessageDiv);
-
-                    // Scroll to bottom
-                    aiConversation.scrollTop = aiConversation.scrollHeight;
-
-                } catch (error) {
-                    // Remove typing indicator
-                    if (aiConversation.contains(typingDiv)) {
-                        aiConversation.removeChild(typingDiv);
-                    }
-
-                    console.error('AI conversation error:', error);
-                    const errorDiv = document.createElement('div');
-                    errorDiv.className = 'ai-message ai error';
-                    errorDiv.textContent = `AI: Sorry, I encountered an error: ${error.message}`;
-                    aiConversation.appendChild(errorDiv);
-                }
-            }
-
-            async chatWithAI(message, imageDataUrl = null) {
-                try {
-                    if (!this.puterAuthenticated) {
-                        return 'AI chat requires Puter authentication. Please authenticate first or use the app without AI features.';
-                    }
-
-                    let response;
-
-                    try {
-                        if (imageDataUrl) {
-                            // If there's an image, include it in the conversation
-                            response = await puter.ai.chat(
-                                message,
-                                imageDataUrl,
-                                {
-                                    model: 'google/gemini-2.0-flash-lite-001'
-                                }
-                            );
-                        } else {
-                            // Text-only conversation
-                            response = await puter.ai.chat(
-                                message,
-                                {
-                                    model: 'google/gemini-2.0-flash-lite-001'
-                                }
-                            );
-                        }
-                    } catch (puterError) {
-                        console.error('Puter AI chat failed:', puterError);
-                        return `AI chat failed: ${puterError.message}. Please check your authentication and try again.`;
-                    }
-
-                    return response.message?.content || 'No response received from AI.';
-                } catch (error) {
-                    console.error('AI chat failed:', error);
-                    return `AI chat failed: ${error.message}. Please try again.`;
-                }
-            }
-
             async updateStats() {
                 try {
                     // Get storage quota information
@@ -1532,12 +796,13 @@
                     this.updateStats();
                 }, 30000);
 
-                // Also update when storage changes
-                if ('storage' in navigator) {
-                    window.addEventListener('storage', () => {
+                // Also update when localStorage changes (alternative to storage API)
+                window.addEventListener('storage', (e) => {
+                    if (e.key === 'raptureCaptures') {
+                        this.loadCaptures();
                         this.updateStats();
-                    });
-                }
+                    }
+                });
             }
 
             async downloadAllAsZip() {
@@ -1673,6 +938,4 @@
         console.log('🔧 Usage: Click capture buttons to start, then analyze with AI or save/upload');
     </script>
 </body>
-
-
 </html>
