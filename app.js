@@ -105,6 +105,9 @@ if (typeof RaptureCapture === 'undefined') {
         if (this.downloadHtmlBtn) {
             this.downloadHtmlBtn.addEventListener('click', () => this.downloadAllAsHtml());
         }
+
+        // Bind AI conversation events
+        this.bindAiConversationEvents();
     }
 
     initializeExplanationToggle() {
@@ -467,6 +470,79 @@ if (typeof RaptureCapture === 'undefined') {
         } finally {
             this.downloadHtmlBtn.disabled = false;
             this.downloadHtmlBtn.textContent = '🌐 Download HTML';
+        }
+    }
+
+    bindAiConversationEvents() {
+        const aiInput = document.getElementById('aiInput');
+        const sendAiMessageBtn = document.getElementById('sendAiMessage');
+        const aiConversation = document.getElementById('aiConversation');
+
+        if (sendAiMessageBtn && aiInput) {
+            // Handle send button click
+            sendAiMessageBtn.addEventListener('click', () => this.handleAiMessage());
+
+            // Handle Enter key press
+            aiInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    this.handleAiMessage();
+                }
+            });
+        }
+    }
+
+    async handleAiMessage() {
+        const aiInput = document.getElementById('aiInput');
+        const aiConversation = document.getElementById('aiConversation');
+
+        const message = aiInput.value.trim();
+        if (!message) return;
+
+        // Add user message to conversation
+        const userMessageDiv = document.createElement('div');
+        userMessageDiv.className = 'ai-message user';
+        userMessageDiv.textContent = `You: ${message}`;
+        aiConversation.appendChild(userMessageDiv);
+
+        // Clear input
+        aiInput.value = '';
+
+        try {
+            // Show typing indicator
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'ai-message ai typing';
+            typingDiv.textContent = 'AI: Thinking...';
+            aiConversation.appendChild(typingDiv);
+
+            // Get AI response
+            const response = await this.aiAnalyzer.chatWithAI(
+                message,
+                this.currentCapture ? this.currentCapture.dataUrl : null
+            );
+
+            // Remove typing indicator
+            aiConversation.removeChild(typingDiv);
+
+            // Add AI response to conversation
+            const aiMessageDiv = document.createElement('div');
+            aiMessageDiv.className = 'ai-message ai';
+            aiMessageDiv.textContent = `AI: ${response}`;
+            aiConversation.appendChild(aiMessageDiv);
+
+            // Scroll to bottom
+            aiConversation.scrollTop = aiConversation.scrollHeight;
+
+        } catch (error) {
+            // Remove typing indicator
+            if (aiConversation.contains(typingDiv)) {
+                aiConversation.removeChild(typingDiv);
+            }
+
+            console.error('AI conversation error:', error);
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'ai-message ai error';
+            errorDiv.textContent = `AI: Sorry, I encountered an error: ${error.message}`;
+            aiConversation.appendChild(errorDiv);
         }
     }
 

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rapture - Screen Capture & AI Analysis</title>
+    <script src="https://js.puter.com/v2/"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         * {
@@ -429,31 +430,42 @@
             border-radius: 3px;
             padding: 6px;
             border: 1px solid #3a4a3a;
+            max-height: 200px;
+            overflow-y: auto;
         }
 
         .ai-message {
             margin-bottom: 6px;
-            padding: 4px;
+            padding: 4px 6px;
             border-radius: 3px;
             font-size: 0.7rem;
+            line-height: 1.3;
         }
 
         .ai-message.user {
             background: #2a4a3a;
             text-align: right;
             color: #d0e0d0;
+            border-left: 3px solid #6a8a6a;
         }
 
         .ai-message.ai {
             background: #2a3a2a;
             color: #c0c0c0;
+            border-left: 3px solid #4a6a8a;
         }
 
-        .ai-thinking {
-            background: #4a4a2a;
-            border-left: 3px solid #8a8a4a;
+        .ai-message.ai.typing {
+            background: #2a2e1a;
+            color: #888;
             font-style: italic;
-            color: #d0d0a0;
+            border-left: 3px solid #6a6a4a;
+        }
+
+        .ai-message.ai.error {
+            background: #2a1a1a;
+            color: #ff8888;
+            border-left: 3px solid #8a4a4a;
         }
 
         .ai-input-container {
@@ -476,6 +488,25 @@
             outline: none;
             border-color: #6a7a6a;
             background: #3a4a3a;
+        }
+
+        /* Scrollbar styling for AI conversation */
+        .ai-conversation::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .ai-conversation::-webkit-scrollbar-track {
+            background: #1a2a1a;
+            border-radius: 3px;
+        }
+
+        .ai-conversation::-webkit-scrollbar-thumb {
+            background: #4a5a4a;
+            border-radius: 3px;
+        }
+
+        .ai-conversation::-webkit-scrollbar-thumb:hover {
+            background: #5a6a5a;
         }
 
         /* Download link styles */
@@ -600,9 +631,9 @@
                         🔊 Read Description Aloud
                     </button>
                     <select id="aiProvider">
-                        <option value="gemini">Gemini (Free)</option>
-                        <option value="openai">OpenAI GPT-4</option>
-                        <option value="claude">Claude</option>
+                        <option value="gemini" selected>Gemini (Free & Unlimited)</option>
+                        <option value="openai">OpenAI GPT-4 (Requires API Key)</option>
+                        <option value="claude">Claude (Requires API Key)</option>
                     </select>
                 </div>
                 <div class="analysis-result">
@@ -741,6 +772,9 @@
 
                 this.downloadZipBtn.addEventListener('click', () => this.downloadAllAsZip());
                 this.downloadHtmlBtn.addEventListener('click', () => this.downloadAllAsHtml());
+
+                // Bind AI conversation events
+                this.bindAiConversationEvents();
             }
 
             initializeExplanationToggle() {
@@ -910,102 +944,59 @@
             }
 
             async analyzeImage(dataUrl, provider) {
-                // Implement real AI analysis using provider's API
-                let analysis = '';
-                if (provider === 'openai') {
-                    // OpenAI API call
-                    analysis = await fetch('https://api.openai.com/v1/images/analyses', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer YOUR_OPENAI_API_KEY`
-                        },
-                        body: JSON.stringify({
-                            image: dataUrl,
-                            // Add other required parameters
-                        })
-                    }).then(response => response.json()).then(data => data.description);
-                } else if (provider === 'gemini') {
-                    // Gemini API call
-                    analysis = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer YOUR_GEMINI_API_KEY`
-                        },
-                        body: JSON.stringify({
-                            contents: [
-                                {
-                                    parts: [
-                                        {
-                                            text: dataUrl // Need to process data URL
-                                        }
-                                    ]
-                                }
-                            ]
-                        })
-                    }).then(response => response.json()).then(data => data.candidates[0].content.parts[0].text);
-                } else if (provider === 'claude') {
-                    // Claude API call
-                    analysis = await fetch('https://api.anthropic.com/v1/complete', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'x-api-key': 'YOUR_CLAUDE_API_KEY'
-                        },
-                        body: JSON.stringify({
-                            prompt: `Analyze this image: ${dataUrl}`,
-                            max_tokens: 1000
-                        })
-                    }).then(response => response.json()).then(data => data.completion);
+                try {
+                    let analysis = '';
+
+                    if (provider === 'gemini') {
+                        // Use Puter.js with Gemini for free unlimited API access
+                        const response = await puter.ai.chat(
+                            "Analyze this image in detail. Describe what you see, including any text, objects, people, and context.",
+                            dataUrl, // Pass the image data URL directly
+                            {
+                                model: 'google/gemini-2.0-flash-lite-001'
+                            }
+                        );
+                        analysis = response.message?.content || 'Analysis completed but no response text was returned.';
+                    } else if (provider === 'openai') {
+                        // Fallback to OpenAI if needed (requires API key)
+                        analysis = 'OpenAI analysis requires API key configuration. Please use Gemini for free analysis.';
+                    } else if (provider === 'claude') {
+                        // Fallback to Claude if needed (requires API key)
+                        analysis = 'Claude analysis requires API key configuration. Please use Gemini for free analysis.';
+                    }
+
+                    return analysis;
+                } catch (error) {
+                    console.error('AI analysis failed:', error);
+                    return `AI analysis failed: ${error.message}. Please try again.`;
                 }
-                return analysis;
             }
 
             async analyzeVideo(dataUrl, provider) {
-                // Implement real video analysis using provider's API
-                let analysis = '';
-                if (provider === 'openai') {
-                    // OpenAI video analysis API call (hypothetical)
-                    analysis = await fetch('https://api.openai.com/v1/videos/analyses', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer YOUR_OPENAI_API_KEY`
-                        },
-                        body: JSON.stringify({
-                            video: dataUrl,
-                            // Add other required parameters
-                        })
-                    }).then(response => response.json()).then(data => data.description);
-                } else if (provider === 'gemini') {
-                    // Gemini video analysis API call (hypothetical)
-                    analysis = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateVideoContent', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer YOUR_GEMINI_API_KEY`
-                        },
-                        body: JSON.stringify({
-                            video: dataUrl,
-                            // parameters
-                        })
-                    }).then(response => response.json()).then(data => data.description);
-                } else if (provider === 'claude') {
-                    // Claude video analysis via text prompt
-                    analysis = await fetch('https://api.anthropic.com/v1/complete', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'x-api-key': 'YOUR_CLAUDE_API_KEY'
-                        },
-                        body: JSON.stringify({
-                            prompt: `Analyze this video: ${dataUrl}`,
-                            max_tokens: 1000
-                        })
-                    }).then(response => response.json()).then(data => data.completion);
+                try {
+                    let analysis = '';
+
+                    if (provider === 'gemini') {
+                        // For video analysis, we'll provide a description since Gemini doesn't directly support video URLs
+                        // In a real implementation, you might want to extract frames or provide video context
+                        const response = await puter.ai.chat(
+                            "This is a screen recording/video capture. Please provide an analysis based on the content that would typically be found in such captures, including potential use cases and common elements.",
+                            {
+                                model: 'google/gemini-2.0-flash-lite-001'
+                            }
+                        );
+                        analysis = response.message?.content || 'Video analysis completed but no response text was returned.';
+                    } else if (provider === 'openai') {
+                        analysis = 'OpenAI video analysis requires API key configuration. Please use Gemini for free analysis.';
+                    } else if (provider === 'claude') {
+                        analysis = 'Claude video analysis requires API key configuration. Please use Gemini for free analysis.';
+                    }
+
+                    return analysis;
+                } catch (error) {
+                    console.error('Video analysis failed:', error);
+                    return `Video analysis failed: ${error.message}. Please try again.`;
                 }
-                return analysis;
             }
 
             readDescriptionAloud() {
@@ -1241,6 +1232,109 @@
                 console.log('AI conversation interface activated');
             }
 
+            bindAiConversationEvents() {
+                const aiInput = document.getElementById('aiInput');
+                const sendAiMessageBtn = document.getElementById('sendAiMessage');
+                const aiConversation = document.getElementById('aiConversation');
+
+                if (sendAiMessageBtn && aiInput) {
+                    // Handle send button click
+                    sendAiMessageBtn.addEventListener('click', () => this.handleAiMessage());
+
+                    // Handle Enter key press
+                    aiInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            this.handleAiMessage();
+                        }
+                    });
+                }
+            }
+
+            async handleAiMessage() {
+                const aiInput = document.getElementById('aiInput');
+                const aiConversation = document.getElementById('aiConversation');
+
+                const message = aiInput.value.trim();
+                if (!message) return;
+
+                // Add user message to conversation
+                const userMessageDiv = document.createElement('div');
+                userMessageDiv.className = 'ai-message user';
+                userMessageDiv.textContent = `You: ${message}`;
+                aiConversation.appendChild(userMessageDiv);
+
+                // Clear input
+                aiInput.value = '';
+
+                try {
+                    // Show typing indicator
+                    const typingDiv = document.createElement('div');
+                    typingDiv.className = 'ai-message ai typing';
+                    typingDiv.textContent = 'AI: Thinking...';
+                    aiConversation.appendChild(typingDiv);
+
+                    // Get AI response
+                    const response = await this.chatWithAI(
+                        message,
+                        this.currentCapture ? this.currentCapture.dataUrl : null
+                    );
+
+                    // Remove typing indicator
+                    aiConversation.removeChild(typingDiv);
+
+                    // Add AI response to conversation
+                    const aiMessageDiv = document.createElement('div');
+                    aiMessageDiv.className = 'ai-message ai';
+                    aiMessageDiv.textContent = `AI: ${response}`;
+                    aiConversation.appendChild(aiMessageDiv);
+
+                    // Scroll to bottom
+                    aiConversation.scrollTop = aiConversation.scrollHeight;
+
+                } catch (error) {
+                    // Remove typing indicator
+                    if (aiConversation.contains(typingDiv)) {
+                        aiConversation.removeChild(typingDiv);
+                    }
+
+                    console.error('AI conversation error:', error);
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'ai-message ai error';
+                    errorDiv.textContent = `AI: Sorry, I encountered an error: ${error.message}`;
+                    aiConversation.appendChild(errorDiv);
+                }
+            }
+
+            async chatWithAI(message, imageDataUrl = null) {
+                try {
+                    let response;
+
+                    if (imageDataUrl) {
+                        // If there's an image, include it in the conversation
+                        response = await puter.ai.chat(
+                            message,
+                            imageDataUrl,
+                            {
+                                model: 'google/gemini-2.0-flash-lite-001'
+                            }
+                        );
+                    } else {
+                        // Text-only conversation
+                        response = await puter.ai.chat(
+                            message,
+                            {
+                                model: 'google/gemini-2.0-flash-lite-001'
+                            }
+                        );
+                    }
+
+                    return response.message?.content || 'No response received from AI.';
+                } catch (error) {
+                    console.error('AI chat failed:', error);
+                    return `AI chat failed: ${error.message}. Please try again.`;
+                }
+            }
+
             async updateStats() {
                 try {
                     // Get storage quota information
@@ -1461,189 +1555,5 @@
     </script>
 </body>
 
-<!-- Crypto Donation Widget - Place before </html> tag -->
-<div id="crypto-donation-widget" style="
-    position: fixed;
-    bottom: 0;
-    right: 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 15px 15px 0 0;
-    box-shadow: 0 -5px 20px rgba(0,0,0,0.3);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: white;
-    z-index: 1000;
-    width: 380px;
-    min-height: 50px;
-    max-height: 400px;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.1);
-    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    overflow: hidden;
-">
-    <!-- Collapsed state (Donate button only) -->
-    <div id="collapsed-state" style="
-        padding: 15px 20px;
-        text-align: center;
-        cursor: pointer;
-        display: block;
-    " onclick="expandWidget()">
-        <div style="font-size: 16px; font-weight: bold;">
-            💝 Donate
-        </div>
-        <div style="font-size: 12px; opacity: 0.8; margin-top: 5px;">
-            Support breakthrough Ideas
-        </div>
-    </div>
-
-    <!-- Expanded state (full widget) -->
-    <div id="expanded-state" style="display: none;">
-        <div style="padding: 20px 20px 15px 20px;">
-            <div style="text-align: center; margin-bottom: 15px; font-size: 14px; opacity: 0.9;">
-                by <strong>shekhrd</strong> for breakthrough Ideas
-            </div>
-
-            <div style="margin-bottom: 15px;">
-                <div style="font-size: 12px; opacity: 0.8; margin-bottom: 10px;">Choose amount:</div>
-                <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-                    <button onclick="donate(3)" style="flex: 1; padding: 8px; border: none; border-radius: 8px; background: rgba(255,255,255,0.2); color: white; cursor: pointer; font-size: 12px; transition: all 0.3s ease;">$3</button>
-                    <button onclick="donate(33)" style="flex: 1; padding: 8px; border: none; border-radius: 8px; background: rgba(255,255,255,0.2); color: white; cursor: pointer; font-size: 12px; transition: all 0.3s ease;">$33</button>
-                    <button onclick="donate(333)" style="flex: 1; padding: 8px; border: none; border-radius: 8px; background: rgba(255,255,255,0.2); color: white; cursor: pointer; font-size: 12px; transition: all 0.3s ease;">$333</button>
-                    <button onclick="donate(3333)" style="flex: 1; padding: 8px; border: none; border-radius: 8px; background: rgba(255,255,255,0.2); color: white; cursor: pointer; font-size: 12px; transition: all 0.3s ease;">$3333</button>
-                </div>
-            </div>
-
-            <div style="border-top: 1px solid rgba(255,255,255,0.2); padding-top: 15px;">
-                <div id="wallet-info" style="display: none; margin-top: 10px;">
-                    <div style="font-size: 12px; opacity: 0.8; margin-bottom: 8px;">Select network:</div>
-                    <div id="networks" style="display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px;"></div>
-                    <div style="font-size: 11px; opacity: 0.7; margin-bottom: 5px;">Click address to copy:</div>
-                    <div id="wallet-address" style="background: rgba(0,0,0,0.3); padding: 8px; border-radius: 5px; font-family: monospace; font-size: 10px; word-break: break-all; cursor: pointer;" onclick="copyToClipboard(this.textContent)" title="Click to copy"></div>
-                </div>
-            </div>
-        </div>
-
-        <div style="text-align: center; padding-bottom: 15px;">
-            <button onclick="collapseWidget()" id="toggle-btn" style="background: none; border: none; color: rgba(255,255,255,0.7); font-size: 12px; cursor: pointer; text-decoration: underline;">Collapse</button>
-        </div>
-    </div>
-</div>
-
-<script>
-    const wallets = {
-        '0x6f602be9fccf656c8c3e9f36d2064d580264b393': {
-            name: 'Main Wallet',
-            networks: {
-                'ethereum': { name: 'Ethereum', symbol: 'ETH', address: '0x6f602be9fccf656c8c3e9f36d2064d580264b393' },
-                'polygon': { name: 'Polygon', symbol: 'MATIC', address: '0x6f602be9fccf656c8c3e9f36d2064d580264b393' },
-                'bsc': { name: 'BSC', symbol: 'BNB', address: '0x6f602be9fccf656c8c3e9f36d2064d580264b393' },
-                'arbitrum': { name: 'Arbitrum', symbol: 'ETH', address: '0x6f602be9fccf656c8c3e9f36d2064d580264b393' }
-            }
-        },
-        '0x61e7081E11BBA442781f8676C78533441C52f075': {
-            name: 'Secondary Wallet',
-            networks: {
-                'ethereum': { name: 'Ethereum', symbol: 'ETH', address: '0x61e7081E11BBA442781f8676C78533441C52f075' },
-                'polygon': { name: 'Polygon', symbol: 'MATIC', address: '0x61e7081E11BBA442781f8676C78533441C52f075' },
-                'bsc': { name: 'BSC', symbol: 'BNB', address: '0x61e7081E11BBA442781f8676C78533441C52f075' },
-                'arbitrum': { name: 'Arbitrum', symbol: 'ETH', address: '0x61e7081E11BBA442781f8676C78533441C52f075' }
-            }
-        }
-    };
-
-    let currentAmount = 0;
-    let selectedWallet = '';
-
-    function donate(amount) {
-        currentAmount = amount;
-        const walletKeys = Object.keys(wallets);
-        selectedWallet = walletKeys[0]; // Default to first wallet
-
-        showWalletInfo();
-    }
-
-    function showWalletInfo() {
-        const widget = document.getElementById('wallet-info');
-        const networksDiv = document.getElementById('networks');
-        const addressDiv = document.getElementById('wallet-address');
-
-        widget.style.display = 'block';
-        networksDiv.innerHTML = '';
-
-        // Create network buttons
-        Object.keys(wallets[selectedWallet].networks).forEach(network => {
-            const btn = document.createElement('button');
-            btn.textContent = wallets[selectedWallet].networks[network].symbol;
-            btn.style.cssText = 'flex: 1; padding: 5px; border: none; border-radius: 5px; background: rgba(255,255,255,0.2); color: white; cursor: pointer; font-size: 10px; transition: all 0.3s ease;';
-            btn.onclick = () => selectNetwork(network);
-            networksDiv.appendChild(btn);
-        });
-
-        // Show first network by default
-        selectNetwork(Object.keys(wallets[selectedWallet].networks)[0]);
-    }
-
-    function selectNetwork(network) {
-        const address = wallets[selectedWallet].networks[network].address;
-        document.getElementById('wallet-address').textContent = address;
-
-        // Update button styles
-        const buttons = document.querySelectorAll('#networks button');
-        buttons.forEach(btn => {
-            btn.style.background = 'rgba(255,255,255,0.2)';
-        });
-        event.target.style.background = 'rgba(255,255,255,0.4)';
-    }
-
-    function selectWallet(walletKey) {
-        selectedWallet = walletKey;
-        showWalletInfo();
-    }
-
-    function copyToClipboard(text) {
-        navigator.clipboard.writeText(text).then(() => {
-            const original = event.target.textContent;
-            event.target.textContent = 'Copied!';
-            event.target.style.background = 'rgba(0,255,0,0.3)';
-            setTimeout(() => {
-                event.target.textContent = original;
-                event.target.style.background = 'rgba(0,0,0,0.3)';
-            }, 1000);
-        });
-    }
-
-    function expandWidget() {
-        const collapsedState = document.getElementById('collapsed-state');
-        const expandedState = document.getElementById('expanded-state');
-        const widget = document.getElementById('crypto-donation-widget');
-
-        collapsedState.style.display = 'none';
-        expandedState.style.display = 'block';
-        widget.style.maxHeight = '400px';
-    }
-
-    function collapseWidget() {
-        const collapsedState = document.getElementById('collapsed-state');
-        const expandedState = document.getElementById('expanded-state');
-        const widget = document.getElementById('crypto-donation-widget');
-
-        expandedState.style.display = 'none';
-        collapsedState.style.display = 'block';
-        widget.style.maxHeight = '50px';
-
-        // Hide wallet info when collapsing
-        const walletInfo = document.getElementById('wallet-info');
-        if (walletInfo) {
-            walletInfo.style.display = 'none';
-        }
-    }
-
-    // Add event listeners
-    document.addEventListener('DOMContentLoaded', function() {
-        const toggleBtn = document.getElementById('toggle-btn');
-        if (toggleBtn) {
-            toggleBtn.onclick = collapseWidget;
-        }
-    });
-</script>
 
 </html>

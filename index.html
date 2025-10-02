@@ -5,6 +5,7 @@
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>Rapture - Screen Capture & AI Analysis</title>
    <link rel="stylesheet" href="styles.css">
+   <script src="https://js.puter.com/v2/"></script>
    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
    <script src="capture.js"></script>
    <script src="ai.js"></script>
@@ -88,9 +89,9 @@
                         🔊 Read Description Aloud
                     </button>
                     <select id="aiProvider">
-                        <option value="gemini">Gemini (Free)</option>
-                        <option value="openai">OpenAI GPT-4</option>
-                        <option value="claude">Claude</option>
+                        <option value="gemini" selected>Gemini (Free & Unlimited)</option>
+                        <option value="openai">OpenAI GPT-4 (Requires API Key)</option>
+                        <option value="claude">Claude (Requires API Key)</option>
                     </select>
                 </div>
                 <div class="analysis-result">

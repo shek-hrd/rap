@@ -71,6 +71,95 @@ main {
 }
 
 .btn {
+    cursor: pointer;
+}
+
+/* AI Conversation styles */
+.ai-conversation {
+background: #1a2a1a;
+border: 1px solid #3a4a3a;
+border-radius: 5px;
+padding: 8px;
+margin-top: 8px;
+max-height: 200px;
+overflow-y: auto;
+}
+
+.ai-message {
+margin-bottom: 6px;
+padding: 4px 6px;
+border-radius: 3px;
+font-size: 0.8rem;
+line-height: 1.3;
+}
+
+.ai-message.user {
+background: #2a4a2a;
+color: #90d090;
+text-align: right;
+border-left: 3px solid #6a8a6a;
+}
+
+.ai-message.ai {
+background: #1a2e2a;
+color: #c0c0c0;
+border-left: 3px solid #4a6a8a;
+}
+
+.ai-message.ai.typing {
+background: #2a2e1a;
+color: #888;
+font-style: italic;
+border-left: 3px solid #6a6a4a;
+}
+
+.ai-message.ai.error {
+background: #2a1a1a;
+color: #ff8888;
+border-left: 3px solid #8a4a4a;
+}
+
+.ai-input-container {
+margin-top: 8px;
+gap: 4px;
+}
+
+.ai-input {
+flex: 1;
+padding: 4px;
+border: 1px solid #5a6a5a;
+border-radius: 3px;
+font-size: 0.8rem;
+background: #2a3a2a;
+color: #c0c0c0;
+}
+
+.ai-input:focus {
+outline: none;
+border-color: #6a7a6a;
+background: #3a4a3a;
+}
+
+/* Scrollbar styling for AI conversation */
+.ai-conversation::-webkit-scrollbar {
+width: 6px;
+}
+
+.ai-conversation::-webkit-scrollbar-track {
+background: #1a2a1a;
+border-radius: 3px;
+}
+
+.ai-conversation::-webkit-scrollbar-thumb {
+background: #4a5a4a;
+border-radius: 3px;
+}
+
+.ai-conversation::-webkit-scrollbar-thumb:hover {
+background: #5a6a5a;
+}
+
+.btn {
     padding: 6px 12px;
     border: 1px solid #5a6a5a;
     border-radius: 3px;
