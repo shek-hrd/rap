@@ -21,6 +21,7 @@
             color: #c0c0c0;
             font-size: 11px;
             line-height: 1.4;
+            text-shadow: 0 0 2px #00ff00, 0 0 4px #00ff00, 0 0 6px #00ff00;
         }
 
         .container {
@@ -56,11 +57,13 @@
             font-size: 1.1rem;
             font-weight: bold;
             color: #90d090;
+            text-shadow: 0 0 3px #00ff00, 0 0 6px #00ff00;
         }
 
         .stat-label {
             font-size: 0.7rem;
             color: #a0a0a0;
+            text-shadow: 0 0 2px #00ff00;
         }
 
         .download-all-section {
@@ -98,7 +101,7 @@
         header h1 {
             font-size: 1.3rem;
             margin-bottom: 4px;
-            text-shadow: none;
+            text-shadow: 0 0 3px #00ff00, 0 0 6px #00ff00;
             color: #90d090;
         }
 
@@ -106,6 +109,7 @@
             font-size: 0.8rem;
             opacity: 0.8;
             color: #a0a0a0;
+            text-shadow: 0 0 2px #00ff00;
         }
 
         main {
@@ -129,6 +133,7 @@
             color: #b0d0b0;
             font-size: 1rem;
             font-weight: 600;
+            text-shadow: 0 0 2px #00ff00, 0 0 4px #00ff00;
         }
 
         .capture-buttons {
@@ -139,7 +144,7 @@
 
         .btn {
             padding: 6px 12px;
-            border: 1px solid #5a6a5a;
+            border: 2px solid #00ff00;
             border-radius: 3px;
             font-size: 0.8rem;
             font-weight: 500;
@@ -150,6 +155,8 @@
             gap: 3px;
             background: #3a4a3a;
             color: #c0c0c0;
+            text-shadow: 0 0 2px #00ff00;
+            box-shadow: 0 0 4px #00ff00, inset 0 0 4px rgba(0,255,0,0.1);
         }
 
         .btn:hover {
@@ -726,13 +733,22 @@
                         this.puterAuthenticated = true;
                         console.log('✅ Puter.js initialized with anonymous access');
                     } catch (anonError) {
-                        console.log('Anonymous access failed, user may need to authenticate manually');
-                        // Show authentication UI or prompt user to login
-                        this.showAuthPrompt();
+                        console.log('Anonymous access failed, will try manual authentication');
+                        // Try manual sign in instead
+                        try {
+                            await puter.auth.signIn();
+                            this.puterAuthenticated = true;
+                            console.log('✅ Puter.js initialized with manual authentication');
+                        } catch (manualError) {
+                            console.log('Manual authentication also failed, using without AI features');
+                            this.puterAuthenticated = false;
+                            this.showAiDisabledMessage();
+                        }
                     }
                 } catch (error) {
                     console.error('❌ Puter.js initialization failed:', error);
-                    this.showAuthPrompt();
+                    this.puterAuthenticated = false;
+                    this.showAiDisabledMessage();
                 }
 
                 // Continue with app initialization after auth attempt
@@ -744,70 +760,47 @@
                 this.startStatsMonitoring();
             }
 
-            showAuthPrompt() {
-                // Create a simple auth prompt
-                const authDiv = document.createElement('div');
-                authDiv.id = 'puter-auth-prompt';
-                authDiv.style.cssText = `
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(0,0,0,0.8);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    z-index: 10000;
-                    font-family: Arial, sans-serif;
+            showAiDisabledMessage() {
+                // Show a less intrusive message about AI features being disabled
+                const messageDiv = document.createElement('div');
+                messageDiv.id = 'ai-disabled-message';
+                messageDiv.style.cssText = `
+                    background: #2a4a2a;
+                    color: #90d090;
+                    padding: 8px 12px;
+                    border-radius: 4px;
+                    margin-bottom: 12px;
+                    border: 2px solid #60a060;
+                    font-size: 0.8rem;
+                    text-align: center;
+                `;
+                messageDiv.innerHTML = `
+                    <strong>ℹ️ AI features unavailable:</strong> Using screen capture without AI analysis.
+                    <button id="retry-ai-btn" style="
+                        background: #3a5a3a;
+                        color: #a0d0a0;
+                        border: 1px solid #5a7a5a;
+                        padding: 2px 8px;
+                        border-radius: 3px;
+                        cursor: pointer;
+                        font-size: 0.7rem;
+                        margin-left: 8px;
+                    ">Retry AI</button>
                 `;
 
-                authDiv.innerHTML = `
-                    <div style="background: #2a3a2a; padding: 30px; border-radius: 10px; text-align: center; color: white;">
-                        <h3>🔐 Puter Authentication Required</h3>
-                        <p style="margin: 15px 0; color: #ccc;">AI features require Puter.js authentication.</p>
-                        <button id="puter-auth-btn" style="
-                            background: #4a5a4a;
-                            color: white;
-                            border: none;
-                            padding: 12px 24px;
-                            border-radius: 5px;
-                            cursor: pointer;
-                            font-size: 14px;
-                            margin-right: 10px;
-                        ">Authenticate with Puter</button>
-                        <button id="puter-skip-btn" style="
-                            background: #3a2a2a;
-                            color: #ccc;
-                            border: 1px solid #5a4a4a;
-                            padding: 12px 24px;
-                            border-radius: 5px;
-                            cursor: pointer;
-                            font-size: 14px;
-                        ">Use Without AI</button>
-                    </div>
-                `;
+                // Insert the message after the header
+                const header = document.querySelector('header');
+                if (header && header.parentNode) {
+                    header.parentNode.insertBefore(messageDiv, header.nextSibling);
+                }
 
-                document.body.appendChild(authDiv);
-
-                // Handle auth button
-                document.getElementById('puter-auth-btn').addEventListener('click', async () => {
-                    try {
-                        await puter.auth.signIn();
-                        this.puterAuthenticated = true;
-                        document.body.removeChild(authDiv);
-                        console.log('✅ User authenticated with Puter');
-                    } catch (error) {
-                        console.error('Authentication failed:', error);
-                        alert('Authentication failed. Please try again or use the app without AI features.');
+                // Handle retry button
+                document.getElementById('retry-ai-btn').addEventListener('click', () => {
+                    if (messageDiv && messageDiv.parentNode) {
+                        messageDiv.parentNode.removeChild(messageDiv);
                     }
-                });
-
-                // Handle skip button
-                document.getElementById('puter-skip-btn').addEventListener('click', () => {
-                    this.puterAuthenticated = false;
-                    document.body.removeChild(authDiv);
-                    console.log('ℹ️ Using app without AI features');
+                    // Retry Puter initialization
+                    this.initializePuter();
                 });
             }
 
