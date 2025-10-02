@@ -6,26 +6,6 @@
     <title>Rapture - Screen Capture & AI Analysis</title>
     <script src="https://js.puter.com/v2/"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script>
-        // Global error handler for Puter.js loading issues
-        window.addEventListener('error', function(event) {
-            if (event.target && event.target.src && event.target.src.includes('js.puter.com')) {
-                console.warn('Puter.js failed to load, continuing without AI features');
-                // Set a global flag for the app to detect
-                window.puterJsFailed = true;
-            }
-        });
-
-        // Also check if puter is available after scripts load
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(function() {
-                if (typeof puter === 'undefined') {
-                    console.warn('Puter.js not available after page load');
-                    window.puterJsFailed = true;
-                }
-            }, 1000);
-        });
-    </script>
     <style>
         * {
             margin: 0;
@@ -744,27 +724,27 @@
 
             async initializePuter() {
                 try {
-                    // Check if Puter.js failed to load
-                    if (window.puterJsFailed || typeof puter === 'undefined') {
-                        console.log('Puter.js not loaded, using without AI features');
-                        this.puterAuthenticated = false;
-                        this.showAiDisabledMessage();
-                        return;
+                    // Initialize Puter.js authentication
+                    await puter.auth.init();
+
+                    // Try anonymous authentication first
+                    try {
+                        await puter.auth.signInAnonymously();
+                        this.puterAuthenticated = true;
+                        console.log('✅ Puter.js initialized with anonymous access');
+                    } catch (anonError) {
+                        console.log('Anonymous access failed, will try manual authentication');
+                        // Try manual sign in instead
+                        try {
+                            await puter.auth.signIn();
+                            this.puterAuthenticated = true;
+                            console.log('✅ Puter.js initialized with manual authentication');
+                        } catch (manualError) {
+                            console.log('Manual authentication also failed, using without AI features');
+                            this.puterAuthenticated = false;
+                            this.showAiDisabledMessage();
+                        }
                     }
-
-                    // Check if Puter AI API is available
-                    if (!puter.ai || typeof puter.ai.chat !== 'function') {
-                        console.log('Puter AI API not available, using without AI features');
-                        this.puterAuthenticated = false;
-                        this.showAiDisabledMessage();
-                        return;
-                    }
-
-                    // Try to use Puter AI directly without explicit authentication
-                    // Puter.js v2 might handle auth automatically
-                    this.puterAuthenticated = true;
-                    console.log('✅ Puter.js available, AI features enabled');
-
                 } catch (error) {
                     console.error('❌ Puter.js initialization failed:', error);
                     this.puterAuthenticated = false;
@@ -1053,8 +1033,8 @@
                     let analysis = '';
 
                     if (provider === 'gemini') {
-                        if (!this.puterAuthenticated || typeof puter === 'undefined' || !puter.ai) {
-                            return 'AI analysis is not available. Please ensure Puter.js is loaded correctly.';
+                        if (!this.puterAuthenticated) {
+                            return 'AI analysis requires Puter authentication. Please authenticate first or use the app without AI features.';
                         }
 
                         try {
@@ -1066,10 +1046,10 @@
                                     model: 'google/gemini-2.0-flash-lite-001'
                                 }
                             );
-                            analysis = response.message?.content || response.content || 'Analysis completed but no response text was returned.';
+                            analysis = response.message?.content || 'Analysis completed but no response text was returned.';
                         } catch (puterError) {
                             console.error('Puter AI analysis failed:', puterError);
-                            return `AI analysis failed: ${puterError.message}. This may be due to authentication or API limitations.`;
+                            return `AI analysis failed: ${puterError.message}. Please check your authentication and try again.`;
                         }
                     } else if (provider === 'openai') {
                         // Fallback to OpenAI if needed (requires API key)
@@ -1091,8 +1071,8 @@
                     let analysis = '';
 
                     if (provider === 'gemini') {
-                        if (!this.puterAuthenticated || typeof puter === 'undefined' || !puter.ai) {
-                            return 'AI video analysis is not available. Please ensure Puter.js is loaded correctly.';
+                        if (!this.puterAuthenticated) {
+                            return 'AI analysis requires Puter authentication. Please authenticate first or use the app without AI features.';
                         }
 
                         try {
@@ -1104,10 +1084,10 @@
                                     model: 'google/gemini-2.0-flash-lite-001'
                                 }
                             );
-                            analysis = response.message?.content || response.content || 'Video analysis completed but no response text was returned.';
+                            analysis = response.message?.content || 'Video analysis completed but no response text was returned.';
                         } catch (puterError) {
                             console.error('Puter AI video analysis failed:', puterError);
-                            return `AI video analysis failed: ${puterError.message}. This may be due to authentication or API limitations.`;
+                            return `AI video analysis failed: ${puterError.message}. Please check your authentication and try again.`;
                         }
                     } else if (provider === 'openai') {
                         analysis = 'OpenAI video analysis requires API key configuration. Please use Gemini for free analysis.';
@@ -1430,8 +1410,8 @@
 
             async chatWithAI(message, imageDataUrl = null) {
                 try {
-                    if (!this.puterAuthenticated || typeof puter === 'undefined' || !puter.ai) {
-                        return 'AI chat is not available. Please ensure Puter.js is loaded correctly.';
+                    if (!this.puterAuthenticated) {
+                        return 'AI chat requires Puter authentication. Please authenticate first or use the app without AI features.';
                     }
 
                     let response;
@@ -1457,10 +1437,10 @@
                         }
                     } catch (puterError) {
                         console.error('Puter AI chat failed:', puterError);
-                        return `AI chat failed: ${puterError.message}. This may be due to API limitations or network issues.`;
+                        return `AI chat failed: ${puterError.message}. Please check your authentication and try again.`;
                     }
 
-                    return response.message?.content || response.content || 'No response received from AI.';
+                    return response.message?.content || 'No response received from AI.';
                 } catch (error) {
                     console.error('AI chat failed:', error);
                     return `AI chat failed: ${error.message}. Please try again.`;
