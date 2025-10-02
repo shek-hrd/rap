@@ -21,7 +21,7 @@
             color: #c0c0c0;
             font-size: 11px;
             line-height: 1.4;
-            text-shadow: 0 0 2px #00ff00, 0 0 4px #00ff00, 0 0 6px #00ff00;
+            text-shadow: 0 0 2px #ff8c00, 0 0 4px #ff8c00, 0 0 6px #ff8c00;
         }
 
         .container {
@@ -57,13 +57,13 @@
             font-size: 1.1rem;
             font-weight: bold;
             color: #90d090;
-            text-shadow: 0 0 3px #00ff00, 0 0 6px #00ff00;
+            text-shadow: 0 0 3px #ff8c00, 0 0 6px #ff8c00;
         }
 
         .stat-label {
             font-size: 0.7rem;
             color: #a0a0a0;
-            text-shadow: 0 0 2px #00ff00;
+            text-shadow: 0 0 2px #ff8c00;
         }
 
         .download-all-section {
@@ -101,7 +101,7 @@
         header h1 {
             font-size: 1.3rem;
             margin-bottom: 4px;
-            text-shadow: 0 0 3px #00ff00, 0 0 6px #00ff00;
+            text-shadow: 0 0 3px #ff8c00, 0 0 6px #ff8c00;
             color: #90d090;
         }
 
@@ -109,7 +109,7 @@
             font-size: 0.8rem;
             opacity: 0.8;
             color: #a0a0a0;
-            text-shadow: 0 0 2px #00ff00;
+            text-shadow: 0 0 2px #ff8c00;
         }
 
         main {
@@ -133,7 +133,7 @@
             color: #b0d0b0;
             font-size: 1rem;
             font-weight: 600;
-            text-shadow: 0 0 2px #00ff00, 0 0 4px #00ff00;
+            text-shadow: 0 0 2px #ff8c00, 0 0 4px #ff8c00;
         }
 
         .capture-buttons {
@@ -144,7 +144,7 @@
 
         .btn {
             padding: 6px 12px;
-            border: 2px solid #00ff00;
+            border: 2px solid #ff8c00;
             border-radius: 3px;
             font-size: 0.8rem;
             font-weight: 500;
@@ -155,8 +155,8 @@
             gap: 3px;
             background: #3a4a3a;
             color: #c0c0c0;
-            text-shadow: 0 0 2px #00ff00;
-            box-shadow: 0 0 4px #00ff00, inset 0 0 4px rgba(0,255,0,0.1);
+            text-shadow: 0 0 2px #ff8c00;
+            box-shadow: 0 0 4px #ff8c00, inset 0 0 4px rgba(255,140,0,0.1);
         }
 
         .btn:hover {
@@ -724,27 +724,26 @@
 
             async initializePuter() {
                 try {
-                    // Initialize Puter.js authentication
-                    await puter.auth.init();
-
-                    // Try anonymous authentication first
-                    try {
-                        await puter.auth.signInAnonymously();
-                        this.puterAuthenticated = true;
-                        console.log('✅ Puter.js initialized with anonymous access');
-                    } catch (anonError) {
-                        console.log('Anonymous access failed, will try manual authentication');
-                        // Try manual sign in instead
-                        try {
-                            await puter.auth.signIn();
-                            this.puterAuthenticated = true;
-                            console.log('✅ Puter.js initialized with manual authentication');
-                        } catch (manualError) {
-                            console.log('Manual authentication also failed, using without AI features');
-                            this.puterAuthenticated = false;
-                            this.showAiDisabledMessage();
-                        }
+                    // Check if Puter.js failed to load
+                    if (window.puterJsFailed || typeof puter === 'undefined') {
+                        console.log('Puter.js not loaded, using without AI features');
+                        this.puterAuthenticated = false;
+                        this.showAiDisabledMessage();
+                        return;
                     }
+
+                    // Check if Puter AI API is available
+                    if (!puter.ai || typeof puter.ai.chat !== 'function') {
+                        console.log('Puter AI API not available, using without AI features');
+                        this.puterAuthenticated = false;
+                        this.showAiDisabledMessage();
+                        return;
+                    }
+
+                    // Puter.js v2 works without explicit authentication
+                    this.puterAuthenticated = true;
+                    console.log('✅ Puter.js available, AI features enabled');
+
                 } catch (error) {
                     console.error('❌ Puter.js initialization failed:', error);
                     this.puterAuthenticated = false;
@@ -881,17 +880,30 @@
                         video: { mediaSource: 'screen' },
                         audio: false
                     });
-                    
-                    const track = stream.getVideoTracks()[0];
+
+                    const tracks = stream.getVideoTracks();
+                    if (!tracks || tracks.length === 0) {
+                        throw new Error('No video track found in screen capture stream');
+                    }
+
+                    const track = tracks[0];
                     const imageCapture = new ImageCapture(track);
                     const bitmap = await imageCapture.grabFrame();
-                    
+
                     this.displayCapture(bitmap, 'screen');
                     track.stop();
-                    
+
                 } catch (error) {
                     console.error('Screen capture failed:', error);
-                    alert('Screen capture failed. Please ensure you have granted screen recording permissions.');
+                    if (error.name === 'NotAllowedError') {
+                        alert('Screen capture permission denied. Please allow screen recording when prompted.');
+                    } else if (error.name === 'NotFoundError') {
+                        alert('No screen capture source found. Please ensure you have a screen to capture.');
+                    } else if (error.message.includes('cancelled') || error.name === 'AbortError') {
+                        console.log('Screen capture cancelled by user');
+                    } else {
+                        alert(`Screen capture failed: ${error.message || 'Unknown error'}`);
+                    }
                 }
             }
 
@@ -1283,21 +1295,38 @@
 
             loadCaptures() {
                 this.capturesList.innerHTML = '';
-                
+
+                // Add Clear All button if there are captures
+                if (this.captures.length > 0) {
+                    const clearAllItem = document.createElement('div');
+                    clearAllItem.className = 'capture-item';
+                    clearAllItem.innerHTML = `
+                        <div class="capture-info" style="text-align: center; color: #ff8c00; font-weight: bold;">
+                            📋 ${this.captures.length} Saved Captures
+                        </div>
+                        <div class="capture-actions" style="justify-content: center;">
+                            <button class="btn btn-small btn-danger" onclick="rapture.clearAllCaptures()">🗑️ Clear All</button>
+                        </div>
+                    `;
+                    this.capturesList.appendChild(clearAllItem);
+                }
+
                 this.captures.forEach(capture => {
                     const item = document.createElement('div');
                     item.className = 'capture-item';
-                    
+                    item.style.cursor = 'pointer';
+
                     const date = new Date(capture.timestamp).toLocaleString();
                     const type = capture.type === 'image' ? capture.subtype : 'video';
-                    
+
                     if (capture.type === 'image' && capture.thumbnail) {
                         item.innerHTML = `
-                            <img src="${capture.thumbnail}" alt="Capture ${type}">
+                            <img src="${capture.thumbnail}" alt="Capture ${type}" style="cursor: pointer;">
                             <div class="capture-info">${type} - ${date}</div>
                             ${capture.uploadUrl ? `<a href="${capture.uploadUrl}" target="_blank" class="capture-link">${capture.uploadProvider.toUpperCase()}: ${capture.uploadUrl}</a>` : ''}
                             <div class="capture-actions">
-                                <button class="btn btn-small btn-info" onclick="rapture.downloadCapture('${capture.id}')">Download</button>
+                                <button class="btn btn-small btn-info" onclick="event.stopPropagation(); rapture.downloadCapture('${capture.id}')">Download</button>
+                                <button class="btn btn-small btn-warning" onclick="event.stopPropagation(); rapture.loadCaptureToPreview('${capture.id}')">👁️ View</button>
                             </div>
                         `;
                     } else {
@@ -1305,11 +1334,19 @@
                             <div class="capture-info">${type} - ${date}</div>
                             ${capture.uploadUrl ? `<a href="${capture.uploadUrl}" target="_blank" class="capture-link">${capture.uploadProvider.toUpperCase()}: ${capture.uploadUrl}</a>` : ''}
                             <div class="capture-actions">
-                                <button class="btn btn-small btn-info" onclick="rapture.downloadCapture('${capture.id}')">Download</button>
+                                <button class="btn btn-small btn-info" onclick="event.stopPropagation(); rapture.downloadCapture('${capture.id}')">Download</button>
+                                <button class="btn btn-small btn-warning" onclick="event.stopPropagation(); rapture.loadCaptureToPreview('${capture.id}')">👁️ View</button>
                             </div>
                         `;
                     }
-                    
+
+                    // Make the entire item clickable to load into preview
+                    item.addEventListener('click', (e) => {
+                        if (!e.target.matches('button') && !e.target.matches('.capture-link')) {
+                            this.loadCaptureToPreview(capture.id);
+                        }
+                    });
+
                     this.capturesList.appendChild(item);
                 });
             }
@@ -1317,11 +1354,75 @@
             downloadCapture(captureId) {
                 const capture = this.captures.find(c => c.id == captureId);
                 if (!capture) return;
-                
+
                 const link = document.createElement('a');
                 link.download = capture.filename;
                 link.href = capture.dataUrl;
                 link.click();
+            }
+
+            loadCaptureToPreview(captureId) {
+                const capture = this.captures.find(c => c.id == captureId);
+                if (!capture) return;
+
+                // Set as current capture
+                this.currentCapture = capture;
+
+                // Display in preview area
+                if (capture.type === 'image') {
+                    this.previewImage.src = capture.dataUrl;
+                    this.previewImage.style.display = 'block';
+                    this.previewVideo.style.display = 'none';
+                    this.previewCanvas.style.display = 'none';
+                } else if (capture.type === 'video') {
+                    this.previewVideo.src = capture.dataUrl;
+                    this.previewVideo.style.display = 'block';
+                    this.previewVideo.controls = true;
+                    this.previewImage.style.display = 'none';
+                    this.previewCanvas.style.display = 'none';
+                }
+
+                // Enable action buttons
+                this.enableActionButtons();
+
+                // Scroll to preview section
+                const previewSection = document.querySelector('.preview-section');
+                if (previewSection) {
+                    previewSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+
+                console.log('Loaded capture to preview:', capture.filename);
+            }
+
+            clearAllCaptures() {
+                if (confirm('Are you sure you want to clear all captures? This action cannot be undone.')) {
+                    // Clear captures array
+                    this.captures = [];
+
+                    // Clear localStorage
+                    localStorage.removeItem('raptureCaptures');
+
+                    // Reload captures (which will now be empty)
+                    this.loadCaptures();
+
+                    // Clear current capture
+                    this.currentCapture = null;
+
+                    // Clear preview area
+                    this.previewImage.style.display = 'none';
+                    this.previewVideo.style.display = 'none';
+                    this.previewCanvas.style.display = 'none';
+
+                    // Disable action buttons
+                    this.analyzeBtn.disabled = true;
+                    this.saveLocalBtn.disabled = true;
+                    this.uploadCloudBtn.disabled = true;
+
+                    // Update stats
+                    this.updateStats();
+
+                    console.log('All captures cleared');
+                }
             }
 
             showAiConversation() {
