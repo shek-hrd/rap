@@ -135,8 +135,9 @@ class AIAnalyzer {
         } finally {
             this.isAnalyzing = false;
         }
-    }</search>
-</search_and_replace>
+    }
+
+    async getAvailableProvider() {
 
     async getAvailableProvider() {
         // Get provider configurations from main app
