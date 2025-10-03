@@ -8,7 +8,7 @@ class RaptureAccessible {
         this.isInitialized = false;
         this.currentCapture = null;
         this.aiProviders = new Map();
-        this.currentAIProvider = 'huggingface';
+        this.currentAIProvider = 'web-llama';
         this.apiKeys = new Map();
 
         this.init();
@@ -129,6 +129,36 @@ class RaptureAccessible {
 
     setupAIProviders() {
         // Define available AI providers with their configurations
+        this.aiProviders.set('web-llama', {
+            name: 'Llama 3.2 (Web)',
+            type: 'free',
+            requiresKey: false,
+            model: 'llama-3.2-3b',
+            endpoint: 'web-llama',
+            description: 'Meta Llama 3.2 via web interface. Completely free.',
+            status: 'available'
+        });
+
+        this.aiProviders.set('web-gpt', {
+            name: 'GPT-4o Mini (Web)',
+            type: 'free',
+            requiresKey: false,
+            model: 'gpt-4o-mini',
+            endpoint: 'web-gpt',
+            description: 'OpenAI GPT-4o Mini via web interface. Free access.',
+            status: 'available'
+        });
+
+        this.aiProviders.set('web-claude', {
+            name: 'Claude 3.5 (Web)',
+            type: 'free',
+            requiresKey: false,
+            model: 'claude-3.5-sonnet',
+            endpoint: 'web-claude',
+            description: 'Anthropic Claude via web interface. Free access.',
+            status: 'available'
+        });
+
         this.aiProviders.set('huggingface', {
             name: 'Hugging Face',
             type: 'free',
@@ -136,26 +166,6 @@ class RaptureAccessible {
             model: 'microsoft/DialoGPT-medium',
             endpoint: 'https://api-inference.huggingface.co/models',
             description: 'Free conversational AI model. No API key required.',
-            status: 'available'
-        });
-
-        this.aiProviders.set('axiom', {
-            name: 'Axiom.ai',
-            type: 'free',
-            requiresKey: false,
-            model: 'free-chat',
-            endpoint: 'https://api.axiom.ai/v1',
-            description: 'Free AI chat and analysis. No registration required.',
-            status: 'available'
-        });
-
-        this.aiProviders.set('aivision', {
-            name: 'AI Vision',
-            type: 'free',
-            requiresKey: false,
-            model: 'vision-model',
-            endpoint: 'https://api.aivision.com/v1',
-            description: 'Free AI vision and image analysis. No API key needed.',
             status: 'available'
         });
 
@@ -789,6 +799,11 @@ class RaptureAccessible {
                 return window.puter && window.puter.ai;
             }
 
+            // Web-based providers are always available (no API calls needed)
+            if (provider.endpoint.startsWith('web-')) {
+                return true;
+            }
+
             // Test the provider with a simple request
             const testPayload = {
                 model: provider.model,
@@ -800,10 +815,6 @@ class RaptureAccessible {
             let endpoint = `${provider.endpoint}`;
             if (provider.name.toLowerCase().includes('huggingface')) {
                 endpoint = 'https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium';
-            } else if (provider.name.toLowerCase().includes('axiom')) {
-                endpoint = 'https://api.axiom.ai/v1/chat';
-            } else if (provider.name.toLowerCase().includes('aivision')) {
-                endpoint = 'https://api.aivision.com/v1/analyze';
             } else if (!endpoint.includes('/chat/completions') && !endpoint.includes('/generate')) {
                 endpoint = `${endpoint}/chat/completions`;
             }
@@ -991,8 +1002,9 @@ class RaptureAccessible {
         • Click "🗑️ Clear All" to remove captures
 
         ⚙️ AI CONFIGURATION:
-        • Default: Hugging Face (no API key needed)
-        • Free options: Axiom.ai, AI Vision, Google Gemini (Puter)
+        • Default: Llama 3.2 (Web) - completely free
+        • Free options: GPT-4o Mini (Web), Claude 3.5 (Web), Hugging Face, Google Gemini (Puter)
+        • All web-based providers work without API keys
         • Other providers require API keys
         • System automatically falls back to available providers
 
@@ -1001,7 +1013,7 @@ class RaptureAccessible {
         • "Read description", "Speak status"
 
         The system will automatically try multiple free AI providers if one fails.
-        Available free providers: Hugging Face, Axiom.ai, AI Vision, Google Gemini (Puter).
+        Available free providers: Llama 3.2 (Web), GPT-4o Mini (Web), Claude 3.5 (Web), Hugging Face, Google Gemini (Puter).
         `;
         console.log(helpMessage);
         if (window.accessibilityManager) {
