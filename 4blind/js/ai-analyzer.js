@@ -61,7 +61,7 @@ async analyzeWithAI(providerConfig = null) {
         return;
     }
 
-    if (!this.currentCapture && !window.captureManager?.currentCapture) {
+    if (!this.currentCapture && !window.captureManager?.currentCapture && !window.currentCapture) {
         console.error('❌ No capture available for analysis');
         window.accessibilityManager?.announceError('No capture available for analysis');
         return;
@@ -277,7 +277,7 @@ async analyzeWithAI(providerConfig = null) {
     }
 
     getCaptureData() {
-        const capture = this.currentCapture || window.captureManager?.currentCapture;
+        const capture = this.currentCapture || window.captureManager?.currentCapture || window.currentCapture;
         if (!capture) {
             throw new Error('No capture data available');
         }
