@@ -1,0 +1,377 @@
+/**
+ * Main Application Module for Rapture Accessible
+ * Coordinates all modules and provides overall application logic
+ */
+
+class RaptureAccessible {
+    constructor() {
+        this.isInitialized = false;
+        this.currentCapture = null;
+        this.autoCaptureInterval = null;
+
+        this.init();
+    }
+
+    async init() {
+        console.log('🚀 Initializing Rapture Accessible...');
+
+        // Wait for DOM to be ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.performInitialization());
+        } else {
+            this.performInitialization();
+        }
+    }
+
+    performInitialization() {
+        try {
+            // Initialize all modules
+            this.initializeModules();
+
+            // Setup global error handling
+            this.setupErrorHandling();
+
+            // Setup keyboard shortcuts
+            this.setupKeyboardShortcuts();
+
+            // Setup system monitoring
+            this.setupSystemMonitoring();
+
+            // Load user preferences
+            this.loadUserPreferences();
+
+            // Setup auto-capture on first load
+            this.setupFirstLoadAutoCapture();
+
+            this.isInitialized = true;
+
+            console.log('✅ Rapture Accessible initialized successfully');
+            this.announceInitialization();
+
+        } catch (error) {
+            console.error('❌ Initialization failed:', error);
+            this.handleInitializationError(error);
+        }
+    }
+
+    initializeModules() {
+        // Modules are initialized automatically when their scripts load
+        // This method can be used for any additional setup
+
+        // Make modules globally accessible
+        if (window.accessibilityManager) {
+            console.log('✅ Accessibility Manager loaded');
+        }
+        if (window.voiceCommandManager) {
+            console.log('✅ Voice Command Manager loaded');
+        }
+        if (window.autoCaptureManager) {
+            console.log('✅ Auto Capture Manager loaded');
+        }
+        if (window.aiAnalyzer) {
+            console.log('✅ AI Analyzer loaded');
+        }
+        if (window.captureManager) {
+            console.log('✅ Capture Manager loaded');
+        }
+    }
+
+    setupErrorHandling() {
+        window.addEventListener('error', (e) => {
+            console.error('Global error:', e.error);
+            window.accessibilityManager?.announceError('An error occurred: ' + e.message);
+        });
+
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('Unhandled promise rejection:', e.reason);
+            window.accessibilityManager?.announceError('A system error occurred');
+        });
+    }
+
+    setupKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            // Alt key combinations
+            if (e.altKey) {
+                switch (e.key.toLowerCase()) {
+                    case '1':
+                        e.preventDefault();
+                        this.handleQuickAction('autoCapture');
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        this.handleQuickAction('emergencyCapture');
+                        break;
+                    case '3':
+                        e.preventDefault();
+                        this.handleQuickAction('speakStatus');
+                        break;
+                    case '4':
+                        e.preventDefault();
+                        this.handleQuickAction('readAloud');
+                        break;
+                    case 'h':
+                        e.preventDefault();
+                        this.showKeyboardShortcuts();
+                        break;
+                }
+            }
+
+            // Ctrl key combinations
+            if (e.ctrlKey) {
+                switch (e.key.toLowerCase()) {
+                    case 's':
+                        e.preventDefault();
+                        this.handleQuickAction('saveCapture');
+                        break;
+                    case 'e':
+                        e.preventDefault();
+                        this.handleQuickAction('exportAll');
+                        break;
+                }
+            }
+        });
+    }
+
+    handleQuickAction(action) {
+        switch (action) {
+            case 'autoCapture':
+                if (window.autoCaptureManager) {
+                    window.autoCaptureManager.toggleAutoCapture();
+                }
+                break;
+            case 'emergencyCapture':
+                if (window.autoCaptureManager) {
+                    window.autoCaptureManager.emergencyCapture();
+                }
+                break;
+            case 'speakStatus':
+                if (window.accessibilityManager) {
+                    window.accessibilityManager.handleSpeakStatus();
+                }
+                break;
+            case 'readAloud':
+                if (window.aiAnalyzer) {
+                    window.aiAnalyzer.readDescriptionAloud();
+                }
+                break;
+            case 'saveCapture':
+                if (window.captureManager) {
+                    window.captureManager.saveCurrentCapture();
+                }
+                break;
+            case 'exportAll':
+                if (window.captureManager) {
+                    window.captureManager.downloadAllAsHtml();
+                }
+                break;
+        }
+    }
+
+    setupSystemMonitoring() {
+        // Monitor system resources
+        if ('performance' in window) {
+            setInterval(() => {
+                this.updatePerformanceStats();
+            }, 10000); // Every 10 seconds
+        }
+
+        // Monitor online status
+        window.addEventListener('online', () => {
+            window.accessibilityManager?.announce('Connection restored');
+        });
+
+        window.addEventListener('offline', () => {
+            window.accessibilityManager?.announce('Connection lost - some features may not work');
+        });
+    }
+
+    updatePerformanceStats() {
+        if (performance.memory) {
+            const memoryUsage = performance.memory.usedJSHeapSize;
+            const memoryElement = document.getElementById('memoryUsage');
+            if (memoryElement) {
+                memoryElement.textContent = this.formatBytes(memoryUsage);
+            }
+        }
+    }
+
+    loadUserPreferences() {
+        try {
+            const preferences = JSON.parse(localStorage.getItem('raptureAccessiblePreferences') || '{}');
+
+            // Apply preferences
+            if (preferences.autoCaptureEnabled) {
+                setTimeout(() => {
+                    if (window.autoCaptureManager) {
+                        window.autoCaptureManager.startAutoCapture();
+                    }
+                }, 2000); // Delay to allow full initialization
+            }
+
+            if (preferences.aiProvider) {
+                const aiSelect = document.getElementById('aiProviderSelect');
+                if (aiSelect) {
+                    aiSelect.value = preferences.aiProvider;
+                }
+            }
+
+            console.log('✅ User preferences loaded');
+        } catch (error) {
+            console.error('Error loading preferences:', error);
+        }
+    }
+
+    saveUserPreferences() {
+        const preferences = {
+            autoCaptureEnabled: window.autoCaptureManager?.isAutoCapturing || false,
+            aiProvider: document.getElementById('aiProviderSelect')?.value || 'gemini',
+            lastUsed: new Date().toISOString()
+        };
+
+        localStorage.setItem('raptureAccessiblePreferences', JSON.stringify(preferences));
+    }
+
+    setupFirstLoadAutoCapture() {
+        // Perform initial capture after a short delay
+        setTimeout(() => {
+            if (window.autoCaptureManager && !this.currentCapture) {
+                console.log('🚀 Performing first-load auto capture...');
+                window.autoCaptureManager.performAutoCapture();
+            }
+        }, 3000); // 3 second delay to allow everything to load
+    }
+
+    announceInitialization() {
+        setTimeout(() => {
+            const announcement = `
+                Rapture Accessible initialized.
+                Use Alt+1 for auto capture,
+                Alt+2 for emergency capture,
+                Alt+3 to speak status,
+                Alt+H for help.
+                First capture starting automatically.
+            `;
+            window.accessibilityManager?.announce(announcement);
+        }, 1000);
+    }
+
+    handleInitializationError(error) {
+        const errorMessage = `
+            Initialization failed: ${error.message}.
+            Basic functionality may still be available.
+            Try refreshing the page or contact support.
+        `;
+        window.accessibilityManager?.announceError(errorMessage);
+    }
+
+    showKeyboardShortcuts() {
+        const shortcuts = `
+            Keyboard Shortcuts:
+            Alt+1: Toggle auto capture
+            Alt+2: Emergency capture
+            Alt+3: Speak system status
+            Alt+4: Read description aloud
+            Alt+C: Auto capture (alternative)
+            Alt+V: Voice commands (when supported)
+            Alt+R: Read aloud (alternative)
+            Alt+S: Speak status (alternative)
+            Alt+H: Show this help
+            Ctrl+S: Save current capture
+            Ctrl+E: Export all captures
+            Escape: Cancel current operation
+        `;
+        window.accessibilityManager?.announce(shortcuts);
+    }
+
+    formatBytes(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    // Public API methods
+    getSystemInfo() {
+        return {
+            isInitialized: this.isInitialized,
+            currentCapture: !!this.currentCapture,
+            autoCapturing: window.autoCaptureManager?.isAutoCapturing || false,
+            capturesCount: window.captureManager?.captures.length || 0,
+            aiProviders: window.aiAnalyzer?.getAvailableProviders() || []
+        };
+    }
+
+    // Method to handle module communication
+    broadcast(event, data) {
+        // Broadcast events between modules
+        switch (event) {
+            case 'capture:created':
+                if (data.capture) {
+                    this.currentCapture = data.capture;
+                    // Auto-analyze if enabled
+                    const autoAnalyzeEnabled = document.getElementById('autoAnalyzeToggle')?.checked ?? true;
+                    if (autoAnalyzeEnabled && window.aiAnalyzer) {
+                        setTimeout(() => {
+                            window.aiAnalyzer.analyzeWithAI();
+                        }, 500);
+                    }
+                }
+                break;
+
+            case 'analysis:completed':
+                if (data.analysis) {
+                    // Save analysis with capture
+                    if (this.currentCapture && window.captureManager) {
+                        this.currentCapture.analysis = data.analysis;
+                    }
+                }
+                break;
+        }
+    }
+}
+
+// Initialize the application
+const raptureAccessible = new RaptureAccessible();
+
+// Make globally accessible for debugging
+window.raptureAccessible = raptureAccessible;
+
+// Enhanced console output
+console.log(`
+🎬 Rapture Accessible - Screen Capture for Blind Users
+══════════════════════════════════════════════════════
+✅ Features:
+   • Auto screen capture with AI analysis
+   • Voice command support (preparation)
+   • Multiple AI providers (Gemini, Hugging Face, OpenAI)
+   • High contrast interface optimized for accessibility
+   • Keyboard shortcuts and screen reader support
+   • Automatic first-load capture
+
+🎯 Quick Start:
+   • First capture: Automatic after initialization
+   • Manual capture: Alt+1 or click "Auto Capture Screen"
+   • Emergency capture: Alt+2 or click "Emergency Capture"
+   • Speak status: Alt+3 or click "Speak System Status"
+   • Read analysis: Alt+4 or click "Read Description Aloud"
+
+🔧 Keyboard Shortcuts:
+   • Alt+H: Show all shortcuts
+   • Alt+V: Voice commands (when supported)
+   • Ctrl+S: Save current capture
+   • Ctrl+E: Export all captures
+
+📊 System Status:
+   • Initialized: ${raptureAccessible.isInitialized}
+   • Online: ${navigator.onLine}
+   • Screen Reader: ${window.accessibilityManager?.detectScreenReader() || 'Not detected'}
+
+🚀 Ready to use!
+`);
+
+console.log('💡 Tips:');
+console.log('   • The app performs an automatic capture 3 seconds after loading');
+console.log('   • Use Alt+3 to hear current system status anytime');
+console.log('   • All buttons have keyboard shortcuts for easy access');
+console.log('   • Voice commands are prepared for future browser support');

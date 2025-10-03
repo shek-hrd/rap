@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapture Accessible - Screen Capture for Blind Users</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://js.puter.com/v2/"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+    <!-- Skip to main content for screen readers -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- Voice command status indicator -->
+    <div id="voice-status" class="voice-status" role="status" aria-live="polite" aria-label="Voice command status"></div>
+
+    <div class="container">
+        <header role="banner">
+            <h1>Rapture Accessible</h1>
+            <p>Voice-Enabled Screen Capture & AI Analysis for Blind Users</p>
+            <div class="status-announcements" role="status" aria-live="polite" aria-label="System status"></div>
+        </header>
+
+        <main id="main-content" role="main">
+            <!-- System Status Section -->
+            <section class="status-section" role="region" aria-labelledby="status-heading">
+                <h2 id="status-heading">System Status</h2>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <span class="status-label">Storage Used:</span>
+                        <span class="status-value" id="storageUsed">-</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Storage Quota:</span>
+                        <span class="status-value" id="storageQuota">-</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Memory Usage:</span>
+                        <span class="status-value" id="memoryUsage">-</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Captures Count:</span>
+                        <span class="status-value" id="capturesCount">-</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quick Actions Section -->
+            <section class="quick-actions-section" role="region" aria-labelledby="quick-actions-heading">
+                <h2 id="quick-actions-heading">Quick Actions</h2>
+                <div class="quick-actions">
+                    <button id="autoCapture" class="btn btn-primary" aria-describedby="auto-capture-desc">
+                        Auto Capture Screen
+                    </button>
+                    <button id="emergencyCapture" class="btn btn-danger" aria-describedby="emergency-capture-desc">
+                        Emergency Capture
+                    </button>
+                    <button id="speakStatus" class="btn btn-info" aria-describedby="speak-status-desc">
+                        Speak System Status
+                    </button>
+                </div>
+                <div class="action-descriptions">
+                    <p id="auto-capture-desc">Automatically captures screen and analyzes with AI</p>
+                    <p id="emergency-capture-desc">Immediately captures current screen for urgent situations</p>
+                    <p id="speak-status-desc">Speaks current system status and recent activity</p>
+                </div>
+            </section>
+
+            <!-- Auto Analysis Section -->
+            <section class="auto-analysis-section" role="region" aria-labelledby="auto-analysis-heading">
+                <h2 id="auto-analysis-heading">Auto Analysis</h2>
+                <div class="analysis-controls">
+                    <label for="autoAnalyzeToggle">Enable Automatic Analysis:</label>
+                    <input type="checkbox" id="autoAnalyzeToggle" checked aria-describedby="auto-analyze-desc">
+                    <span class="toggle-status" aria-live="polite"></span>
+                </div>
+                <p id="auto-analyze-desc">When enabled, new captures are automatically analyzed with AI</p>
+
+                <div class="ai-provider-selection">
+                    <label for="aiProviderSelect">AI Provider:</label>
+                    <select id="aiProviderSelect" aria-describedby="ai-provider-desc">
+                        <option value="gemini">Gemini (Free & Unlimited)</option>
+                        <option value="huggingface">Hugging Face (Free Alternative)</option>
+                        <option value="openai">OpenAI GPT-4 (Requires API Key)</option>
+                    </select>
+                </div>
+                <p id="ai-provider-desc">Select AI service for content analysis</p>
+            </section>
+
+            <!-- Live Preview Section -->
+            <section class="preview-section" role="region" aria-labelledby="preview-heading">
+                <h2 id="preview-heading">Live Preview</h2>
+                <div class="preview-container">
+                    <video id="previewVideo" autoplay muted style="display: none;" aria-label="Live video preview"></video>
+                    <canvas id="previewCanvas" style="display: none;" aria-label="Screen capture preview"></canvas>
+                    <img id="previewImage" alt="Screen capture preview" style="display: none;" aria-label="Screen capture image">
+                    <div id="previewPlaceholder" class="preview-placeholder">
+                        No preview available. Use auto capture to begin.
+                    </div>
+                </div>
+                <div class="preview-controls">
+                    <button id="readAloud" class="btn btn-success" disabled aria-describedby="read-aloud-desc">
+                        Read Description Aloud
+                    </button>
+                    <button id="saveCapture" class="btn btn-primary" disabled aria-describedby="save-capture-desc">
+                        Save Capture
+                    </button>
+                </div>
+                <div class="control-descriptions">
+                    <p id="read-aloud-desc">Speaks the AI analysis of the current capture</p>
+                    <p id="save-capture-desc">Saves the current capture to local storage</p>
+                </div>
+            </section>
+
+            <!-- AI Analysis Results -->
+            <section class="analysis-results-section" role="region" aria-labelledby="analysis-results-heading">
+                <h2 id="analysis-results-heading">AI Analysis Results</h2>
+                <div class="analysis-content">
+                    <textarea id="aiDescription" placeholder="AI analysis will appear here..." readonly aria-label="AI analysis results"></textarea>
+                </div>
+                <div class="analysis-actions">
+                    <button id="reanalyze" class="btn btn-secondary" disabled aria-describedby="reanalyze-desc">
+                        Re-analyze with Different AI
+                    </button>
+                    <button id="askQuestion" class="btn btn-info" aria-describedby="ask-question-desc">
+                        Ask Question About Analysis
+                    </button>
+                </div>
+                <div class="action-descriptions">
+                    <p id="reanalyze-desc">Analyzes the capture again with a different AI provider</p>
+                    <p id="ask-question-desc">Ask a question about the current analysis</p>
+                </div>
+            </section>
+
+            <!-- Recent Captures Gallery -->
+            <section class="captures-gallery-section" role="region" aria-labelledby="captures-gallery-heading">
+                <h2 id="captures-gallery-heading">Recent Captures</h2>
+                <div class="gallery-controls">
+                    <button id="clearAll" class="btn btn-danger" aria-describedby="clear-all-desc">
+                        Clear All Captures
+                    </button>
+                    <button id="exportAll" class="btn btn-info" aria-describedby="export-all-desc">
+                        Export All as HTML
+                    </button>
+                </div>
+                <div class="control-descriptions">
+                    <p id="clear-all-desc">Removes all saved captures from storage</p>
+                    <p id="export-all-desc">Exports all captures as an accessible HTML file</p>
+                </div>
+                <div id="capturesList" class="captures-grid" role="list" aria-label="Recent captures list"></div>
+            </section>
+
+            <!-- Voice Commands Help -->
+            <section class="help-section" role="region" aria-labelledby="help-heading">
+                <h2 id="help-heading">Voice Commands (Coming Soon)</h2>
+                <details class="help-details">
+                    <summary>Available Voice Commands</summary>
+                    <div class="help-content">
+                        <ul>
+                            <li>"Capture screen" - Take a screenshot</li>
+                            <li>"Start recording" - Begin screen recording</li>
+                            <li>"Stop recording" - End current recording</li>
+                            <li>"Analyze capture" - Run AI analysis on current capture</li>
+                            <li>"Read description" - Speak the AI analysis aloud</li>
+                            <li>"Save capture" - Save current capture to storage</li>
+                            <li>"Clear all" - Remove all saved captures</li>
+                            <li>"Speak status" - Announce current system status</li>
+                        </ul>
+                        <p><strong>Note:</strong> Voice commands will be enabled once speech recognition permissions are granted.</p>
+                    </div>
+                </details>
+            </section>
+
+            <!-- Processing Status -->
+            <div class="processing-status" id="processingStatus" style="display: none;" role="status" aria-live="polite" aria-label="Processing status"></div>
+
+            <!-- AI Conversation Interface -->
+            <div class="ai-conversation" id="aiConversation" style="display: none;" role="region" aria-labelledby="conversation-heading">
+                <h3 id="conversation-heading">AI Conversation</h3>
+                <div class="conversation-messages" id="conversationMessages" role="log" aria-live="polite" aria-label="AI conversation messages"></div>
+                <div class="conversation-input-container">
+                    <label for="aiInput">Ask AI about the capture:</label>
+                    <input type="text" id="aiInput" class="ai-input" placeholder="Type your question here..." aria-describedby="ai-input-desc">
+                    <button id="sendAiMessage" class="btn btn-primary">Send Question</button>
+                </div>
+                <p id="ai-input-desc">Ask questions about the current capture or analysis</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- Load JavaScript modules -->
+    <script src="js/accessibility.js"></script>
+    <script src="js/voice-commands.js"></script>
+    <script src="js/auto-capture.js"></script>
+    <script src="js/ai-analyzer.js"></script>
+    <script src="js/capture-manager.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
