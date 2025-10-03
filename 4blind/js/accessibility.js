@@ -10,6 +10,7 @@ class AccessibilityManager {
         this.isAnnouncing = false;
         this.voiceStatusElement = null;
         this.statusAnnouncementsElement = null;
+        this.hasUserActivated = false;
 
         this.init();
     }
@@ -18,6 +19,7 @@ class AccessibilityManager {
         // Get DOM elements
         this.voiceStatusElement = document.getElementById('voice-status');
         this.statusAnnouncementsElement = document.querySelector('.status-announcements');
+        this.announcementsListElement = document.getElementById('announcementsList');
 
         // Initialize speech synthesis
         this.initSpeechSynthesis();
@@ -27,6 +29,12 @@ class AccessibilityManager {
 
         // Add focus management
         this.initFocusManagement();
+
+        // Track user activation for speech synthesis
+        this.trackUserActivation();
+
+        // Setup announcements clear button
+        this.setupAnnouncementsClearButton();
 
         console.log('🔧 Accessibility Manager initialized');
     }
@@ -145,8 +153,10 @@ class AccessibilityManager {
     }
 
     speakAnnouncement(announcement) {
+        // Always display visually first
+        this.displayAnnouncement(announcement.message);
+
         if (!this.speechSynthesis) {
-            this.displayAnnouncement(announcement.message);
             return;
         }
 
@@ -169,27 +179,25 @@ class AccessibilityManager {
         utterance.onerror = (error) => {
             console.error('Speech synthesis error:', error);
             this.isAnnouncing = false;
-            this.displayAnnouncement(announcement.message);
             setTimeout(() => this.processAnnouncementQueue(), 100);
         };
 
-        // Check if user has activated speech synthesis before speaking
-        if (this.speechSynthesis.speaking) {
-            this.speechSynthesis.cancel();
-        }
+        // Only speak if user has interacted with the page
+        if (this.hasUserActivated) {
+            if (this.speechSynthesis.speaking) {
+                this.speechSynthesis.cancel();
+            }
 
-        try {
-            this.speechSynthesis.speak(utterance);
-        } catch (error) {
-            console.error('Speech synthesis failed:', error);
-            this.displayAnnouncement(announcement.message);
+            try {
+                this.speechSynthesis.speak(utterance);
+            } catch (error) {
+                console.error('Speech synthesis failed:', error);
+            }
         }
-
-        // Also display visually
-        this.displayAnnouncement(announcement.message);
     }
 
     displayAnnouncement(message) {
+        // Add to screen reader announcements (hidden)
         if (this.statusAnnouncementsElement) {
             const announcementDiv = document.createElement('div');
             announcementDiv.className = 'announcement';
@@ -204,6 +212,30 @@ class AccessibilityManager {
                     announcementDiv.parentNode.removeChild(announcementDiv);
                 }
             }, 5000);
+        }
+
+        // Add to visible announcements list at bottom
+        if (this.announcementsListElement) {
+            const announcementItem = document.createElement('div');
+            announcementItem.className = 'announcement-item';
+            announcementItem.textContent = message;
+            announcementItem.setAttribute('role', 'listitem');
+
+            // Add timestamp
+            const timestamp = document.createElement('small');
+            timestamp.style.opacity = '0.7';
+            timestamp.textContent = ` (${new Date().toLocaleTimeString()})`;
+            announcementItem.appendChild(timestamp);
+
+            this.announcementsListElement.appendChild(announcementItem);
+
+            // Auto-scroll to bottom
+            this.announcementsListElement.scrollTop = this.announcementsListElement.scrollHeight;
+
+            // Limit to 50 announcements
+            while (this.announcementsListElement.children.length > 50) {
+                this.announcementsListElement.removeChild(this.announcementsListElement.firstChild);
+            }
         }
     }
 
@@ -313,6 +345,35 @@ class AccessibilityManager {
 
         if (usesScreenReader) {
             this.announce('Screen reader detected. Enhanced accessibility mode enabled.');
+        }
+    }
+
+    // Track user activation for speech synthesis
+    trackUserActivation() {
+        const userActivationEvents = ['click', 'keydown', 'touchstart'];
+
+        userActivationEvents.forEach(event => {
+            document.addEventListener(event, () => {
+                this.hasUserActivated = true;
+            }, { once: true });
+        });
+    }
+
+    // Setup announcements clear button
+    setupAnnouncementsClearButton() {
+        const clearBtn = document.getElementById('clearAnnouncements');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                this.clearAnnouncements();
+            });
+        }
+    }
+
+    // Clear all announcements
+    clearAnnouncements() {
+        if (this.announcementsListElement) {
+            this.announcementsListElement.innerHTML = '';
+            this.announce('Announcements cleared');
         }
     }
 }

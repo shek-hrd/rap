@@ -82,7 +82,8 @@ class VoiceCommandManager {
             console.log('✅ Speech recognition supported');
         } else {
             console.warn('❌ Speech recognition not supported in this browser');
-            this.showNotSupportedMessage();
+            // Don't show message during initialization to avoid speech synthesis errors
+            // this.showNotSupportedMessage();
         }
     }
 
@@ -409,7 +410,10 @@ class VoiceCommandManager {
     }
 
     showNotSupportedMessage() {
-        window.accessibilityManager.announce('Voice commands not supported in this browser. Please use keyboard shortcuts or button clicks.');
+        // Only announce if user has activated speech synthesis
+        if (window.accessibilityManager?.hasUserActivated) {
+            window.accessibilityManager.announce('Voice commands not supported in this browser. Please use keyboard shortcuts or button clicks.');
+        }
 
         const message = document.createElement('div');
         message.className = 'error';

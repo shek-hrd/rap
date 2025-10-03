@@ -307,6 +307,7 @@ class RaptureAccessible {
 
     announceInitialization() {
         setTimeout(() => {
+            // Only display visually, don't speak automatically
             const announcement = `
                 Rapture Accessible initialized.
                 Use Alt+1 for auto capture,
@@ -317,7 +318,10 @@ class RaptureAccessible {
                 Alt+H for help.
                 Manual capture buttons are ready to use.
             `;
-            window.accessibilityManager?.announce(announcement);
+            // Just display, don't announce via speech synthesis
+            if (window.accessibilityManager) {
+                window.accessibilityManager.displayAnnouncement(announcement);
+            }
         }, 1000);
     }
 

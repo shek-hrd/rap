@@ -864,14 +864,6 @@ class AutoCaptureManager {
         window.accessibilityManager.announce('All sequential actions completed');
         console.log('✅ All sequential actions completed');
     }
-        // Update the button text if currently autocapturing
-        if (this.isAutoCapturing) {
-            const autoCaptureBtn = document.getElementById('autoCapture');
-            if (autoCaptureBtn) {
-                autoCaptureBtn.textContent = `Stop Auto Capture (${this.autoCaptureCount} captures)`;
-            }
-        }
-    }
 
     // Method to handle keyboard shortcuts
     handleKeyboardShortcut(key) {

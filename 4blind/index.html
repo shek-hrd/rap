@@ -23,6 +23,9 @@
         </header>
 
         <main id="main-content" role="main">
+            <!-- Status Announcements - Hidden at top for screen readers -->
+            <div class="status-announcements" role="status" aria-live="polite" aria-label="System status" style="position: absolute; left: -9999px;"></div>
+
             <!-- Control Panel - Top Section -->
             <section class="control-panel" role="region" aria-labelledby="control-panel-heading">
                 <h2 id="control-panel-heading">Rapture Accessible Control Panel</h2>
@@ -230,6 +233,18 @@
                 </div>
                 <p id="ai-input-desc">Ask questions about the current capture or analysis</p>
             </div>
+
+            <!-- Announcements Section - Bottom of Page -->
+            <section class="announcements-section" role="region" aria-labelledby="announcements-heading">
+                <h3 id="announcements-heading" class="sr-only">System Announcements</h3>
+                <div class="announcements-container">
+                    <div class="announcements-header">
+                        <h4>📢 Recent Announcements</h4>
+                        <button id="clearAnnouncements" class="btn btn-small btn-secondary">🗑️ Clear</button>
+                    </div>
+                    <div id="announcementsList" class="announcements-list" role="log" aria-live="polite" aria-label="Recent announcements"></div>
+                </div>
+            </section>
         </main>
     </div>
 
