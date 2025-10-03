@@ -179,6 +179,16 @@ class RaptureAccessible {
             status: 'available'
         });
 
+        this.aiProviders.set('web-gemini', {
+            name: 'Google Gemini (Web)',
+            type: 'free',
+            requiresKey: false,
+            model: 'gemini-pro',
+            endpoint: 'web-gemini',
+            description: 'Google Gemini via web interface. Free access.',
+            status: 'available'
+        });
+
         this.aiProviders.set('openai', {
             name: 'OpenAI GPT-4o',
             type: 'free_tier',

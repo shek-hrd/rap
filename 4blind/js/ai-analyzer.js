@@ -151,7 +151,7 @@ class AIAnalyzer {
         if (!mainApp || !mainApp.aiProviders) return null;
 
         // Try free providers in order of preference
-        const fallbackOrder = ['puter-gemini', 'web-llama', 'web-gpt', 'web-claude', 'huggingface'];
+        const fallbackOrder = ['puter-gemini', 'web-gemini', 'web-llama', 'web-gpt', 'web-claude', 'huggingface'];
 
         for (const providerKey of fallbackOrder) {
             const provider = mainApp.aiProviders.get(providerKey);
@@ -234,6 +234,9 @@ class AIAnalyzer {
             case 'putergemini':
             case 'googlegeminiputer':
                 return await this.analyzeWithPuterGemini(prompt);
+            case 'webgemini':
+            case 'googlegemini':
+                return await this.analyzeWithWebGemini(prompt);
             case 'openai':
                 return await this.analyzeWithOpenAI(prompt, provider);
             case 'anthropic':
@@ -506,6 +509,7 @@ Please be specific and thorough in your analysis, as this is for accessibility p
         try {
             // Use Puter.js AI integration for free Gemini access
             if (window.puter && window.puter.ai) {
+                console.log('🤖 Using Puter.js Gemini AI...');
                 const result = await window.puter.ai.chat({
                     model: 'gemini-pro',
                     messages: [
@@ -524,10 +528,54 @@ Please be specific and thorough in your analysis, as this is for accessibility p
 
                 return result.text || result.message || 'Analysis could not be completed';
             } else {
+                console.warn('⚠️ Puter.js AI not available, trying fallback...');
                 throw new Error('Puter.js AI not available');
             }
         } catch (error) {
             console.warn('Puter Gemini analysis failed:', error);
+            // Try web-based Gemini as fallback
+            return await this.analyzeWithWebGemini(prompt);
+        }
+    }
+
+    async analyzeWithWebGemini(prompt) {
+        try {
+            console.log('🌐 Trying web-based Gemini fallback...');
+
+            // Use a free web-based Gemini endpoint
+            const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    contents: [
+                        {
+                            parts: [
+                                {
+                                    text: prompt
+                                }
+                            ]
+                        }
+                    ],
+                    generationConfig: {
+                        temperature: 0.7,
+                        maxOutputTokens: 300,
+                    }
+                })
+            });
+
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 429) {
+                    return 'I can see this is a screen capture, but I\'m unable to provide a detailed analysis right now due to API limitations. Please try again later or use a different AI provider.';
+                }
+                throw new Error(`Web Gemini API error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data.candidates[0]?.content?.parts[0]?.text || 'Analysis could not be completed';
+        } catch (error) {
+            console.warn('Web Gemini analysis failed:', error);
             return 'I can see this is a screen capture, but I\'m unable to provide a detailed analysis right now. Please try again later or use a different AI provider.';
         }
     }
