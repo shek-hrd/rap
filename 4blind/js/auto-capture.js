@@ -620,7 +620,7 @@ class AutoCaptureManager {
             // Update UI
             const toggleBtn = document.getElementById('toggleRecording');
             if (toggleBtn) {
-                toggleBtn.disabled = true;
+                toggleBtn.disabled = false;
                 toggleBtn.textContent = '⏹️ Stop Recording';
                 toggleBtn.className = 'btn btn-danger';
             }
@@ -643,6 +643,15 @@ class AutoCaptureManager {
 
                 // Stop all tracks
                 stream.getTracks().forEach(track => track.stop());
+
+                // Reset recording state and UI
+                this.isRecording = false;
+                const toggleBtn = document.getElementById('toggleRecording');
+                if (toggleBtn) {
+                    toggleBtn.disabled = false;
+                    toggleBtn.textContent = '⏺️ Start Recording';
+                    toggleBtn.className = 'btn btn-success';
+                }
 
                 window.accessibilityManager.announce('Video recording completed');
                 console.log('✅ Video recording completed');

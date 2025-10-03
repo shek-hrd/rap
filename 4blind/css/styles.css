@@ -71,7 +71,6 @@ header h1 {
     font-size: 2.5rem;
     margin-bottom: 10px;
     color: #00ff00;
-    text-shadow: 0 0 10px #00ff00;
 }
 
 header p {
@@ -178,7 +177,6 @@ section h2 {
     font-size: 1.5rem;
     margin-bottom: 15px;
     color: #00ff00;
-    text-shadow: 0 0 5px #00ff00;
     border-bottom: 2px solid #8b0000;
     padding-bottom: 5px;
 }
@@ -194,7 +192,6 @@ section h2 {
 
 .control-panel h2 {
     color: #00ff00;
-    text-shadow: 0 0 5px #00ff00;
     margin-bottom: 20px;
     text-align: center;
     border-bottom: 2px solid #8b0000;
@@ -279,7 +276,6 @@ section h2 {
     font-weight: bold;
     color: #ffa500;
     font-family: 'Courier New', monospace;
-    text-shadow: 0 0 5px #ffa500;
     animation: pulse 1s infinite;
 }
 
@@ -348,7 +344,6 @@ section h2 {
     transition: all 0.3s ease;
     background: #1a2332;
     color: #00ff00;
-    text-shadow: 0 0 5px #00ff00;
     min-height: 48px; /* Minimum touch target size */
     display: inline-flex;
     align-items: center;

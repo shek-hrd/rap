@@ -1112,6 +1112,27 @@ For detailed help, check the "Voice Commands" section below.
         const collapsibleHeaders = document.querySelectorAll('.collapsible-header');
 
         collapsibleHeaders.forEach(header => {
+            // Initialize aria-expanded state if not set
+            if (!header.hasAttribute('aria-expanded')) {
+                header.setAttribute('aria-expanded', 'false');
+            }
+
+            // Ensure content is properly hidden initially
+            const content = header.parentElement.querySelector('.collapsible-content');
+            const toggle = header.querySelector('.collapse-toggle');
+
+            if (header.getAttribute('aria-expanded') === 'false' && content) {
+                content.style.display = 'none';
+            } else if (header.getAttribute('aria-expanded') === 'true' && content) {
+                content.style.display = 'block';
+            }
+
+            // Update toggle indicator
+            if (toggle) {
+                const isExpanded = header.getAttribute('aria-expanded') === 'true';
+                toggle.textContent = isExpanded ? '▲' : '▼';
+            }
+
             header.addEventListener('click', () => {
                 this.toggleCollapsibleSection(header);
             });
@@ -1170,6 +1191,15 @@ For detailed help, check the "Voice Commands" section below.
         };
 
         this.setupMiniAnnouncements();
+
+        // Add initial announcements after a short delay to ensure everything is loaded
+        setTimeout(() => {
+            this.addMiniAnnouncement('System initialized and ready');
+        }, 500);
+
+        setTimeout(() => {
+            this.addMiniAnnouncement('Mini status bar active');
+        }, 1000);
     }
 
     setupMiniAnnouncements() {
@@ -1182,6 +1212,19 @@ For detailed help, check the "Voice Commands" section below.
                 this.addMiniAnnouncement(message);
             };
         }
+
+        // Also listen for custom events that might be dispatched
+        this.announcementListener = (message) => {
+            this.addMiniAnnouncement(message);
+        };
+
+        // Listen for system events
+        window.addEventListener('systemAnnouncement', (event) => {
+            if (event.detail && event.detail.message) {
+                this.addMiniAnnouncement(event.detail.message);
+            }
+        });
+    }
 
         // Also listen for custom announcements from the main app
         this.announcementListener = (message) => {
@@ -1250,6 +1293,12 @@ For detailed help, check the "Voice Commands" section below.
     }
 
     updateMiniAIStats(total, rate) {
+        // Check if miniAIStats is initialized before accessing properties
+        if (!this.miniAIStats) {
+            console.warn('Mini AI stats not initialized yet');
+            return;
+        }
+
         if (this.miniAIStats.totalRequests) {
             this.miniAIStats.totalRequests.textContent = `AI: ${total}`;
         }
