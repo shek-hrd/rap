@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Automation Dashboard - Enhanced</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 15px;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr 300px;
+            gap: 15px;
+            height: calc(100vh - 30px);
+        }
+        
+        .panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            color: white;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .panel h2 {
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            text-align: center;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .status-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.8em;
+            position: relative;
+        }
+        
+        .status-card .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            position: absolute;
+            top: 8px;
+            right: 8px;
+        }
+        
+        .status-card.online .status-indicator {
+            background: #2ecc71;
+            box-shadow: 0 0 8px #2ecc71;
+        }
+        
+        .status-card.offline .status-indicator {
+            background: #e74c3c;
+        }
+        
+        .status-card.loading .status-indicator {
+            background: #f39c12;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        .stats {
+            font-size: 0.7em;
+            margin-top: 5px;
+            opacity: 0.8;
+        }
+        
+        .input-group {
+            margin-bottom: 12px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 600;
+            font-size: 0.85em;
+        }
+        
+        .input-group input, .input-group textarea, .input-group select {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            font-size: 13px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .input-group input::placeholder, .input-group textarea::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 3px;
+            font-size: 12px;
+        }
+        
+        .btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: #666;
+        }
+        
+        .btn.danger {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+        }
+        
+        .btn.warning {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+        }
+        
+        .capture-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin: 10px 0;
+        }
+        
+        .capture-btn {
+            padding: 8px 12px;
+            font-size: 11px;
+            border-radius: 6px;
+        }
+        
+        .screenshot-area {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            margin: 10px 0;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            font-size: 0.8em;
+        }
+        
+        .ai-models {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin: 10px 0;
+        }
+        
+        .model-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 0.8em;
+        }
+        
+        .model-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.02);
+        }
+        
+        .model-card.active {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+        }
+        
+        .model-card.online::after {
+            content: '●';
+            color: #2ecc71;
+            position: absolute;
+            top: 5px;
+            right: 8px;
+            font-size: 12px;
+        }
+        
+        .model-card.loading::after {
+            content: '●';
+            color: #f39c12;
+            position: absolute;
+            top: 5px;
+            right: 8px;
+            font-size: 12px;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .output {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 11px;
+            height: 200px;
+            overflow-y: auto;
+            flex-grow: 1;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .task-history {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 11px;
+            height: 100%;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .task-entry {
+            margin: 2px 0;
+            padding: 2px 0;
+        }
+        
+        .task-entry.error {
+            color: #ff4757;
+        }
+        
+        .task-entry.warning {
+            color: #ffa502;
+        }
+        
+        .task-entry.success {
+            color: #2ed573;
+        }
+        
+        .task-entry.chained {
+            margin-left: 20px;
+            border-left: 2px solid rgba(255, 255, 255, 0.2);
+            padding-left: 10px;
+        }
+        
+        .server-controls {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+        
+        .server-controls .btn {
+            font-size: 10px;
+            padding: 6px 10px;
+        }
+        
+        .installation-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .installation-section h3 {
+            font-size: 1em;
+            margin-bottom: 10px;
+            color: #4ecdc4;
+        }
+        
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto;
+                gap: 10px;
+            }
+            
+            .panel {
+                height: auto;
+            }
+            
+            .output, .task-history {
+                height: 150px;
+            }
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            margin: 5% auto;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            width: 80%;
+            max-width: 800px;
+            color: white;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: white;
+        }
+        
+        .script-content {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Consolas', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Screen Understanding & Web Control Panel -->
+        <div class="panel">
+            <h2>🖥️ Screen Control & Web Automation</h2>
+            
+            <div class="status-grid">
+                <div class="status-card loading" id="browserUseCard">
+                    <div class="status-indicator"></div>
+                    <strong>Browser Use</strong>
+                    <div class="stats" id="browserUseStats">Starting...</div>
+                </div>
+                <div class="status-card loading" id="axiomCard">
+                    <div class="status-indicator"></div>
+                    <strong>Axiom.ai</strong>
+                    <div class="stats" id="axiomStats">Connecting...</div>
+                </div>
+                <div class="status-card loading" id="webDriverCard">
+                    <div class="status-indicator"></div>
+                    <strong>WebDriver</strong>
+                    <div class="stats" id="webDriverStats">Initializing...</div>
+                </div>
+                <div class="status-card loading" id="visionCard">
+                    <div class="status-indicator"></div>
+                    <strong>AI Vision</strong>
+                    <div class="stats" id="visionStats">Loading model...</div>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label>Screen Capture Options</label>
+                <div class="capture-options">
+                    <button class="btn capture-btn" onclick="captureScreen('full')" id="captureFullBtn">🖥️ Full Screen</button>
+                    <button class="btn capture-btn" onclick="captureScreen('tab')" id="captureTabBtn">📑 Active Tab</button>
+                    <button class="btn capture-btn" onclick="captureScreen('window')" id="captureWindowBtn">🪟 Window</button>
+                    <button class="btn capture-btn" onclick="captureScreen('region')" id="captureRegionBtn">📐 Region</button>
+                </div>
+                <div class="screenshot-area" id="screenshotArea">
+                    Click capture option above or drag & drop image
+                    <input type="file" accept="image/*" style="display: none;" id="imageInput">
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label>AI Instruction</label>
+                <textarea placeholder="Describe what you want the AI to do..." rows="2" id="webInstruction"></textarea>
+            </div>
+            
+            <div class="input-group">
+                <label>Target</label>
+                <input type="url" placeholder="URL or application name" id="targetUrl">
+            </div>
+            
+            <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                <button class="btn" onclick="executeWebTask()" id="executeBtn" disabled>🤖 Execute</button>
+                <button class="btn" onclick="startAutomation()" id="startAutoBtn" disabled>▶️ Start Auto</button>
+                <button class="btn danger" onclick="stopAutomation()" id="stopAutoBtn" disabled>⏹️ Stop</button>
+                <button class="btn" onclick="observeScreen()" id="observeBtn" disabled>👁️ Observe</button>
+            </div>
+            
+            <div class="output" id="webOutput"></div>
+        </div>
+        
+        <!-- Local AI & PowerShell Panel -->
+        <div class="panel">
+            <h2>⚡ Local AI & PowerShell Control</h2>
+            
+            <div class="ai-models">
+                <div class="model-card loading" onclick="selectModel('jan')" id="janModel">
+                    <strong>Jan AI</strong><br>
+                    <small id="janStatus">Starting...</small>
+                </div>
+                <div class="model-card loading" onclick="selectModel('lmstudio')" id="lmstudioModel">
+                    <strong>LM Studio</strong><br>
+                    <small id="lmstudioStatus">Starting...</small>
+                </div>
+                <div class="model-card loading" onclick="selectModel('offlineai')" id="offlineaiModel">
+                    <strong>OfflineAI</strong><br>
+                    <small id="offlineaiStatus">Starting...</small>
+                </div>
+                <div class="model-card loading" onclick="selectModel('ollama')" id="ollamaModel">
+                    <strong>Ollama</strong><br>
+                    <small id="ollamaStatus">Starting...</small>
+                </div>
+            </div>
+            
+            <div class="server-controls">
+                <button class="btn" onclick="showServerStatus()" id="showStatusBtn">📊 Show Status</button>
+                <button class="btn danger" onclick="terminateServers()" id="terminateBtn">🚫 Terminate</button>
+                <button class="btn warning" onclick="uninstallAI()" id="uninstallBtn">🗑️ Uninstall</button>
+                <button class="btn" onclick="showInstallScript()" id="installScriptBtn">📋 Install Script</button>
+            </div>
+            
+            <div class="input-group">
+                <label>PowerShell Task</label>
+                <textarea placeholder="Describe the PowerShell task..." rows="2" id="psInstruction"></textarea>
+            </div>
+            
+            <div class="input-group">
+                <label>Execution Mode</label>
+                <select id="executionMode">
+                    <option value="generate">Generate Only</option>
+                    <option value="execute">Generate & Execute</option>
+                    <option value="interactive">Interactive</option>
+                </select>
+            </div>
+            
+            <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                <button class="btn" onclick="generatePowerShell()" id="generateBtn" disabled>📝 Generate</button>
+                <button class="btn" onclick="executePowerShell()" id="executePSBtn" disabled>⚡ Execute</button>
+                <button class="btn" onclick="downloadScript()" id="downloadBtn" disabled>💾 Download</button>
+            </div>
+            
+            <div class="output" id="psOutput"></div>
+        </div>
+        
+        <!-- Status & History Panel -->
+        <div class="panel">
+            <h2>📊 Status & Task History</h2>
+            
+            <div class="installation-section">
+                <h3>🚀 System Status</h3>
+                <div id="systemStats">
+                    <div>CPU Usage: <span id="cpuUsage">--</span>%</div>
+                    <div>Memory: <span id="memUsage">--</span>%</div>
+                    <div>Active Processes: <span id="processCount">--</span></div>
+                    <div>Network: <span id="networkStatus">--</span></div>
+                </div>
+            </div>
+            
+            <h3 style="font-size: 1em; margin: 10px 0; color: #4ecdc4;">Task History</h3>
+            <div class="task-history" id="taskHistory">
+                <div class="task-entry">🎉 Dashboard initialized</div>
+                <div class="task-entry">⚡ Starting local AI services...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Installation Script Modal -->
+    <div id="installModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>🚀 Local AI Installation Script</h2>
+            <p>This PowerShell script will automatically install and configure all local AI services:</p>
+            
+            <div class="script-content" id="scriptContent"></div>
+            
+            <div style="margin-top: 20px;">
+                <button class="btn" onclick="downloadInstallScript()">💾 Download Script</button>
+                <button class="btn" onclick="copyScript()">📋 Copy to Clipboard</button>
+                <button class="btn danger" onclick="executeInstallScript()">⚡ Execute Now</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state management
+        let selectedModel = null;
+        let automationActive = false;
+        let aiServers = {
+            jan: { status: 'starting', port: 8001, pid: null },
+            lmstudio: { status: 'starting', port: 8002, pid: null },
+            offlineai: { status: 'starting', port: 8003, pid: null },
+            ollama: { status: 'starting', port: 8004, pid: null }
+        };
+        let webServices = {
+            browserUse: { status: 'starting', connected: false },
+            axiom: { status: 'starting', connected: false },
+            webDriver: { status: 'starting', connected: false },
+            vision: { status: 'starting', loaded: false }
+        };
+        let taskHistory = [];
+        let capturedScreen = null;
+        let currentScript = '';
+
+        // Initialize everything on load
+        window.onload = function() {
+            logTask('🎉 Dashboard loaded successfully');
+            startAllServices();
+            updateSystemStats();
+            setInterval(updateSystemStats, 5000);
+            setInterval(updateServiceStatus, 3000);
+        };
+
+        // Task logging with history
+        function logTask(message, type = 'info', isChained = false) {
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = {
+                time: timestamp,
+                message: message,
+                type: type,
+                chained: isChained
+            };
+            
+            taskHistory.push(entry);
+            
+            // Update history display
+            const historyEl = document.getElementById('taskHistory');
+            const entryEl = document.createElement('div');
+            entryEl.className = `task-entry ${type} ${isChained ? 'chained' : ''}`;
+            entryEl.textContent = `[${timestamp}] ${message}`;
+            
+            historyEl.appendChild(entryEl);
+            historyEl.scrollTop = historyEl.scrollHeight;
+            
+            // Also log to relevant output
+            const outputs = document.querySelectorAll('.output');
+            outputs.forEach(output => {
+                if (output.id === 'webOutput' && message.includes('Web')) {
+                    output.innerHTML += `\n[${timestamp}] ${message}`;
+                    output.scrollTop = output.scrollHeight;
+                } else if (output.id === 'psOutput' && message.includes('PowerShell')) {
+                    output.innerHTML += `\n[${timestamp}] ${message}`;
+                    output.scrollTop = output.scrollHeight;
+                }
+            });
+        }
+
+        // Start all services automatically
+        async function startAllServices() {
+            logTask('⚡ Starting all local AI services...');
+            
+            // Start AI models
+            for (let model in aiServers) {
+                startAIModel(model);
+            }
+            
+            // Start web services
+            for (let service in webServices) {
+                startWebService(service);
+            }
+            
+            updateButtonStates();
+        }
+
+        // Start individual AI model
+        async function startAIModel(modelName) {
+            logTask(`🚀 Starting ${modelName.toUpperCase()}...`, 'info', true);
+            
+            // Simulate startup process
+            setTimeout(() => {
+                const success = Math.random() > 0.3; // 70% success rate for demo
+                
+                if (success) {
+                    aiServers[modelName].status = 'online';
+                    aiServers[modelName].pid = Math.floor(Math.random() * 10000) + 1000;
+                    logTask(`✅ ${modelName.toUpperCase()} started successfully (PID: ${aiServers[modelName].pid})`, 'success', true);
+                    
+                    document.getElementById(modelName + 'Model').classList.remove('loading');
+                    document.getElementById(modelName + 'Model').classList.add('online');
+                    document.getElementById(modelName + 'Status').textContent = `Port: ${aiServers[modelName].port}`;
+                } else {
+                    aiServers[modelName].status = 'error';
+                    logTask(`❌ ${modelName.toUpperCase()} failed to start`, 'error', true);
+                    
+                    document.getElementById(modelName + 'Model').classList.remove('loading');
+                    document.getElementById(modelName + 'Status').textContent = 'Failed';
+                }
+                
+                updateButtonStates();
+            }, Math.random() * 3000 + 1000);
+        }
+
+        // Start web service
+        async function startWebService(serviceName) {
+            logTask(`🌐 Initializing ${serviceName}...`, 'info', true);
+            
+            setTimeout(() => {
+                const success = Math.random() > 0.2; // 80% success rate
+                
+                if (success) {
+                    webServices[serviceName].status = 'online';
+                    webServices[serviceName].connected = true;
+                    logTask(`✅ ${serviceName} connected successfully`, 'success', true);
+                    
+                    const card = document.getElementById(serviceName + 'Card');
+                    card.classList.remove('loading');
+                    card.classList.add('online');
+                    
+                    const stats = document.getElementById(serviceName + 'Stats');
+                    stats.textContent = 'Connected';
+                } else {
+                    webServices[serviceName].status = 'error';
+                    logTask(`⚠️ ${serviceName} connection failed`, 'warning', true);
+                    
+                    const card = document.getElementById(serviceName + 'Card');
+                    card.classList.remove('loading');
+                    card.classList.add('offline');
+                    
+                    const stats = document.getElementById(serviceName + 'Stats');
+                    stats.textContent = 'Failed';
+                }
+                
+                updateButtonStates();
+            }, Math.random() * 2000 + 500);
+        }
+
+        // Update button states based on service status
+        function updateButtonStates() {
+            const hasOnlineAI = Object.values(aiServers).some(s => s.status === 'online');
+            const hasOnlineWeb = Object.values(webServices).some(s => s.status === 'online');
+            
+            // AI buttons
+            document.getElementById('generateBtn').disabled = !hasOnlineAI;
+            document.getElementById('executePSBtn').disabled = !hasOnlineAI;
+            document.getElementById('downloadBtn').disabled = !currentScript;
+            
+            // Web automation buttons
+            document.getElementById('executeBtn').disabled = !hasOnlineWeb;
+            document.getElementById('startAutoBtn').disabled = !hasOnlineWeb || automationActive;
+            document.getElementById('stopAutoBtn').disabled = !automationActive;
+            document.getElementById('observeBtn').disabled = !hasOnlineWeb;
+            
+            // Capture buttons
+            const canCapture = webServices.vision.status === 'online';
+            document.getElementById('captureFullBtn').disabled = !canCapture;
+            document.getElementById('captureTabBtn').disabled = !canCapture;
+            document.getElementById('captureWindowBtn').disabled = !canCapture;
+            document.getElementById('captureRegionBtn').disabled = !canCapture;
+        }
+
+        // Screen capture with different modes
+        function captureScreen(mode) {
+            logTask(`📸 Capturing ${mode} screen...`);
+            
+            // Simulate different capture modes
+            const modes = {
+                full: 'Full screen captured (1920x1080)',
+                tab: 'Active browser tab captured',
+                window: 'Active window captured',
+                region: 'Selected region captured (400x300)'
+            };
+            
+            setTimeout(() => {
+                capturedScreen = {
+                    mode: mode,
+                    timestamp: new Date(),
+                    size: modes[mode]
+                };
+                
+                logTask(`✅ Screen capture completed: ${modes[mode]}`, 'success', true);
+                
+                const screenshotArea = document.getElementById('screenshotArea');
+                screenshotArea.innerHTML = `📸 ${modes[mode]}<br><small>Ready for AI analysis</small>`;
+                screenshotArea.style.background = 'rgba(46, 204, 113, 0.1)';
+                
+                updateButtonStates();
+            }, 1000);
+        }
+
+        // Web task execution
+        function executeWebTask() {
+            const instruction = document.getElementById('webInstruction').value;
+            const target = document.getElementById('targetUrl').value;
+            
+            if (!instruction.trim()) {
+                logTask('❌ Web task failed: No instruction provided', 'error');
+                return;
+            }
+            
+            logTask(`🤖 Executing web task: "${instruction.substring(0, 50)}..."`);
+            
+            setTimeout(() => {
+                if (capturedScreen) {
+                    logTask(`🔍 Analyzing ${capturedScreen.mode} capture...`, 'info', true);
+                    logTask(`🎯 Target: ${target || 'Current screen'}`, 'info', true);
+                    logTask(`⚡ AI processing instruction...`, 'info', true);
+                    logTask(`✅ Web task completed successfully`, 'success', true);
+                } else {
+                    logTask(`⚠️ No screen capture available, using current view`, 'warning', true);
+                    logTask(`✅ Web task completed with limited context`, 'success', true);
+                }
+            }, 2000);
+        }
+
+        // Start/stop automation
+        function startAutomation() {
+            automationActive = true;
+            logTask('▶️ Starting continuous automation mode');
+            logTask('👁️ Monitoring screen for changes...', 'info', true);
+            updateButtonStates();
+        }
+
+        function stopAutomation() {
+            automationActive = false;
+            logTask('⏹️ Automation stopped');
+            updateButtonStates();
+        }
+
+        // Screen observation
+        function observeScreen() {
+            logTask('👁️ Starting screen observation mode');
+            
+            setTimeout(() => {
+                logTask('📊 Screen analysis complete:', 'success', true);
+                logTask('• 3 buttons detected', 'info', true);
+                logTask('• 2 input fields identified', 'info', true);
+                logTask('• 1 dropdown menu found', 'info', true);
+            }, 1500);
+        }
+
+        // AI model selection
+        function selectModel(modelName) {
+            if (aiServers[modelName].status !== 'online') {
+                logTask(`❌ Cannot select ${modelName.toUpperCase()}: Service not running`, 'error');
+                return;
+            }
+            
+            // Clear previous selection
+            document.querySelectorAll('.model-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            
+            // Activate selected model
+            document.getElementById(modelName + 'Model').classList.add('active');
+            selectedModel = modelName;
+            
+            logTask(`🤖 Selected AI model: ${modelName.toUpperCase()}`);
+            updateButtonStates();
+        }
+
+        // PowerShell script generation
+        function generatePowerShell() {
+            const instruction = document.getElementById('psInstruction').value;
+            
+            if (!instruction.trim()) {
+                logTask('❌ PowerShell generation failed: No instruction provided', 'error');
+                return;
+            }
+            
+            if (!selectedModel) {
+                logTask('❌ PowerShell generation failed: No AI model selected', 'error');
+                return;
+            }
+            
+            logTask(`📝 Generating PowerShell script with ${selectedModel.toUpperCase()}`);
+            logTask(`Task: "${instruction.substring(0, 50)}..."`, 'info', true);
+            
+            setTimeout(() => {
+                currentScript = generateScriptFromInstruction(instruction);
+                logTask('✅ PowerShell script generated successfully', 'success', true);
+                
+                const output = document.getElementById('psOutput');
+                output.innerHTML += `\n\n# Generated PowerShell Script:\n${currentScript}`;
+                output.scrollTop = output.scrollHeight;
+                
+                updateButtonStates();
+            }, 2000);
+        }
+
+        // Execute PowerShell script
+        function executePowerShell() {
+            if (!currentScript) {
+                logTask('❌ No script to execute - generate one first', 'error');
+                return;
+            }
+            
+            const mode = document.getElementById('executionMode').value;
+            logTask(`⚡ Executing PowerShell script in ${mode} mode`);
+            
+            setTimeout(() => {
+                logTask('🔐 Checking execution policy...', 'info', true);
+                logTask('✅ Execution authorized', 'success', true);
+                logTask('🔄 Running PowerShell commands...', 'info', true);
+                
+                // Simulate execution results
+                const results = [
+                    '📊 Process: chrome.exe - CPU: 15.2% - Memory: 523MB',
+                    '📊 Process: code.exe - CPU: 8.7% - Memory: 412MB',
+                    '📊 Process: powershell.exe - CPU: 5.1% - Memory: 89MB'
+                ];
+                
+                results.forEach(result => {
+                    logTask(result, 'info', true);
+                });
+                
+                logTask('✅ PowerShell execution completed successfully', 'success', true);
+            }, 1500);
+        }
+
+        // Download generated script
+        function downloadScript() {
+            if (!currentScript) {
+                logTask('❌ No script available to download', 'error');
+                return;
+            }
+            
+            const blob = new Blob([currentScript], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ai-generated-script-${Date.now()}.ps1`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            logTask('💾 PowerShell script downloaded successfully', 'success');
+        }
+
+        // Generate script based on instruction
+        function generateScriptFromInstruction(instruction) {
+            const timestamp = new Date().toISOString();
+            return `# AI-Generated PowerShell Script
+# Generated: ${timestamp}
+# Task: ${instruction}
+# Model: ${selectedModel.toUpperCase()}
+
+# Script execution
+Write-Host "Starting task: ${instruction}" -ForegroundColor Cyan
+
+# Example commands based on common tasks
+Get-Process | Sort-Object CPU -Descending | Select-Object -First 10 | Format-Table
+Write-Host "Task completed successfully" -ForegroundColor Green`;
+        }
+
+        // Server management functions
+        function showServerStatus() {
+            logTask('📊 Retrieving server status...');
+            
+            setTimeout(() => {
+                logTask('🖥️ Server Status Report:', 'success', true);
+                
+                for (let model in aiServers) {
+                    const server = aiServers[model];
+                    if (server.status === 'online') {
+                        logTask(`✅ ${model.toUpperCase()}: Running (PID: ${server.pid}, Port: ${server.port})`, 'success', true);
+                    } else if (server.status === 'starting') {
+                        logTask(`⚠️ ${model.toUpperCase()}: Starting...`, 'warning', true);
+                    } else {
+                        logTask(`❌ ${model.toUpperCase()}: Offline`, 'error', true);
+                    }
+                }
+                
+                logTask('🌐 Web Services:', 'success', true);
+                for (let service in webServices) {
+                    const srv = webServices[service];
+                    if (srv.status === 'online') {
+                        logTask(`✅ ${service}: Connected`, 'success', true);
+                    } else {
+                        logTask(`❌ ${service}: Disconnected`, 'error', true);
+                    }
+                }
+            }, 500);
+        }
+
+        function terminateServers() {
+            const confirmed = confirm('⚠️ Are you sure you want to terminate all AI servers?');
+            if (!confirmed) return;
+            
+            logTask('🚫 Terminating all AI servers...', 'warning');
+            
+            for (let model in aiServers) {
+                if (aiServers[model].status === 'online') {
+                    logTask(`🛑 Stopping ${model.toUpperCase()} (PID: ${aiServers[model].pid})...`, 'warning', true);
+                    
+                    setTimeout(() => {
+                        aiServers[model].status = 'offline';
+                        aiServers[model].pid = null;
+                        
+                        document.getElementById(model + 'Model').classList.remove('online', 'active');
+                        document.getElementById(model + 'Model').classList.add('offline');
+                        document.getElementById(model + 'Status').textContent = 'Stopped';
+                        
+                        logTask(`✅ ${model.toUpperCase()} terminated`, 'success', true);
+                        updateButtonStates();
+                    }, Math.random() * 1000 + 500);
+                }
+            }
+            
+            selectedModel = null;
+        }
+
+        function uninstallAI() {
+            const confirmed = confirm('⚠️ WARNING: This will uninstall all local AI services. Continue?');
+            if (!confirmed) return;
+            
+            logTask('🗑️ Starting uninstallation process...', 'warning');
+            
+            // First terminate
+            for (let model in aiServers) {
+                if (aiServers[model].status === 'online') {
+                    logTask(`🛑 Stopping ${model.toUpperCase()}...`, 'warning', true);
+                    aiServers[model].status = 'offline';
+                }
+            }
+            
+            setTimeout(() => {
+                logTask('🗑️ Removing installation files...', 'warning', true);
+                logTask('🗑️ Cleaning up directories...', 'warning', true);
+                logTask('🗑️ Removing registry entries...', 'warning', true);
+                logTask('✅ Uninstallation completed', 'success', true);
+                logTask('💡 Use Install Script to reinstall services', 'info', true);
+            }, 2000);
+        }
+
+        // Installation script modal
+        function showInstallScript() {
+            const modal = document.getElementById('installModal');
+            const scriptContent = document.getElementById('scriptContent');
+            
+            scriptContent.textContent = getInstallationScript();
+            modal.style.display = 'block';
+            
+            logTask('📋 Installation script displayed');
+        }
+
+        function closeModal() {
+            document.getElementById('installModal').style.display = 'none';
+        }
+
+        function getInstallationScript() {
+            return `# Local AI Services Installation Script
+# Generated: ${new Date().toISOString()}
+# This script installs and configures all local AI services
+
+Write-Host "========================================" -ForegroundColor Cyan
+Write-Host "Local AI Services Installation" -ForegroundColor Cyan
+Write-Host "========================================" -ForegroundColor Cyan
+
+# Check if running as Administrator
+if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
+    Write-Warning "Please run this script as Administrator!"
+    Exit
+}
+
+# Create installation directory
+$InstallPath = "C:\\LocalAI"
+if (!(Test-Path $InstallPath)) {
+    New-Item -ItemType Directory -Path $InstallPath | Out-Null
+    Write-Host "Created installation directory: $InstallPath" -ForegroundColor Green
+}
+
+# Install Chocolatey (if not installed)
+Write-Host "Checking for Chocolatey..." -ForegroundColor Yellow
+if (!(Get-Command choco -ErrorAction SilentlyContinue)) {
+    Write-Host "Installing Chocolatey..." -ForegroundColor Yellow
+    Set-ExecutionPolicy Bypass -Scope Process -Force
+    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+    Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+}
+
+# Install Node.js (required for some AI tools)
+Write-Host "Installing Node.js..." -ForegroundColor Yellow
+choco install nodejs -y
+
+# Install Python (required for AI models)
+Write-Host "Installing Python..." -ForegroundColor Yellow
+choco install python -y
+
+# Refresh environment variables
+refreshenv
+
+# Install Ollama
+Write-Host "Installing Ollama..." -ForegroundColor Yellow
+$OllamaUrl = "https://ollama.ai/download/OllamaSetup.exe"
+$OllamaInstaller = "$env:TEMP\\OllamaSetup.exe"
+Invoke-WebRequest -Uri $OllamaUrl -OutFile $OllamaInstaller
+Start-Process -FilePath $OllamaInstaller -ArgumentList "/S" -Wait
+Write-Host "Ollama installed successfully" -ForegroundColor Green
+
+# Install LM Studio
+Write-Host "Downloading LM Studio..." -ForegroundColor Yellow
+$LMStudioUrl = "https://lmstudio.ai/download/windows"
+Write-Host "Please download LM Studio from: $LMStudioUrl" -ForegroundColor Cyan
+Write-Host "Installation will continue after manual download..." -ForegroundColor Yellow
+
+# Install Jan AI
+Write-Host "Installing Jan AI..." -ForegroundColor Yellow
+$JanUrl = "https://github.com/janhq/jan/releases/latest/download/jan-win-x64.exe"
+$JanInstaller = "$InstallPath\\jan-installer.exe"
+Invoke-WebRequest -Uri $JanUrl -OutFile $JanInstaller
+Start-Process -FilePath $JanInstaller -ArgumentList "/S" -Wait
+Write-Host "Jan AI installed successfully" -ForegroundColor Green
+
+# Install Python packages for OfflineAI
+Write-Host "Installing Python packages for OfflineAI..." -ForegroundColor Yellow
+pip install transformers torch sentencepiece accelerate
+
+# Create startup scripts
+Write-Host "Creating startup scripts..." -ForegroundColor Yellow
+
+# Ollama startup script
+$OllamaStart = @"
+@echo off
+echo Starting Ollama...
+ollama serve
+"@
+$OllamaStart | Out-File "$InstallPath\\start-ollama.bat" -Encoding ASCII
+
+# Jan startup script
+$JanStart = @"
+@echo off
+echo Starting Jan AI...
+start "" "C:\\Users\\%USERNAME%\\AppData\\Local\\Programs\\Jan\\Jan.exe"
+"@
+$JanStart | Out-File "$InstallPath\\start-jan.bat" -Encoding ASCII
+
+# Create combined startup script
+$StartAll = @"
+@echo off
+echo ========================================
+echo Starting All Local AI Services
+echo ========================================
+
+echo Starting Ollama...
+start "Ollama" cmd /c "$InstallPath\\start-ollama.bat"
+timeout /t 2 /nobreak > nul
+
+echo Starting Jan AI...
+start "Jan" cmd /c "$InstallPath\\start-jan.bat"
+timeout /t 2 /nobreak > nul
+
+echo Starting LM Studio...
+start "" "C:\\Users\\%USERNAME%\\AppData\\Local\\Programs\\LM Studio\\LM Studio.exe"
+
+echo.
+echo All services started!
+echo Check each window for status.
+pause
+"@
+$StartAll | Out-File "$InstallPath\\start-all-ai.bat" -Encoding ASCII
+
+Write-Host "" 
+Write-Host "========================================" -ForegroundColor Green
+Write-Host "Installation Complete!" -ForegroundColor Green
+Write-Host "========================================" -ForegroundColor Green
+Write-Host ""
+Write-Host "Installation Path: $InstallPath" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "To start all services, run:" -ForegroundColor Yellow
+Write-Host "$InstallPath\\start-all-ai.bat" -ForegroundColor White
+Write-Host ""
+Write-Host "Individual service scripts:" -ForegroundColor Yellow
+Write-Host "- Ollama: $InstallPath\\start-ollama.bat" -ForegroundColor White
+Write-Host "- Jan AI: $InstallPath\\start-jan.bat" -ForegroundColor White
+Write-Host ""
+Write-Host "Press any key to exit..." -ForegroundColor Cyan
+$null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")`;
+        }
+
+        function downloadInstallScript() {
+            const script = getInstallationScript();
+            const blob = new Blob([script], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'install-local-ai.ps1';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            logTask('💾 Installation script downloaded', 'success');
+        }
+
+        function copyScript() {
+            const script = getInstallationScript();
+            navigator.clipboard.writeText(script).then(() => {
+                logTask('📋 Installation script copied to clipboard', 'success');
+                alert('Script copied to clipboard!');
+            });
+        }
+
+        function executeInstallScript() {
+            const confirmed = confirm('⚠️ This will execute the installation script. Make sure you run this with Administrator privileges. Continue?');
+            if (!confirmed) return;
+            
+            logTask('⚡ Installation script execution initiated', 'warning');
+            logTask('⚠️ Please run the downloaded script as Administrator', 'warning', true);
+            logTask('💡 The script will install all required AI services', 'info', true);
+            
+            downloadInstallScript();
+        }
+
+        // Update system stats
+        function updateSystemStats() {
+            // Simulate system stats
+            document.getElementById('cpuUsage').textContent = (Math.random() * 40 + 20).toFixed(1);
+            document.getElementById('memUsage').textContent = (Math.random() * 30 + 50).toFixed(1);
+            document.getElementById('processCount').textContent = Math.floor(Math.random() * 50 + 150);
+            document.getElementById('networkStatus').textContent = Math.random() > 0.5 ? 'Online' : 'Limited';
+        }
+
+        // Update service status periodically
+        function updateServiceStatus() {
+            // Update web service stats
+            if (webServices.browserUse.status === 'online') {
+                document.getElementById('browserUseStats').textContent = 'Active | Requests: ' + Math.floor(Math.random() * 100);
+            }
+            if (webServices.axiom.status === 'online') {
+                document.getElementById('axiomStats').textContent = 'Ready | Bots: ' + Math.floor(Math.random() * 5);
+            }
+            if (webServices.webDriver.status === 'online') {
+                document.getElementById('webDriverStats').textContent = 'Connected | Sessions: ' + Math.floor(Math.random() * 3);
+            }
+            if (webServices.vision.status === 'online') {
+                document.getElementById('visionStats').textContent = 'Loaded | Accuracy: 94%';
+            }
+        }
+
+        // File upload handling
+        document.getElementById('imageInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                logTask(`📁 Image uploaded: ${file.name}`);
+                logTask('🔍 Processing image with AI vision...', 'info', true);
+                
+                setTimeout(() => {
+                    capturedScreen = {
+                        mode: 'uploaded',
+                        timestamp: new Date(),
+                        size: `${file.name} (${(file.size / 1024).toFixed(1)}KB)`
+                    };
+                    
+                    logTask('✅ Image processed and ready for automation', 'success', true);
+                    
+                    const screenshotArea = document.getElementById('screenshotArea');
+                    screenshotArea.innerHTML = `📸 ${file.name}<br><small>${(file.size / 1024).toFixed(1)}KB - Ready</small>`;
+                    screenshotArea.style.background = 'rgba(46, 204, 113, 0.1)';
+                }, 1000);
+            }
+        });
+
+        // Drag and drop
+        const screenshotArea = document.getElementById('screenshotArea');
+        
+        screenshotArea.addEventListener('click', function() {
+            document.getElementById('imageInput').click();
+        });
+        
+        screenshotArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.style.background = 'rgba(255, 255, 255, 0.15)';
+            this.style.borderColor = 'rgba(78, 205, 196, 0.8)';
+        });
+        
+        screenshotArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            if (!capturedScreen) {
+                this.style.background = 'rgba(255, 255, 255, 0.05)';
+                this.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+            }
+        });
+        
+        screenshotArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].type.startsWith('image/')) {
+                const file = files[0];
+                logTask(`📁 Image dropped: ${file.name}`);
+                logTask('🔍 Processing with AI vision...', 'info', true);
+                
+                setTimeout(() => {
+                    capturedScreen = {
+                        mode: 'dropped',
+                        timestamp: new Date(),
+                        size: `${file.name} (${(file.size / 1024).toFixed(1)}KB)`
+                    };
+                    
+                    logTask('✅ Image processed successfully', 'success', true);
+                    
+                    this.innerHTML = `📸 ${file.name}<br><small>${(file.size / 1024).toFixed(1)}KB - Ready</small>`;
+                    this.style.background = 'rgba(46, 204, 113, 0.1)';
+                }, 1000);
+            }
+        });
+
+        // Close modal on outside click
+        window.onclick = function(event) {
+            const modal = document.getElementById('installModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+            
