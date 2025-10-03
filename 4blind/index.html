@@ -54,11 +54,8 @@
                             <button id="manualVideoCapture" class="btn btn-primary" aria-describedby="manual-video-desc">
                                 🎥 Manual Video Capture
                             </button>
-                            <button id="startRecording" class="btn btn-success" aria-describedby="start-recording-desc">
+                            <button id="toggleRecording" class="btn btn-success" aria-describedby="toggle-recording-desc">
                                 ⏺️ Start Recording
-                            </button>
-                            <button id="stopRecording" class="btn btn-danger" disabled aria-describedby="stop-recording-desc">
-                                ⏹️ Stop Recording
                             </button>
                         </div>
                     </div>
@@ -125,7 +122,7 @@
 
                         <div class="setting-group">
                             <label for="autoCaptureCount">Auto captures:</label>
-                            <input type="number" id="autoCaptureCount" min="1" max="10" value="3">
+                            <input type="number" id="autoCaptureCount" min="1" max="10" value="1">
                             <button id="updateAutoCaptureCount" class="btn btn-small">Update</button>
                         </div>
 

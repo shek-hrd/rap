@@ -10,7 +10,7 @@ class AutoCaptureManager {
         this.autoCaptureDelay = 5000; // 5 seconds default
         this.emergencyMode = false;
         this.captureHistory = [];
-        this.autoCaptureCount = 3; // Default to 3 autocaptures
+        this.autoCaptureCount = 1; // Default to 1 autocapture
         this.currentAutoCaptureCount = 0; // Track current count
         this.manualCaptureMode = true; // Default to manual capture
         this.hardCodedSpeechRecognition = true; // Enable hard-coded speech recognition
@@ -68,17 +68,11 @@ class AutoCaptureManager {
             });
         }
 
-        // Video recording controls
-        const startRecordingBtn = document.getElementById('startRecording');
-        const stopRecordingBtn = document.getElementById('stopRecording');
-        if (startRecordingBtn) {
-            startRecordingBtn.addEventListener('click', () => {
-                this.startVideoRecording();
-            });
-        }
-        if (stopRecordingBtn) {
-            stopRecordingBtn.addEventListener('click', () => {
-                this.stopVideoRecording();
+        // Video recording toggle control
+        const toggleRecordingBtn = document.getElementById('toggleRecording');
+        if (toggleRecordingBtn) {
+            toggleRecordingBtn.addEventListener('click', () => {
+                this.toggleVideoRecording();
             });
         }
 
@@ -624,10 +618,12 @@ class AutoCaptureManager {
             this.recordedChunks = [];
 
             // Update UI
-            const startBtn = document.getElementById('startRecording');
-            const stopBtn = document.getElementById('stopRecording');
-            if (startBtn) startBtn.disabled = true;
-            if (stopBtn) stopBtn.disabled = false;
+            const toggleBtn = document.getElementById('toggleRecording');
+            if (toggleBtn) {
+                toggleBtn.disabled = true;
+                toggleBtn.textContent = '⏹️ Stop Recording';
+                toggleBtn.className = 'btn btn-danger';
+            }
 
             // Create MediaRecorder
             this.videoRecorder = new MediaRecorder(stream);
@@ -671,10 +667,21 @@ class AutoCaptureManager {
         this.isRecording = false;
 
         // Update UI
-        const startBtn = document.getElementById('startRecording');
-        const stopBtn = document.getElementById('stopRecording');
-        if (startBtn) startBtn.disabled = false;
-        if (stopBtn) stopBtn.disabled = true;
+        const toggleBtn = document.getElementById('toggleRecording');
+        if (toggleBtn) {
+            toggleBtn.disabled = false;
+            toggleBtn.textContent = '⏺️ Start Recording';
+            toggleBtn.className = 'btn btn-success';
+        }
+    }
+
+    // Toggle video recording (combines start/stop functionality)
+    toggleVideoRecording() {
+        if (this.isRecording) {
+            this.stopVideoRecording();
+        } else {
+            this.startVideoRecording();
+        }
     }
 
     displayVideoPreview(captureResult) {

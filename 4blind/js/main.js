@@ -466,6 +466,15 @@ class RaptureAccessible {
             case 'capture:created':
                 if (data.capture) {
                     this.currentCapture = data.capture;
+
+                    // Auto-save capture
+                    if (window.captureManager) {
+                        setTimeout(() => {
+                            window.captureManager.saveCurrentCapture();
+                            this.addMiniAnnouncement(`Capture saved: ${data.capture.name || 'Untitled'}`);
+                        }, 100);
+                    }
+
                     // Auto-analyze if enabled
                     const autoAnalyzeEnabled = document.getElementById('autoAnalyzeToggle')?.checked ?? true;
                     if (autoAnalyzeEnabled && window.aiAnalyzer) {
@@ -481,6 +490,12 @@ class RaptureAccessible {
                     // Save analysis with capture
                     if (this.currentCapture && window.captureManager) {
                         this.currentCapture.analysis = data.analysis;
+
+                        // Auto-save after analysis
+                        setTimeout(() => {
+                            window.captureManager.saveCurrentCapture();
+                            this.addMiniAnnouncement('Analysis completed and saved');
+                        }, 100);
                     }
                 }
                 break;
@@ -1112,15 +1127,20 @@ For detailed help, check the "Voice Commands" section below.
 
     toggleCollapsibleSection(header) {
         const isExpanded = header.getAttribute('aria-expanded') === 'true';
-        const content = header.nextElementSibling;
+        const content = header.parentElement.querySelector('.collapsible-content');
         const toggle = header.querySelector('.collapse-toggle');
 
         if (isExpanded) {
             header.setAttribute('aria-expanded', 'false');
-            content.style.display = 'none';
+            if (content) content.style.display = 'none';
         } else {
             header.setAttribute('aria-expanded', 'true');
-            content.style.display = 'block';
+            if (content) content.style.display = 'block';
+        }
+
+        // Update toggle indicator
+        if (toggle) {
+            toggle.textContent = isExpanded ? '▼' : '▲';
         }
 
         // Announce state change for screen readers
@@ -1162,6 +1182,24 @@ For detailed help, check the "Voice Commands" section below.
                 this.addMiniAnnouncement(message);
             };
         }
+
+        // Also listen for custom announcements from the main app
+        this.announcementListener = (message) => {
+            this.addMiniAnnouncement(message);
+        };
+
+        // Add initial system ready announcement
+        setTimeout(() => {
+            this.addMiniAnnouncement('System initialized');
+        }, 1000);
+
+        // Test announcements for visibility
+        setTimeout(() => {
+            this.addMiniAnnouncement('Console monitoring active');
+        }, 2000);
+        setTimeout(() => {
+            this.addMiniAnnouncement('AI analysis ready');
+        }, 3000);
     }
 
     addMiniAnnouncement(message) {
@@ -1180,20 +1218,26 @@ For detailed help, check the "Voice Commands" section below.
 
         this.miniAnnouncements.count.textContent = this.miniAnnouncements.announcements.length;
 
-        // Clear existing items except the first one
-        while (this.miniAnnouncements.list.children.length > 1) {
-            this.miniAnnouncements.list.removeChild(this.miniAnnouncements.list.lastChild);
-        }
+        // Clear existing items
+        this.miniAnnouncements.list.innerHTML = '';
 
-        // Add new announcements
-        this.miniAnnouncements.announcements.forEach((announcement, index) => {
-            if (index > 0) { // Skip the first item which is the placeholder
+        // Show placeholder if no announcements
+        if (this.miniAnnouncements.announcements.length === 0) {
+            const item = document.createElement('div');
+            item.className = 'mini-announcement-item';
+            item.textContent = 'System ready';
+            this.miniAnnouncements.list.appendChild(item);
+        } else {
+            // Add announcements (show last 2)
+            const announcementsToShow = this.miniAnnouncements.announcements.slice(0, 2);
+            announcementsToShow.forEach((announcement) => {
                 const item = document.createElement('div');
                 item.className = 'mini-announcement-item';
-                item.textContent = announcement.length > 20 ? announcement.substring(0, 20) + '...' : announcement;
+                item.textContent = announcement.length > 25 ? announcement.substring(0, 25) + '...' : announcement;
+                item.title = announcement; // Show full text on hover
                 this.miniAnnouncements.list.appendChild(item);
-            }
-        });
+            });
+        }
     }
 
     updateMiniProgress(percentage, text) {

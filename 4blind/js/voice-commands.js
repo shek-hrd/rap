@@ -307,16 +307,16 @@ class VoiceCommandManager {
                 break;
 
             case 'startRecording':
-                if (window.captureManager) {
-                    window.captureManager.startRecording();
+                if (window.autoCaptureManager) {
+                    window.autoCaptureManager.toggleVideoRecording();
                 } else {
                     window.accessibilityManager.announce('Capture manager not ready');
                 }
                 break;
 
             case 'stopRecording':
-                if (window.captureManager) {
-                    window.captureManager.stopRecording();
+                if (window.autoCaptureManager) {
+                    window.autoCaptureManager.toggleVideoRecording();
                 } else {
                     window.accessibilityManager.announce('Capture manager not ready');
                 }

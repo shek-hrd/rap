@@ -983,7 +983,7 @@ input:focus,
 select:focus,
 textarea:focus,
 details:focus summary {
-    outline: 3px solid #00ff00;
+    outline: 3px solid #000000;
     outline-offset: 2px;
 }
 
@@ -1473,7 +1473,7 @@ details:focus summary {
 }
 
 .section-header:focus {
-    outline: 3px solid #00ff00;
+    outline: 3px solid #000000;
     outline-offset: 2px;
 }
 
@@ -1689,6 +1689,12 @@ details:focus summary {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    padding: 2px 0;
+    border-bottom: 1px solid rgba(170, 255, 170, 0.2);
+}
+
+.mini-announcement-item:last-child {
+    border-bottom: none;
     animation: scroll 10s linear infinite;
 }
 
