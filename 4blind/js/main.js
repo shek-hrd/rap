@@ -405,13 +405,13 @@ class RaptureAccessible {
 
     async handleManualScreenCapture() {
         try {
-            if (window.captureManager) {
-                const result = await window.captureManager.manualScreenCapture();
-                if (result) {
-                    this.currentCapture = result;
-                    window.accessibilityManager?.announce('Screen capture completed');
-                    this.enableAnalysisButtons();
-                }
+            if (window.autoCaptureManager && typeof window.autoCaptureManager.manualScreenCapture === 'function') {
+                await window.autoCaptureManager.manualScreenCapture();
+                window.accessibilityManager?.announce('Screen capture completed');
+                this.enableAnalysisButtons();
+            } else {
+                console.error('Auto capture manager not available or manualScreenCapture method not found');
+                window.accessibilityManager?.announceError('Screen capture not available - please refresh the page');
             }
         } catch (error) {
             console.error('Screen capture failed:', error);
@@ -421,13 +421,13 @@ class RaptureAccessible {
 
     async handleEmergencyCapture() {
         try {
-            if (window.captureManager) {
-                const result = await window.captureManager.emergencyCapture();
-                if (result) {
-                    this.currentCapture = result;
-                    window.accessibilityManager?.announce('Emergency capture completed');
-                    this.enableAnalysisButtons();
-                }
+            if (window.autoCaptureManager && typeof window.autoCaptureManager.emergencyCapture === 'function') {
+                await window.autoCaptureManager.emergencyCapture();
+                window.accessibilityManager?.announce('Emergency capture completed');
+                this.enableAnalysisButtons();
+            } else {
+                console.error('Auto capture manager not available or emergencyCapture method not found');
+                window.accessibilityManager?.announceError('Emergency capture not available - please refresh the page');
             }
         } catch (error) {
             console.error('Emergency capture failed:', error);
