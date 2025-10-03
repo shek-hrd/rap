@@ -10,6 +10,10 @@ class AutoCaptureManager {
         this.autoCaptureDelay = 5000; // 5 seconds default
         this.emergencyMode = false;
         this.captureHistory = [];
+        this.autoCaptureCount = 3; // Default to 3 autocaptures
+        this.currentAutoCaptureCount = 0; // Track current count
+        this.manualCaptureMode = true; // Default to manual capture
+        this.hardCodedSpeechRecognition = true; // Enable hard-coded speech recognition
 
         this.init();
     }
@@ -46,6 +50,36 @@ class AutoCaptureManager {
             });
         }
 
+        // Manual capture mode toggle
+        const manualCaptureModeToggle = document.getElementById('manualCaptureMode');
+        if (manualCaptureModeToggle) {
+            manualCaptureModeToggle.addEventListener('change', () => {
+                this.toggleManualCaptureMode();
+            });
+        }
+
+        // Auto capture count controls
+        const autoCaptureCountInput = document.getElementById('autoCaptureCount');
+        const updateAutoCaptureCountBtn = document.getElementById('updateAutoCaptureCount');
+        if (autoCaptureCountInput && updateAutoCaptureCountBtn) {
+            updateAutoCaptureCountBtn.addEventListener('click', () => {
+                const count = parseInt(autoCaptureCountInput.value);
+                this.setAutoCaptureCount(count);
+                console.log(`🔘 Button pressed: Update Auto Capture Count - Set to ${count}`);
+            });
+        }
+
+        // Auto capture delay controls
+        const autoCaptureDelayInput = document.getElementById('autoCaptureDelay');
+        const updateAutoCaptureDelayBtn = document.getElementById('updateAutoCaptureDelay');
+        if (autoCaptureDelayInput && updateAutoCaptureDelayBtn) {
+            updateAutoCaptureDelayBtn.addEventListener('click', () => {
+                const delay = parseInt(autoCaptureDelayInput.value) * 1000; // Convert to milliseconds
+                this.setAutoCaptureDelay(delay);
+                console.log(`🔘 Button pressed: Update Auto Capture Delay - Set to ${delay}ms`);
+            });
+        }
+
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
             if (e.altKey && e.key.toLowerCase() === 'c') {
@@ -65,11 +99,34 @@ class AutoCaptureManager {
 
         this.autoCaptureDelay = settings.autoCaptureDelay || 5000;
         this.emergencyMode = settings.emergencyMode || false;
+        this.autoCaptureCount = settings.autoCaptureCount || 3;
+        this.manualCaptureMode = settings.manualCaptureMode !== false; // Default to true
 
         // Update UI
         const autoAnalyzeToggle = document.getElementById('autoAnalyzeToggle');
         if (autoAnalyzeToggle) {
             autoAnalyzeToggle.checked = settings.autoAnalyze !== false; // Default to true
+        }
+
+        // Update autocapture count UI
+        this.updateAutoCaptureCountUI();
+
+        // Update manual capture mode UI
+        const manualCaptureModeToggle = document.getElementById('manualCaptureMode');
+        if (manualCaptureModeToggle) {
+            manualCaptureModeToggle.checked = this.manualCaptureMode;
+        }
+
+        // Update delay UI
+        const autoCaptureDelayInput = document.getElementById('autoCaptureDelay');
+        if (autoCaptureDelayInput) {
+            autoCaptureDelayInput.value = this.autoCaptureDelay / 1000; // Convert to seconds for display
+        }
+
+        // Update count UI
+        const autoCaptureCountInput = document.getElementById('autoCaptureCount');
+        if (autoCaptureCountInput) {
+            autoCaptureCountInput.value = this.autoCaptureCount;
         }
     }
 
@@ -77,7 +134,9 @@ class AutoCaptureManager {
         const settings = {
             autoCaptureDelay: this.autoCaptureDelay,
             emergencyMode: this.emergencyMode,
-            autoAnalyze: document.getElementById('autoAnalyzeToggle')?.checked ?? true
+            autoAnalyze: document.getElementById('autoAnalyzeToggle')?.checked ?? true,
+            autoCaptureCount: this.autoCaptureCount,
+            manualCaptureMode: this.manualCaptureMode
         };
 
         localStorage.setItem('raptureAccessibleSettings', JSON.stringify(settings));
@@ -95,14 +154,18 @@ class AutoCaptureManager {
         if (this.isAutoCapturing) return;
 
         this.isAutoCapturing = true;
+        this.currentAutoCaptureCount = 0;
 
         // Update UI
         const autoCaptureBtn = document.getElementById('autoCapture');
         if (autoCaptureBtn) {
-            autoCaptureBtn.textContent = 'Stop Auto Capture';
+            autoCaptureBtn.textContent = `Stop Auto Capture (${this.autoCaptureCount} captures)`;
             autoCaptureBtn.classList.add('btn-danger');
             autoCaptureBtn.classList.remove('btn-primary');
         }
+
+        // Log button press
+        console.log(`🔘 Button pressed: Auto Capture - Starting ${this.autoCaptureCount} autocaptures`);
 
         // Start the capture loop
         this.performAutoCapture();
@@ -110,15 +173,16 @@ class AutoCaptureManager {
             this.performAutoCapture();
         }, this.autoCaptureDelay);
 
-        window.accessibilityManager.announce(`Auto capture started. Capturing every ${this.autoCaptureDelay / 1000} seconds.`);
+        window.accessibilityManager.announce(`Auto capture started. Will perform ${this.autoCaptureCount} captures every ${this.autoCaptureDelay / 1000} seconds.`);
 
-        console.log(`📸 Auto capture started - interval: ${this.autoCaptureDelay}ms`);
+        console.log(`📸 Auto capture started - interval: ${this.autoCaptureDelay}ms, count: ${this.autoCaptureCount}`);
     }
 
     stopAutoCapture() {
         if (!this.isAutoCapturing) return;
 
         this.isAutoCapturing = false;
+        const completedCaptures = this.currentAutoCaptureCount;
 
         // Update UI
         const autoCaptureBtn = document.getElementById('autoCapture');
@@ -134,17 +198,26 @@ class AutoCaptureManager {
             this.autoCaptureInterval = null;
         }
 
-        window.accessibilityManager.announce('Auto capture stopped.');
+        // Reset counter
+        this.currentAutoCaptureCount = 0;
 
+        const message = completedCaptures > 0 ?
+            `Auto capture stopped after ${completedCaptures} captures.` :
+            'Auto capture stopped.';
+
+        window.accessibilityManager.announce(message);
+
+        console.log(`🔘 Button pressed: Stop Auto Capture - Completed ${completedCaptures} captures`);
         console.log('📸 Auto capture stopped');
     }
 
     async performAutoCapture() {
         try {
-            console.log('📸 Performing auto capture...');
+            this.currentAutoCaptureCount++;
+            console.log(`📸 Performing auto capture ${this.currentAutoCaptureCount}/${this.autoCaptureCount}...`);
 
             // Show processing indicator
-            this.showProcessingStatus('Capturing screen...');
+            this.showProcessingStatus(`Capturing screen... (${this.currentAutoCaptureCount}/${this.autoCaptureCount})`);
 
             // Perform the capture
             const captureResult = await this.captureScreen();
@@ -154,18 +227,37 @@ class AutoCaptureManager {
                 this.captureHistory.unshift({
                     timestamp: new Date().toISOString(),
                     type: 'auto',
-                    filename: captureResult.filename
+                    filename: captureResult.filename,
+                    count: this.currentAutoCaptureCount
                 });
 
                 // Auto-analyze if enabled
                 const autoAnalyzeEnabled = document.getElementById('autoAnalyzeToggle')?.checked ?? true;
                 if (autoAnalyzeEnabled && window.aiAnalyzer) {
-                    setTimeout(() => {
-                        window.aiAnalyzer.analyzeWithAI();
+                    setTimeout(async () => {
+                        try {
+                            const analysisResult = await window.aiAnalyzer.analyzeWithAI();
+                            // Print AI communication to console
+                            if (analysisResult) {
+                                console.log('🤖 AI Communication (Auto Capture):', analysisResult);
+                                console.log(`📊 Analysis Details: Provider: ${document.getElementById('aiProviderSelect')?.value || 'gemini'}`);
+                            } else {
+                                console.log('🤖 AI Analysis failed or returned no results');
+                            }
+                        } catch (error) {
+                            console.error('🤖 AI Analysis error:', error);
+                        }
                     }, 1000); // Delay to allow UI to update
                 }
 
-                window.accessibilityManager.announceCaptureSuccess(captureResult.filename, 'auto capture');
+                window.accessibilityManager.announceCaptureSuccess(captureResult.filename, `auto capture ${this.currentAutoCaptureCount} of ${this.autoCaptureCount}`);
+
+                // Check if we've reached the autocapture count
+                if (this.currentAutoCaptureCount >= this.autoCaptureCount) {
+                    this.stopAutoCapture();
+                    window.accessibilityManager.announce(`Auto capture completed. Performed ${this.autoCaptureCount} captures.`);
+                    console.log(`📸 Auto capture completed after ${this.autoCaptureCount} captures`);
+                }
             } else {
                 window.accessibilityManager.announceError('Auto capture failed: ' + captureResult.error);
             }
@@ -181,6 +273,7 @@ class AutoCaptureManager {
     async emergencyCapture() {
         try {
             console.log('🚨 Performing emergency capture...');
+            console.log('🔘 Button pressed: Emergency Capture');
 
             this.emergencyMode = true;
 
@@ -193,7 +286,20 @@ class AutoCaptureManager {
             if (captureResult.success) {
                 // Auto-analyze immediately
                 if (window.aiAnalyzer) {
-                    window.aiAnalyzer.analyzeWithAI();
+                    setTimeout(async () => {
+                        try {
+                            const analysisResult = await window.aiAnalyzer.analyzeWithAI();
+                            // Print AI communication to console
+                            if (analysisResult) {
+                                console.log('🤖 AI Communication (Emergency):', analysisResult);
+                                console.log(`🚨 Emergency Analysis Details: Provider: ${document.getElementById('aiProviderSelect')?.value || 'gemini'}`);
+                            } else {
+                                console.log('🤖 Emergency AI Analysis failed or returned no results');
+                            }
+                        } catch (error) {
+                            console.error('🤖 Emergency AI Analysis error:', error);
+                        }
+                    }, 500); // Shorter delay for emergency captures
                 }
 
                 // Auto-save
@@ -348,6 +454,19 @@ class AutoCaptureManager {
         console.log(`🔧 Auto analysis ${status}`);
     }
 
+    toggleManualCaptureMode() {
+        const manualCaptureModeToggle = document.getElementById('manualCaptureMode');
+        this.manualCaptureMode = manualCaptureModeToggle?.checked ?? true;
+
+        this.saveSettings();
+
+        const status = this.manualCaptureMode ? 'enabled' : 'disabled';
+        window.accessibilityManager.announce(`Manual capture mode ${status}`);
+
+        console.log(`🔘 Button pressed: Manual Capture Mode Toggle - ${status}`);
+        console.log(`🔧 Manual capture mode ${status}`);
+    }
+
     getCaptureHistory() {
         return this.captureHistory;
     }
@@ -368,6 +487,24 @@ class AutoCaptureManager {
         }
 
         console.log(`📸 Auto capture delay set to ${this.autoCaptureDelay}ms`);
+    }
+
+    setAutoCaptureCount(count) {
+        this.autoCaptureCount = Math.max(1, Math.min(10, count)); // Between 1 and 10
+        this.saveSettings();
+        this.updateAutoCaptureCountUI();
+
+        console.log(`📸 Auto capture count set to ${this.autoCaptureCount}`);
+    }
+
+    updateAutoCaptureCountUI() {
+        // Update the button text if currently autocapturing
+        if (this.isAutoCapturing) {
+            const autoCaptureBtn = document.getElementById('autoCapture');
+            if (autoCaptureBtn) {
+                autoCaptureBtn.textContent = `Stop Auto Capture (${this.autoCaptureCount} captures)`;
+            }
+        }
     }
 
     // Method to handle keyboard shortcuts

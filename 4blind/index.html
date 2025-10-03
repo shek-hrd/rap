@@ -88,6 +88,31 @@
                 <p id="ai-provider-desc">Select AI service for content analysis</p>
             </section>
 
+            <!-- Auto Capture Settings Section -->
+            <section class="auto-capture-settings-section" role="region" aria-labelledby="auto-capture-settings-heading">
+                <h2 id="auto-capture-settings-heading">Auto Capture Settings</h2>
+                <div class="capture-mode-controls">
+                    <label for="manualCaptureMode">Manual Capture Mode (Default):</label>
+                    <input type="checkbox" id="manualCaptureMode" checked aria-describedby="manual-capture-desc">
+                    <span class="toggle-status" aria-live="polite"></span>
+                </div>
+                <p id="manual-capture-desc">When enabled, requires manual activation for captures. When disabled, auto-capture is enabled by default.</p>
+
+                <div class="autocapture-count-controls">
+                    <label for="autoCaptureCount">Number of Auto Captures:</label>
+                    <input type="number" id="autoCaptureCount" min="1" max="10" value="3" aria-describedby="autocapture-count-desc">
+                    <button id="updateAutoCaptureCount" class="btn btn-secondary">Update Count</button>
+                </div>
+                <p id="autocapture-count-desc">Set how many captures to perform during auto capture mode (1-10). Default is 3.</p>
+
+                <div class="capture-delay-controls">
+                    <label for="autoCaptureDelay">Auto Capture Delay (seconds):</label>
+                    <input type="number" id="autoCaptureDelay" min="1" max="60" value="5" aria-describedby="capture-delay-desc">
+                    <button id="updateAutoCaptureDelay" class="btn btn-secondary">Update Delay</button>
+                </div>
+                <p id="capture-delay-desc">Set the delay between auto captures in seconds (1-60). Default is 5 seconds.</p>
+            </section>
+
             <!-- Live Preview Section -->
             <section class="preview-section" role="region" aria-labelledby="preview-heading">
                 <h2 id="preview-heading">Live Preview</h2>

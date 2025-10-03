@@ -121,8 +121,12 @@ class AIAnalyzer {
                 this.displayAnalysis(analysis, provider);
                 this.addToHistory(provider, analysis);
                 window.accessibilityManager.announceAnalysisComplete(provider);
+
+                // Return the analysis for console logging
+                return analysis;
             } else {
                 window.accessibilityManager.announceError('Analysis failed - no results returned');
+                return null;
             }
 
         } catch (error) {
@@ -387,6 +391,14 @@ class AIAnalyzer {
         if (aiConversation) {
             aiConversation.style.display = 'block';
         }
+    }
+
+    getCurrentAnalysis() {
+        return this.currentAnalysis;
+    }
+
+    getAnalysisHistory() {
+        return this.analysisHistory;
     }
 
     readDescriptionAloud() {

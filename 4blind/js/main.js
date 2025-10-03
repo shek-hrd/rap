@@ -74,6 +74,9 @@ class RaptureAccessible {
         if (window.captureManager) {
             console.log('✅ Capture Manager loaded');
         }
+
+        // Setup global button press logging
+        this.setupButtonPressLogging();
     }
 
     setupErrorHandling() {
@@ -185,6 +188,48 @@ class RaptureAccessible {
         });
     }
 
+    setupButtonPressLogging() {
+        // Add logging to all buttons
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(button => {
+            if (!button.hasAttribute('data-logged')) {
+                button.addEventListener('click', (e) => {
+                    const buttonText = e.target.textContent.trim() || e.target.id || 'Unknown Button';
+                    console.log(`🔘 Button pressed: ${buttonText}`);
+                });
+                button.setAttribute('data-logged', 'true');
+            }
+        });
+
+        // Monitor for dynamically added buttons
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        const newButtons = node.querySelectorAll ?
+                            node.querySelectorAll('button:not([data-logged])') :
+                            (node.tagName === 'BUTTON' ? [node] : []);
+
+                        newButtons.forEach(button => {
+                            button.addEventListener('click', (e) => {
+                                const buttonText = e.target.textContent.trim() || e.target.id || 'Unknown Button';
+                                console.log(`🔘 Button pressed: ${buttonText}`);
+                            });
+                            button.setAttribute('data-logged', 'true');
+                        });
+                    }
+                });
+            });
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        console.log('✅ Button press logging initialized');
+    }
+
     updatePerformanceStats() {
         if (performance.memory) {
             const memoryUsage = performance.memory.usedJSHeapSize;
@@ -232,11 +277,17 @@ class RaptureAccessible {
     }
 
     setupFirstLoadAutoCapture() {
-        // Perform initial capture after a short delay
+        // Only perform initial capture if manual capture mode is disabled
         setTimeout(() => {
             if (window.autoCaptureManager && !this.currentCapture) {
-                console.log('🚀 Performing first-load auto capture...');
-                window.autoCaptureManager.performAutoCapture();
+                const manualMode = window.autoCaptureManager.manualCaptureMode;
+                if (!manualMode) {
+                    console.log('🚀 Performing first-load auto capture...');
+                    window.autoCaptureManager.performAutoCapture();
+                } else {
+                    console.log('🚀 Manual capture mode enabled - skipping first-load auto capture');
+                    window.accessibilityManager?.announce('Manual capture mode is enabled. Use the Auto Capture button to begin capturing.');
+                }
             }
         }, 3000); // 3 second delay to allow everything to load
     }
@@ -342,19 +393,21 @@ console.log(`
 🎬 Rapture Accessible - Screen Capture for Blind Users
 ══════════════════════════════════════════════════════
 ✅ Features:
-   • Auto screen capture with AI analysis
-   • Voice command support (preparation)
+   • Hard-coded speech recognition with manual/autocapture modes
+   • Auto screen capture with configurable count (default: 3 captures)
    • Multiple AI providers (Gemini, Hugging Face, OpenAI)
    • High contrast interface optimized for accessibility
    • Keyboard shortcuts and screen reader support
-   • Automatic first-load capture
+   • Manual capture mode by default
+   • AI communication logging to console
+   • Complete button press logging
 
 🎯 Quick Start:
-   • First capture: Automatic after initialization
    • Manual capture: Alt+1 or click "Auto Capture Screen"
    • Emergency capture: Alt+2 or click "Emergency Capture"
    • Speak status: Alt+3 or click "Speak System Status"
    • Read analysis: Alt+4 or click "Read Description Aloud"
+   • Configure autocapture: Use settings section
 
 🔧 Keyboard Shortcuts:
    • Alt+H: Show all shortcuts
@@ -366,12 +419,15 @@ console.log(`
    • Initialized: ${raptureAccessible.isInitialized}
    • Online: ${navigator.onLine}
    • Screen Reader: ${window.accessibilityManager?.detectScreenReader() || 'Not detected'}
+   • Manual Mode: ${window.autoCaptureManager?.manualCaptureMode ? 'Enabled' : 'Disabled'}
+   • Auto Count: ${window.autoCaptureManager?.autoCaptureCount || 3}
 
 🚀 Ready to use!
 `);
 
 console.log('💡 Tips:');
-console.log('   • The app performs an automatic capture 3 seconds after loading');
+console.log('   • Manual capture mode is enabled by default');
+console.log('   • Configure autocapture count in the settings section');
+console.log('   • All AI communication is logged to the console');
+console.log('   • All button presses are logged to the console');
 console.log('   • Use Alt+3 to hear current system status anytime');
-console.log('   • All buttons have keyboard shortcuts for easy access');
-console.log('   • Voice commands are prepared for future browser support');
