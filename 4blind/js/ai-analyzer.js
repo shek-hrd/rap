@@ -540,26 +540,19 @@ Please be specific and thorough in your analysis, as this is for accessibility p
         try {
             console.log(`🌐 Starting web Llama analysis (Session: ${sessionId})`);
 
-            // Use a free web-based Llama service
-            const response = await fetch('https://api.llama-api.com/chat/completions', {
+            // Use Hugging Face free inference API as a Llama alternative
+            const response = await fetch('https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    model: 'llama-3.2-3b-instruct',
-                    messages: [
-                        {
-                            role: 'system',
-                            content: 'You are an accessibility assistant helping blind users understand screen content. Provide detailed, descriptive analysis of images and interfaces.'
-                        },
-                        {
-                            role: 'user',
-                            content: prompt
-                        }
-                    ],
-                    max_tokens: 300,
-                    temperature: 0.7
+                    inputs: `You are an accessibility assistant helping blind users understand screen content. Please provide a detailed, descriptive analysis of this screen capture:\n\n${prompt}\n\nBe specific and thorough in your description.`,
+                    parameters: {
+                        max_length: 300,
+                        temperature: 0.7,
+                        return_full_text: false
+                    }
                 })
             });
 
@@ -571,7 +564,7 @@ Please be specific and thorough in your analysis, as this is for accessibility p
             }
 
             const data = await response.json();
-            return data.choices[0]?.message?.content || 'Analysis could not be completed';
+            return data[0]?.generated_text || 'Analysis could not be completed';
         } catch (error) {
             console.warn('Web Llama analysis failed:', error);
             return 'I can see this is a screen capture, but I\'m unable to provide a detailed analysis right now. Please try again later or use a different AI provider.';
@@ -582,42 +575,84 @@ Please be specific and thorough in your analysis, as this is for accessibility p
         try {
             console.log(`🌐 Starting web GPT analysis (Session: ${sessionId})`);
 
-            // Use a free web-based GPT service
-            const response = await fetch('https://api.openai.com/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer free-access' // This will fail but shows the structure
-                },
-                body: JSON.stringify({
-                    model: 'gpt-4o-mini',
-                    messages: [
-                        {
-                            role: 'system',
-                            content: 'You are an accessibility assistant helping blind users understand screen content. Provide detailed, descriptive analysis of images and interfaces.'
-                        },
-                        {
-                            role: 'user',
-                            content: prompt
-                        }
-                    ],
-                    max_tokens: 300,
-                    temperature: 0.7
-                })
-            });
+            // Try multiple free GPT-compatible endpoints
+            const endpoints = [
+                'https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium',
+                'https://api.together.xyz/v1/chat/completions'
+            ];
 
-            if (!response.ok) {
-                if (response.status === 401 || response.status === 429) {
-                    return 'I can see this is a screen capture, but I\'m unable to provide a detailed analysis right now due to API limitations. Please try again later or use a different AI provider.';
+            let lastError;
+
+            for (const endpoint of endpoints) {
+                try {
+                    let requestBody;
+
+                    if (endpoint.includes('huggingface')) {
+                        requestBody = JSON.stringify({
+                            inputs: `You are an accessibility assistant helping blind users understand screen content. Please provide a detailed, descriptive analysis of this screen capture:\n\n${prompt}\n\nBe specific and thorough in your description.`,
+                            parameters: {
+                                max_length: 300,
+                                temperature: 0.7,
+                                return_full_text: false
+                            }
+                        });
+                    } else {
+                        requestBody = JSON.stringify({
+                            model: 'meta-llama/Llama-2-7b-chat-hf',
+                            messages: [
+                                {
+                                    role: 'system',
+                                    content: 'You are an accessibility assistant helping blind users understand screen content. Provide detailed, descriptive analysis of images and interfaces.'
+                                },
+                                {
+                                    role: 'user',
+                                    content: prompt
+                                }
+                            ],
+                            max_tokens: 300,
+                            temperature: 0.7
+                        });
+                    }
+
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: requestBody
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+
+                        if (endpoint.includes('huggingface')) {
+                            return data[0]?.generated_text || 'Analysis could not be completed';
+                        } else {
+                            return data.choices[0]?.message?.content || 'Analysis could not be completed';
+                        }
+                    }
+
+                    if (response.status === 401 || response.status === 429) {
+                        lastError = new Error(`API rate limited or unauthorized: ${response.status}`);
+                        continue;
+                    }
+
+                    lastError = new Error(`API error: ${response.status}`);
+                    continue;
+
+                } catch (endpointError) {
+                    lastError = endpointError;
+                    continue;
                 }
-                throw new Error(`GPT API error: ${response.status}`);
             }
 
-            const data = await response.json();
-            return data.choices[0]?.message?.content || 'Analysis could not be completed';
+            // If all endpoints failed, return fallback message
+            console.warn('All GPT endpoints failed, using fallback');
+            return 'I can see this is a screen capture, but I\'m unable to provide a detailed analysis right now due to API limitations. Please try again later or use a different AI provider.';
+
         } catch (error) {
             console.warn('Web GPT analysis failed:', error);
-            return 'I can see this is a screen capture, but I\'m unable to provide a detailed analysis right now. Please try again later or use a different AI provider.';
+            return 'I can see this is a screen capture, but I\'m unable to provide a detailed analysis right now due to API limitations. Please try again later or use a different AI provider.';
         }
     }
 
@@ -625,36 +660,81 @@ Please be specific and thorough in your analysis, as this is for accessibility p
         try {
             console.log(`🌐 Starting web Claude analysis (Session: ${sessionId})`);
 
-            // Use a free web-based Claude service
-            const response = await fetch('https://api.anthropic.com/v1/messages', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-api-key': 'free-access', // This will fail but shows the structure
-                    'anthropic-version': '2023-06-01'
-                },
-                body: JSON.stringify({
-                    model: 'claude-3-5-sonnet-20241022',
-                    messages: [
-                        {
-                            role: 'user',
-                            content: prompt
-                        }
-                    ],
-                    max_tokens: 300,
-                    temperature: 0.7
-                })
-            });
+            // Try multiple free Claude-compatible endpoints
+            const endpoints = [
+                'https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium',
+                'https://api.together.xyz/v1/chat/completions'
+            ];
 
-            if (!response.ok) {
-                if (response.status === 401 || response.status === 429) {
-                    return 'I can see this is a screen capture, but I\'m unable to provide a detailed analysis right now due to API limitations. Please try again later or use a different AI provider.';
+            let lastError;
+
+            for (const endpoint of endpoints) {
+                try {
+                    let requestBody;
+
+                    if (endpoint.includes('huggingface')) {
+                        requestBody = JSON.stringify({
+                            inputs: `You are an accessibility assistant helping blind users understand screen content. Please provide a detailed, descriptive analysis of this screen capture:\n\n${prompt}\n\nBe specific and thorough in your description.`,
+                            parameters: {
+                                max_length: 300,
+                                temperature: 0.7,
+                                return_full_text: false
+                            }
+                        });
+                    } else {
+                        requestBody = JSON.stringify({
+                            model: 'meta-llama/Llama-2-7b-chat-hf',
+                            messages: [
+                                {
+                                    role: 'system',
+                                    content: 'You are an accessibility assistant helping blind users understand screen content. Provide detailed, descriptive analysis of images and interfaces.'
+                                },
+                                {
+                                    role: 'user',
+                                    content: prompt
+                                }
+                            ],
+                            max_tokens: 300,
+                            temperature: 0.7
+                        });
+                    }
+
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: requestBody
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+
+                        if (endpoint.includes('huggingface')) {
+                            return data[0]?.generated_text || 'Analysis could not be completed';
+                        } else {
+                            return data.choices[0]?.message?.content || 'Analysis could not be completed';
+                        }
+                    }
+
+                    if (response.status === 401 || response.status === 429) {
+                        lastError = new Error(`API rate limited or unauthorized: ${response.status}`);
+                        continue;
+                    }
+
+                    lastError = new Error(`API error: ${response.status}`);
+                    continue;
+
+                } catch (endpointError) {
+                    lastError = endpointError;
+                    continue;
                 }
-                throw new Error(`Claude API error: ${response.status}`);
             }
 
-            const data = await response.json();
-            return data.content[0]?.text || 'Analysis could not be completed';
+            // If all endpoints failed, return fallback message
+            console.warn('All Claude endpoints failed, using fallback');
+            return 'I can see this is a screen capture, but I\'m unable to provide a detailed analysis right now. Please try again later or use a different AI provider.';
+
         } catch (error) {
             console.warn('Web Claude analysis failed:', error);
             return 'I can see this is a screen capture, but I\'m unable to provide a detailed analysis right now. Please try again later or use a different AI provider.';
