@@ -138,8 +138,6 @@ class AIAnalyzer {
     }
 
     async getAvailableProvider() {
-
-    async getAvailableProvider() {
         // Get provider configurations from main app
         const mainApp = window.raptureAccessible;
         if (!mainApp || !mainApp.aiProviders) {
