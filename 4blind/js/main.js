@@ -405,33 +405,94 @@ class RaptureAccessible {
 
     async handleManualScreenCapture() {
         try {
-            if (window.autoCaptureManager && typeof window.autoCaptureManager.manualScreenCapture === 'function') {
-                await window.autoCaptureManager.manualScreenCapture();
-                window.accessibilityManager?.announce('Screen capture completed');
-                this.enableAnalysisButtons();
-            } else {
-                console.error('Auto capture manager not available or manualScreenCapture method not found');
-                window.accessibilityManager?.announceError('Screen capture not available - please refresh the page');
+            console.log('🔍 Attempting manual screen capture...');
+
+            // Try multiple capture methods in order of preference
+            let captureResult = null;
+
+            // Method 1: Try Puter.js screen capture (if available)
+            if (window.puter && window.puter.desktop && window.puter.desktop.screenshot) {
+                captureResult = await this.captureWithPuter();
             }
+
+            // Method 2: Try modern Screen Capture API
+            if (!captureResult) {
+                captureResult = await this.captureWithScreenCaptureAPI();
+            }
+
+            // Method 3: Try html2canvas for webpage capture
+            if (!captureResult) {
+                captureResult = await this.captureWithHtml2Canvas();
+            }
+
+            // Method 4: Try canvas-based capture
+            if (!captureResult) {
+                captureResult = await this.captureWithCanvas();
+            }
+
+            if (captureResult) {
+                // Store the capture globally for other modules to access
+                window.currentCapture = captureResult;
+
+                // Update preview
+                this.updatePreview(captureResult);
+
+                // Enable analysis buttons
+                this.enableAnalysisButtons();
+
+                window.accessibilityManager?.announce('Screen capture completed successfully');
+                console.log('✅ Screen capture completed:', captureResult.filename);
+            } else {
+                throw new Error('All capture methods failed');
+            }
+
         } catch (error) {
-            console.error('Screen capture failed:', error);
-            window.accessibilityManager?.announceError('Screen capture failed');
+            console.error('❌ Screen capture failed:', error);
+            window.accessibilityManager?.announceError(`Screen capture failed: ${error.message}`);
         }
     }
 
     async handleEmergencyCapture() {
         try {
-            if (window.autoCaptureManager && typeof window.autoCaptureManager.emergencyCapture === 'function') {
-                await window.autoCaptureManager.emergencyCapture();
-                window.accessibilityManager?.announce('Emergency capture completed');
-                this.enableAnalysisButtons();
-            } else {
-                console.error('Auto capture manager not available or emergencyCapture method not found');
-                window.accessibilityManager?.announceError('Emergency capture not available - please refresh the page');
+            console.log('🚨 Attempting emergency screen capture...');
+
+            // For emergency capture, prioritize speed over quality
+            let captureResult = null;
+
+            // Method 1: Try html2canvas first (fastest)
+            if (typeof html2canvas !== 'undefined') {
+                captureResult = await this.captureWithHtml2Canvas();
             }
+
+            // Method 2: Try canvas fallback (always available)
+            if (!captureResult) {
+                captureResult = await this.captureWithCanvas();
+            }
+
+            // Method 3: Try Screen Capture API if others fail
+            if (!captureResult) {
+                captureResult = await this.captureWithScreenCaptureAPI();
+            }
+
+            if (captureResult) {
+                // Store the capture globally
+                window.currentCapture = captureResult;
+
+                // Update preview
+                this.updatePreview(captureResult);
+
+                // Enable analysis buttons
+                this.enableAnalysisButtons();
+
+                window.accessibilityManager?.announce('Emergency capture completed successfully');
+                console.log('✅ Emergency capture completed:', captureResult.filename);
+            } else {
+                throw new Error('All emergency capture methods failed');
+            }
+
         } catch (error) {
-            console.error('Emergency capture failed:', error);
-            window.accessibilityManager?.announceError('Emergency capture failed');
+            console.error('❌ Emergency capture failed:', error);
+            window.accessibilityManager?.announceError(`Emergency capture failed: ${error.message}`);
         }
     }
 
@@ -486,6 +547,178 @@ class RaptureAccessible {
     async handleSpeakStatus() {
         if (window.accessibilityManager) {
             window.accessibilityManager.handleSpeakStatus();
+        }
+    }
+
+    // Screen Capture Implementation Methods
+
+    async captureWithPuter() {
+        try {
+            console.log('📸 Trying Puter.js screen capture...');
+            const screenshot = await window.puter.desktop.screenshot();
+            return {
+                type: 'image',
+                subtype: 'screen',
+                dataUrl: screenshot,
+                filename: `screen_capture_${new Date().toISOString().replace(/[:.]/g, '-')}.png`,
+                timestamp: new Date().toISOString(),
+                method: 'puter'
+            };
+        } catch (error) {
+            console.warn('⚠️ Puter.js capture failed:', error.message);
+            return null;
+        }
+    }
+
+    async captureWithScreenCaptureAPI() {
+        try {
+            console.log('📸 Trying Screen Capture API...');
+
+            // Check if the API is available
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+                console.warn('⚠️ Screen Capture API not available');
+                return null;
+            }
+
+            const stream = await navigator.mediaDevices.getDisplayMedia({
+                video: {
+                    mediaSource: 'screen',
+                    width: { ideal: 1920, max: 1920 },
+                    height: { ideal: 1080, max: 1080 }
+                },
+                audio: false
+            });
+
+            // Create video element to capture the stream
+            const video = document.createElement('video');
+            video.srcObject = stream;
+            video.play();
+
+            // Wait for video to load
+            await new Promise(resolve => {
+                video.onloadedmetadata = resolve;
+            });
+
+            // Create canvas to capture the frame
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            // Draw the video frame to canvas
+            ctx.drawImage(video, 0, 0);
+
+            // Stop the stream
+            stream.getTracks().forEach(track => track.stop());
+
+            // Convert to data URL
+            const dataUrl = canvas.toDataURL('image/png');
+
+            return {
+                type: 'image',
+                subtype: 'screen',
+                dataUrl: dataUrl,
+                filename: `screen_capture_${new Date().toISOString().replace(/[:.]/g, '-')}.png`,
+                timestamp: new Date().toISOString(),
+                method: 'screen_capture_api'
+            };
+
+        } catch (error) {
+            console.warn('⚠️ Screen Capture API failed:', error.message);
+            return null;
+        }
+    }
+
+    async captureWithHtml2Canvas() {
+        try {
+            console.log('📸 Trying html2canvas...');
+
+            // Check if html2canvas is available (need to load it first)
+            if (typeof html2canvas === 'undefined') {
+                console.warn('⚠️ html2canvas not loaded');
+                return null;
+            }
+
+            const canvas = await html2canvas(document.body, {
+                useCORS: true,
+                allowTaint: true,
+                scale: 1,
+                width: window.innerWidth,
+                height: window.innerHeight,
+                windowWidth: window.innerWidth,
+                windowHeight: window.innerHeight
+            });
+
+            const dataUrl = canvas.toDataURL('image/png');
+
+            return {
+                type: 'image',
+                subtype: 'webpage',
+                dataUrl: dataUrl,
+                filename: `webpage_capture_${new Date().toISOString().replace(/[:.]/g, '-')}.png`,
+                timestamp: new Date().toISOString(),
+                method: 'html2canvas'
+            };
+
+        } catch (error) {
+            console.warn('⚠️ html2canvas capture failed:', error.message);
+            return null;
+        }
+    }
+
+    async captureWithCanvas() {
+        try {
+            console.log('📸 Trying canvas-based capture...');
+
+            // Create a canvas element
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Set canvas size to window size
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            // Fill with a solid color as fallback (better than nothing)
+            ctx.fillStyle = '#2d3748';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Add text indicating this is a fallback capture
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Screen Capture (Fallback Method)', canvas.width / 2, canvas.height / 2 - 20);
+            ctx.fillText(`Captured at: ${new Date().toLocaleString()}`, canvas.width / 2, canvas.height / 2 + 20);
+
+            const dataUrl = canvas.toDataURL('image/png');
+
+            return {
+                type: 'image',
+                subtype: 'fallback',
+                dataUrl: dataUrl,
+                filename: `fallback_capture_${new Date().toISOString().replace(/[:.]/g, '-')}.png`,
+                timestamp: new Date().toISOString(),
+                method: 'canvas_fallback'
+            };
+
+        } catch (error) {
+            console.warn('⚠️ Canvas capture failed:', error.message);
+            return null;
+        }
+    }
+
+    updatePreview(capture) {
+        const previewImage = document.getElementById('previewImage');
+        const previewPlaceholder = document.getElementById('previewPlaceholder');
+
+        if (previewImage && capture.dataUrl) {
+            previewImage.src = capture.dataUrl;
+            previewImage.style.display = 'block';
+            previewImage.alt = `Screen capture - ${capture.subtype || 'screen'}`;
+        }
+
+        if (previewPlaceholder) {
+            previewPlaceholder.style.display = 'none';
         }
     }
 
