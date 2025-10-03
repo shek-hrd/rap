@@ -798,23 +798,31 @@ class RaptureAccessible {
     }
 
     async checkAIProviderStatus(provider) {
+        console.log(`🔍 Checking status for AI provider: ${provider.name}`);
+
         try {
             if (provider.requiresKey && !this.apiKeys.has(this.currentAIProvider)) {
+                console.warn(`⚠️ Provider ${provider.name} requires API key but none found`);
                 return false;
             }
 
             // Special handling for different provider types
             if (provider.endpoint.startsWith('puter://')) {
                 // Puter providers are always available if Puter.js is loaded
-                return window.puter && window.puter.ai;
+                const available = window.puter && window.puter.ai;
+                console.log(`🔌 Puter provider ${provider.name} status: ${available ? '✅ Available' : '❌ Unavailable'}`);
+                return available;
             }
 
             // Web-based providers are always available (no API calls needed)
             if (provider.endpoint.startsWith('web-')) {
+                console.log(`🌐 Web provider ${provider.name} status: ✅ Available`);
                 return true;
             }
 
             // Test the provider with a simple request
+            console.log(`🔗 Testing provider ${provider.name} with endpoint: ${provider.endpoint}`);
+
             const testPayload = {
                 model: provider.model,
                 messages: [{ role: 'user', content: 'Hello' }],
@@ -825,10 +833,13 @@ class RaptureAccessible {
             let endpoint = `${provider.endpoint}`;
             if (provider.name.toLowerCase().includes('huggingface')) {
                 endpoint = 'https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium';
+                console.log(`🤗 Using Hugging Face endpoint: ${endpoint}`);
             } else if (!endpoint.includes('/chat/completions') && !endpoint.includes('/generate')) {
                 endpoint = `${endpoint}/chat/completions`;
+                console.log(`🔗 Using OpenAI-style endpoint: ${endpoint}`);
             }
 
+            console.log(`📡 Making test request to ${endpoint}...`);
             const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
@@ -838,9 +849,10 @@ class RaptureAccessible {
                 body: JSON.stringify(testPayload)
             });
 
+            console.log(`📡 Response status: ${response.status} ${response.ok ? '✅ OK' : '❌ Failed'}`);
             return response.ok;
         } catch (error) {
-            console.warn(`Provider ${provider.name} check failed:`, error);
+            console.warn(`❌ Provider ${provider.name} check failed:`, error.message);
             return false;
         }
     }

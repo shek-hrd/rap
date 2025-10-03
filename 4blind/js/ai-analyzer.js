@@ -52,13 +52,17 @@ class AIAnalyzer {
         });
     }
 
-    async analyzeWithAI(providerConfig = null) {
+        async analyzeWithAI(providerConfig = null) {
+        console.log('🚀 Starting AI analysis process...');
+
         if (this.isAnalyzing) {
             console.warn('⚠️ Analysis already in progress');
+            window.accessibilityManager?.announceError('Analysis already in progress');
             return;
         }
 
         if (!this.currentCapture && !window.captureManager?.currentCapture) {
+            console.error('❌ No capture available for analysis');
             window.accessibilityManager?.announceError('No capture available for analysis');
             return;
         }
@@ -71,16 +75,18 @@ class AIAnalyzer {
             const provider = providerConfig || await this.getAvailableProvider();
 
             if (!provider) {
+                console.error('❌ No available AI provider found');
                 throw new Error('No available AI provider found');
             }
 
-            console.log(`🤖 Starting analysis with ${provider.name}`);
+            console.log(`🤖 Starting analysis with ${provider.name} (type: ${provider.type}, endpoint: ${provider.endpoint})`);
 
             // Broadcast analysis started event
             window.dispatchEvent(new CustomEvent('analysis:started', {
                 detail: { provider: provider.name }
             }));
 
+            console.log(`📊 Capture data: ${this.getCaptureData().type}, ${this.getCaptureData().name}`);
             const analysis = await this.performAnalysis(provider);
 
             this.currentAnalysis = analysis;
@@ -91,11 +97,14 @@ class AIAnalyzer {
                 detail: { analysis, provider: provider.name }
             }));
 
-            console.log(`✅ Analysis completed with ${provider.name}`);
+            console.log(`✅ Analysis completed successfully with ${provider.name}`);
+            console.log(`📝 Analysis length: ${analysis.length} characters`);
+            window.accessibilityManager?.announce('Analysis completed successfully');
             return analysis;
 
         } catch (error) {
-            console.error('❌ Analysis failed:', error);
+            console.error('❌ Analysis failed:', error.message);
+            console.error('❌ Error details:', error);
 
             // Try fallback provider
             const fallbackProvider = await this.getFallbackProvider();
@@ -110,18 +119,24 @@ class AIAnalyzer {
                         detail: { analysis, provider: fallbackProvider.name }
                     }));
 
+                    console.log(`✅ Fallback analysis completed with ${fallbackProvider.name}`);
+                    window.accessibilityManager?.announce('Analysis completed with fallback provider');
                     return analysis;
                 } catch (fallbackError) {
-                    console.error('❌ Fallback analysis also failed:', fallbackError);
+                    console.error('❌ Fallback analysis also failed:', fallbackError.message);
+                    console.error('❌ Fallback error details:', fallbackError);
+                    window.accessibilityManager?.announceError(`Analysis failed: ${fallbackError.message}`);
                     throw fallbackError;
                 }
             }
 
+            window.accessibilityManager?.announceError(`Analysis failed: ${error.message}`);
             throw error;
         } finally {
             this.isAnalyzing = false;
         }
-    }
+    }</search>
+</search_and_replace>
 
     async getAvailableProvider() {
         // Get provider configurations from main app
@@ -163,23 +178,31 @@ class AIAnalyzer {
         return null;
     }
 
-    async testProvider(provider) {
+        async testProvider(provider) {
+        console.log(`🔍 Testing AI provider: ${provider.name}`);
+
         try {
             if (provider.requiresKey && !this.apiKeys.has(provider.name.toLowerCase().replace(/[^a-z0-9]/g, ''))) {
+                console.warn(`⚠️ Provider ${provider.name} requires API key but none found`);
                 return false;
             }
 
             // Special handling for Puter providers
             if (provider.endpoint.startsWith('puter://')) {
-                return window.puter && window.puter.ai;
+                const available = window.puter && window.puter.ai;
+                console.log(`🔌 Puter provider ${provider.name} status: ${available ? '✅ Available' : '❌ Unavailable'}`);
+                return available;
             }
 
             // Web-based providers are always available (no API calls needed)
             if (provider.endpoint.startsWith('web-')) {
+                console.log(`🌐 Web provider ${provider.name} status: ✅ Available`);
                 return true;
             }
 
             // Simple connectivity test
+            console.log(`🔗 Testing provider ${provider.name} with endpoint: ${provider.endpoint}`);
+
             const testPayload = {
                 model: provider.model,
                 messages: [{ role: 'user', content: 'test' }],
@@ -190,10 +213,13 @@ class AIAnalyzer {
             let endpoint = provider.endpoint;
             if (provider.name.toLowerCase().includes('huggingface')) {
                 endpoint = 'https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium';
+                console.log(`🤗 Using Hugging Face endpoint: ${endpoint}`);
             } else if (!endpoint.includes('/chat/completions') && !endpoint.includes('/generate')) {
                 endpoint = `${endpoint}/chat/completions`;
+                console.log(`🔗 Using OpenAI-style endpoint: ${endpoint}`);
             }
 
+            console.log(`📡 Making test request to ${endpoint}...`);
             const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
@@ -205,12 +231,14 @@ class AIAnalyzer {
                 body: JSON.stringify(testPayload)
             });
 
+            console.log(`📡 Test response status: ${response.status} ${response.ok ? '✅ OK' : '❌ Failed'}`);
             return response.ok;
         } catch (error) {
-            console.warn(`Provider ${provider.name} test failed:`, error);
+            console.warn(`❌ Provider ${provider.name} test failed:`, error.message);
             return false;
         }
-    }
+    }</search>
+</search_and_replace>
 
     async performAnalysis(provider) {
         const captureData = this.getCaptureData();
