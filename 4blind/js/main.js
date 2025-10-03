@@ -40,7 +40,7 @@ class RaptureAccessible {
             // Load user preferences
             this.loadUserPreferences();
 
-            // Setup auto-capture on first load
+            // Setup autoCapture on first load
             this.setupFirstLoadAutoCapture();
 
             // Setup sequential actions
@@ -1397,7 +1397,7 @@ console.log(`
 
 console.log('💡 Tips:');
 console.log('   • Manual capture mode is enabled by default');
-console.log('   • Configure autocapture count in the settings section');
+console.log('   • Configure autoCapture count in the settings section');
 console.log('   • All AI communication is logged to the console');
 console.log('   • All button presses are logged to the console');
 console.log('   • Use Alt+3 to hear current system status anytime');
