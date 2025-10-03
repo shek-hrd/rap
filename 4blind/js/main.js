@@ -43,6 +43,9 @@ class RaptureAccessible {
             // Setup auto-capture on first load
             this.setupFirstLoadAutoCapture();
 
+            // Setup sequential actions
+            this.setupSequentialActions();
+
             this.isInitialized = true;
 
             console.log('✅ Rapture Accessible initialized successfully');
@@ -87,7 +90,8 @@ class RaptureAccessible {
 
         window.addEventListener('unhandledrejection', (e) => {
             console.error('Unhandled promise rejection:', e.reason);
-            window.accessibilityManager?.announceError('A system error occurred');
+            const errorMessage = e.reason?.message || e.reason?.toString() || 'Unknown error occurred';
+            window.accessibilityManager?.announceError(`System error: ${errorMessage}`);
         });
     }
 
@@ -109,6 +113,10 @@ class RaptureAccessible {
                         this.handleQuickAction('speakStatus');
                         break;
                     case '4':
+                        e.preventDefault();
+                        this.handleQuickAction('analyzeCurrent');
+                        break;
+                    case '5':
                         e.preventDefault();
                         this.handleQuickAction('readAloud');
                         break;
@@ -165,6 +173,11 @@ class RaptureAccessible {
             case 'exportAll':
                 if (window.captureManager) {
                     window.captureManager.downloadAllAsHtml();
+                }
+                break;
+            case 'analyzeCurrent':
+                if (window.aiAnalyzer) {
+                    window.aiAnalyzer.analyzeWithAI();
                 }
                 break;
         }
@@ -299,8 +312,10 @@ class RaptureAccessible {
                 Use Alt+1 for auto capture,
                 Alt+2 for emergency capture,
                 Alt+3 to speak status,
+                Alt+4 to analyze current capture,
+                Alt+5 to read analysis aloud,
                 Alt+H for help.
-                First capture starting automatically.
+                Manual capture buttons are ready to use.
             `;
             window.accessibilityManager?.announce(announcement);
         }, 1000);
@@ -321,7 +336,8 @@ class RaptureAccessible {
             Alt+1: Toggle auto capture
             Alt+2: Emergency capture
             Alt+3: Speak system status
-            Alt+4: Read description aloud
+            Alt+4: Analyze current capture
+            Alt+5: Read description aloud
             Alt+C: Auto capture (alternative)
             Alt+V: Voice commands (when supported)
             Alt+R: Read aloud (alternative)
@@ -332,6 +348,92 @@ class RaptureAccessible {
             Escape: Cancel current operation
         `;
         window.accessibilityManager?.announce(shortcuts);
+    }
+
+    // Sequential actions system
+    async performSequentialActions(actionSequence) {
+        if (window.autoCaptureManager) {
+            await window.autoCaptureManager.performSequentialActions(actionSequence);
+        }
+    }
+
+    // Predefined action sequences
+    startQuickSequence() {
+        const actions = [
+            {
+                name: "Screen Capture",
+                execute: async () => {
+                    if (window.autoCaptureManager) {
+                        await window.autoCaptureManager.manualScreenCapture();
+                    }
+                }
+            },
+            {
+                name: "AI Analysis",
+                execute: async () => {
+                    if (window.aiAnalyzer) {
+                        await window.aiAnalyzer.analyzeWithAI();
+                    }
+                }
+            },
+            {
+                name: "Save Capture",
+                execute: async () => {
+                    if (window.captureManager) {
+                        window.captureManager.saveCurrentCapture();
+                    }
+                }
+            }
+        ];
+
+        this.performSequentialActions(actions);
+    }
+
+    startFullSequence() {
+        const actions = [
+            {
+                name: "Screen Capture",
+                execute: async () => {
+                    if (window.autoCaptureManager) {
+                        await window.autoCaptureManager.manualScreenCapture();
+                    }
+                }
+            },
+            {
+                name: "Video Frame Capture",
+                execute: async () => {
+                    if (window.autoCaptureManager) {
+                        await window.autoCaptureManager.manualVideoCapture();
+                    }
+                }
+            },
+            {
+                name: "AI Analysis",
+                execute: async () => {
+                    if (window.aiAnalyzer) {
+                        await window.aiAnalyzer.analyzeWithAI();
+                    }
+                }
+            },
+            {
+                name: "Read Analysis Aloud",
+                execute: async () => {
+                    if (window.aiAnalyzer) {
+                        window.aiAnalyzer.readDescriptionAloud();
+                    }
+                }
+            },
+            {
+                name: "Save All Captures",
+                execute: async () => {
+                    if (window.captureManager) {
+                        window.captureManager.saveCurrentCapture();
+                    }
+                }
+            }
+        ];
+
+        this.performSequentialActions(actions);
     }
 
     formatBytes(bytes) {
@@ -380,6 +482,24 @@ class RaptureAccessible {
                 break;
         }
     }
+
+    // Setup sequential action buttons
+    setupSequentialActions() {
+        const quickSequenceBtn = document.getElementById('quickSequence');
+        const fullSequenceBtn = document.getElementById('fullSequence');
+
+        if (quickSequenceBtn) {
+            quickSequenceBtn.addEventListener('click', () => {
+                this.startQuickSequence();
+            });
+        }
+
+        if (fullSequenceBtn) {
+            fullSequenceBtn.addEventListener('click', () => {
+                this.startFullSequence();
+            });
+        }
+    }
 }
 
 // Initialize the application
@@ -393,8 +513,11 @@ console.log(`
 🎬 Rapture Accessible - Screen Capture for Blind Users
 ══════════════════════════════════════════════════════
 ✅ Features:
-   • Hard-coded speech recognition with manual/autocapture modes
-   • Auto screen capture with configurable count (default: 3 captures)
+   • Manual screen and video capture buttons
+   • Auto screen capture with configurable count and countdown
+   • Video recording with start/stop controls
+   • Real-time countdown timers with pause/resume/stop
+   • Sequential action system (Quick & Full sequences)
    • Multiple AI providers (Gemini, Hugging Face, OpenAI)
    • High contrast interface optimized for accessibility
    • Keyboard shortcuts and screen reader support
@@ -403,15 +526,24 @@ console.log(`
    • Complete button press logging
 
 🎯 Quick Start:
-   • Manual capture: Alt+1 or click "Auto Capture Screen"
-   • Emergency capture: Alt+2 or click "Emergency Capture"
+   • Manual screen capture: Click "📸 Manual Screen Capture"
+   • Manual video capture: Click "🎥 Manual Video Capture"
+   • Auto capture: Alt+1 or click "🔄 Auto Capture"
+   • Emergency capture: Alt+2 or click "🚨 Emergency Capture"
+   • Video recording: Click "⏺️ Start Recording" / "⏹️ Stop Recording"
+   • Analyze capture: Alt+4 or click "🤖 Analyze Current Capture"
    • Speak status: Alt+3 or click "Speak System Status"
-   • Read analysis: Alt+4 or click "Read Description Aloud"
-   • Configure autocapture: Use settings section
+   • Read analysis: Alt+5 or click "🔊 Read Analysis Aloud"
+   • Quick sequence: Click "⚡ Quick Sequence"
+   • Full sequence: Click "🔄 Full Sequence"
 
 🔧 Keyboard Shortcuts:
+   • Alt+1: Toggle auto capture
+   • Alt+2: Emergency capture
+   • Alt+3: Speak system status
+   • Alt+4: Analyze current capture
+   • Alt+5: Read description aloud
    • Alt+H: Show all shortcuts
-   • Alt+V: Voice commands (when supported)
    • Ctrl+S: Save current capture
    • Ctrl+E: Export all captures
 
@@ -431,3 +563,5 @@ console.log('   • Configure autocapture count in the settings section');
 console.log('   • All AI communication is logged to the console');
 console.log('   • All button presses are logged to the console');
 console.log('   • Use Alt+3 to hear current system status anytime');
+console.log('   • Use countdown timers to control action timing');
+console.log('   • Sequential actions help automate workflows');

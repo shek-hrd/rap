@@ -23,155 +23,174 @@
         </header>
 
         <main id="main-content" role="main">
-            <!-- System Status Section -->
-            <section class="status-section" role="region" aria-labelledby="status-heading">
-                <h2 id="status-heading">System Status</h2>
-                <div class="status-grid">
+            <!-- Control Panel - Top Section -->
+            <section class="control-panel" role="region" aria-labelledby="control-panel-heading">
+                <h2 id="control-panel-heading">Rapture Accessible Control Panel</h2>
+
+                <!-- System Status - Compact -->
+                <div class="status-bar">
                     <div class="status-item">
-                        <span class="status-label">Storage Used:</span>
+                        <span class="status-label">Storage:</span>
                         <span class="status-value" id="storageUsed">-</span>
                     </div>
                     <div class="status-item">
-                        <span class="status-label">Storage Quota:</span>
-                        <span class="status-value" id="storageQuota">-</span>
-                    </div>
-                    <div class="status-item">
-                        <span class="status-label">Memory Usage:</span>
+                        <span class="status-label">Memory:</span>
                         <span class="status-value" id="memoryUsage">-</span>
                     </div>
                     <div class="status-item">
-                        <span class="status-label">Captures Count:</span>
+                        <span class="status-label">Captures:</span>
                         <span class="status-value" id="capturesCount">-</span>
                     </div>
-                </div>
-            </section>
-
-            <!-- Quick Actions Section -->
-            <section class="quick-actions-section" role="region" aria-labelledby="quick-actions-heading">
-                <h2 id="quick-actions-heading">Quick Actions</h2>
-                <div class="quick-actions">
-                    <button id="autoCapture" class="btn btn-primary" aria-describedby="auto-capture-desc">
-                        Auto Capture Screen
-                    </button>
-                    <button id="emergencyCapture" class="btn btn-danger" aria-describedby="emergency-capture-desc">
-                        Emergency Capture
-                    </button>
-                    <button id="speakStatus" class="btn btn-info" aria-describedby="speak-status-desc">
-                        Speak System Status
+                    <button id="speakStatus" class="btn btn-info btn-small" aria-describedby="speak-status-desc">
+                        Speak Status
                     </button>
                 </div>
-                <div class="action-descriptions">
-                    <p id="auto-capture-desc">Automatically captures screen and analyzes with AI</p>
-                    <p id="emergency-capture-desc">Immediately captures current screen for urgent situations</p>
-                    <p id="speak-status-desc">Speaks current system status and recent activity</p>
-                </div>
-            </section>
 
-            <!-- Auto Analysis Section -->
-            <section class="auto-analysis-section" role="region" aria-labelledby="auto-analysis-heading">
-                <h2 id="auto-analysis-heading">Auto Analysis</h2>
-                <div class="analysis-controls">
-                    <label for="autoAnalyzeToggle">Enable Automatic Analysis:</label>
-                    <input type="checkbox" id="autoAnalyzeToggle" checked aria-describedby="auto-analyze-desc">
-                    <span class="toggle-status" aria-live="polite"></span>
-                </div>
-                <p id="auto-analyze-desc">When enabled, new captures are automatically analyzed with AI</p>
+                <!-- Main Controls -->
+                <div class="main-controls">
+                    <div class="control-group">
+                        <h3>Screen Capture</h3>
+                        <div class="button-group">
+                            <button id="manualScreenCapture" class="btn btn-primary" aria-describedby="manual-screen-desc">
+                                📸 Manual Screen Capture
+                            </button>
+                            <button id="autoCapture" class="btn btn-secondary" aria-describedby="auto-capture-desc">
+                                🔄 Auto Capture (3x)
+                            </button>
+                            <button id="emergencyCapture" class="btn btn-danger" aria-describedby="emergency-capture-desc">
+                                🚨 Emergency Capture
+                            </button>
+                        </div>
+                    </div>
 
-                <div class="ai-provider-selection">
-                    <label for="aiProviderSelect">AI Provider:</label>
-                    <select id="aiProviderSelect" aria-describedby="ai-provider-desc">
-                        <option value="gemini">Gemini (Free & Unlimited)</option>
-                        <option value="huggingface">Hugging Face (Free Alternative)</option>
-                        <option value="openai">OpenAI GPT-4 (Requires API Key)</option>
-                    </select>
-                </div>
-                <p id="ai-provider-desc">Select AI service for content analysis</p>
-            </section>
+                    <div class="control-group">
+                        <h3>Video Recording</h3>
+                        <div class="button-group">
+                            <button id="manualVideoCapture" class="btn btn-primary" aria-describedby="manual-video-desc">
+                                🎥 Manual Video Capture
+                            </button>
+                            <button id="startRecording" class="btn btn-success" aria-describedby="start-recording-desc">
+                                ⏺️ Start Recording
+                            </button>
+                            <button id="stopRecording" class="btn btn-danger" disabled aria-describedby="stop-recording-desc">
+                                ⏹️ Stop Recording
+                            </button>
+                        </div>
+                    </div>
 
-            <!-- Auto Capture Settings Section -->
-            <section class="auto-capture-settings-section" role="region" aria-labelledby="auto-capture-settings-heading">
-                <h2 id="auto-capture-settings-heading">Auto Capture Settings</h2>
-                <div class="capture-mode-controls">
-                    <label for="manualCaptureMode">Manual Capture Mode (Default):</label>
-                    <input type="checkbox" id="manualCaptureMode" checked aria-describedby="manual-capture-desc">
-                    <span class="toggle-status" aria-live="polite"></span>
-                </div>
-                <p id="manual-capture-desc">When enabled, requires manual activation for captures. When disabled, auto-capture is enabled by default.</p>
+                    <div class="control-group">
+                        <h3>Analysis & Actions</h3>
+                        <div class="button-group">
+                            <button id="analyzeCurrent" class="btn btn-info" disabled aria-describedby="analyze-current-desc">
+                                🤖 Analyze Current Capture
+                            </button>
+                            <button id="readAloud" class="btn btn-success" disabled aria-describedby="read-aloud-desc">
+                                🔊 Read Analysis Aloud
+                            </button>
+                            <button id="saveCapture" class="btn btn-primary" disabled aria-describedby="save-capture-desc">
+                                💾 Save Capture
+                            </button>
+                        </div>
+                    </div>
 
-                <div class="autocapture-count-controls">
-                    <label for="autoCaptureCount">Number of Auto Captures:</label>
-                    <input type="number" id="autoCaptureCount" min="1" max="10" value="3" aria-describedby="autocapture-count-desc">
-                    <button id="updateAutoCaptureCount" class="btn btn-secondary">Update Count</button>
-                </div>
-                <p id="autocapture-count-desc">Set how many captures to perform during auto capture mode (1-10). Default is 3.</p>
-
-                <div class="capture-delay-controls">
-                    <label for="autoCaptureDelay">Auto Capture Delay (seconds):</label>
-                    <input type="number" id="autoCaptureDelay" min="1" max="60" value="5" aria-describedby="capture-delay-desc">
-                    <button id="updateAutoCaptureDelay" class="btn btn-secondary">Update Delay</button>
-                </div>
-                <p id="capture-delay-desc">Set the delay between auto captures in seconds (1-60). Default is 5 seconds.</p>
-            </section>
-
-            <!-- Live Preview Section -->
-            <section class="preview-section" role="region" aria-labelledby="preview-heading">
-                <h2 id="preview-heading">Live Preview</h2>
-                <div class="preview-container">
-                    <video id="previewVideo" autoplay muted style="display: none;" aria-label="Live video preview"></video>
-                    <canvas id="previewCanvas" style="display: none;" aria-label="Screen capture preview"></canvas>
-                    <img id="previewImage" alt="Screen capture preview" style="display: none;" aria-label="Screen capture image">
-                    <div id="previewPlaceholder" class="preview-placeholder">
-                        No preview available. Use auto capture to begin.
+                    <div class="control-group">
+                        <h3>Sequential Actions</h3>
+                        <div class="button-group">
+                            <button id="quickSequence" class="btn btn-secondary" aria-describedby="quick-sequence-desc">
+                                ⚡ Quick Sequence (Capture → Analyze → Save)
+                            </button>
+                            <button id="fullSequence" class="btn btn-secondary" aria-describedby="full-sequence-desc">
+                                🔄 Full Sequence (Screen → Video → Analyze → Read → Save)
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div class="preview-controls">
-                    <button id="readAloud" class="btn btn-success" disabled aria-describedby="read-aloud-desc">
-                        Read Description Aloud
-                    </button>
-                    <button id="saveCapture" class="btn btn-primary" disabled aria-describedby="save-capture-desc">
-                        Save Capture
-                    </button>
+
+                <!-- Countdown Timer -->
+                <div class="countdown-section" id="countdownSection" style="display: none;">
+                    <div class="countdown-display">
+                        <span id="countdownText">Next action in:</span>
+                        <span id="countdownTimer" class="timer">10</span>
+                        <span>seconds</span>
+                    </div>
+                    <div class="countdown-controls">
+                        <button id="pauseCountdown" class="btn btn-warning">⏸️ Pause</button>
+                        <button id="stopCountdown" class="btn btn-danger">⏹️ Stop</button>
+                        <button id="resumeCountdown" class="btn btn-success" style="display: none;">▶️ Resume</button>
+                    </div>
                 </div>
-                <div class="control-descriptions">
-                    <p id="read-aloud-desc">Speaks the AI analysis of the current capture</p>
-                    <p id="save-capture-desc">Saves the current capture to local storage</p>
+
+                <!-- Settings - Collapsible -->
+                <details class="settings-details">
+                    <summary>⚙️ Settings & Configuration</summary>
+                    <div class="settings-content">
+                        <div class="setting-group">
+                            <label for="autoAnalyzeToggle">Auto-analyze captures:</label>
+                            <input type="checkbox" id="autoAnalyzeToggle" checked aria-describedby="auto-analyze-desc">
+                        </div>
+
+                        <div class="setting-group">
+                            <label for="aiProviderSelect">AI Provider:</label>
+                            <select id="aiProviderSelect" aria-describedby="ai-provider-desc">
+                                <option value="gemini">Gemini (Free)</option>
+                                <option value="huggingface">Hugging Face</option>
+                                <option value="openai">OpenAI GPT-4</option>
+                            </select>
+                        </div>
+
+                        <div class="setting-group">
+                            <label for="autoCaptureCount">Auto captures:</label>
+                            <input type="number" id="autoCaptureCount" min="1" max="10" value="3">
+                            <button id="updateAutoCaptureCount" class="btn btn-small">Update</button>
+                        </div>
+
+                        <div class="setting-group">
+                            <label for="autoCaptureDelay">Delay (seconds):</label>
+                            <input type="number" id="autoCaptureDelay" min="1" max="60" value="5">
+                            <button id="updateAutoCaptureDelay" class="btn btn-small">Update</button>
+                        </div>
+                    </div>
+                </details>
+            </section>
+
+            <!-- Live Preview & Analysis - Compact Layout -->
+            <section class="preview-analysis-section" role="region" aria-labelledby="preview-heading">
+                <div class="split-view">
+                    <!-- Left: Preview -->
+                    <div class="preview-panel">
+                        <h3 id="preview-heading">Live Preview</h3>
+                        <div class="preview-container">
+                            <video id="previewVideo" autoplay muted style="display: none;" aria-label="Live video preview"></video>
+                            <canvas id="previewCanvas" style="display: none;" aria-label="Screen capture preview"></canvas>
+                            <img id="previewImage" alt="Screen capture preview" style="display: none;" aria-label="Screen capture image">
+                            <div id="previewPlaceholder" class="preview-placeholder">
+                                No preview available. Use capture buttons above to begin.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Analysis -->
+                    <div class="analysis-panel">
+                        <h3>AI Analysis Results</h3>
+                        <div class="analysis-content">
+                            <textarea id="aiDescription" placeholder="AI analysis will appear here after capture..." readonly aria-label="AI analysis results"></textarea>
+                        </div>
+                        <div class="analysis-actions">
+                            <button id="reanalyze" class="btn btn-small btn-secondary" disabled>🔄 Re-analyze</button>
+                            <button id="askQuestion" class="btn btn-small btn-info">❓ Ask Question</button>
+                        </div>
+                    </div>
                 </div>
             </section>
 
-            <!-- AI Analysis Results -->
-            <section class="analysis-results-section" role="region" aria-labelledby="analysis-results-heading">
-                <h2 id="analysis-results-heading">AI Analysis Results</h2>
-                <div class="analysis-content">
-                    <textarea id="aiDescription" placeholder="AI analysis will appear here..." readonly aria-label="AI analysis results"></textarea>
-                </div>
-                <div class="analysis-actions">
-                    <button id="reanalyze" class="btn btn-secondary" disabled aria-describedby="reanalyze-desc">
-                        Re-analyze with Different AI
-                    </button>
-                    <button id="askQuestion" class="btn btn-info" aria-describedby="ask-question-desc">
-                        Ask Question About Analysis
-                    </button>
-                </div>
-                <div class="action-descriptions">
-                    <p id="reanalyze-desc">Analyzes the capture again with a different AI provider</p>
-                    <p id="ask-question-desc">Ask a question about the current analysis</p>
-                </div>
-            </section>
-
-            <!-- Recent Captures Gallery -->
-            <section class="captures-gallery-section" role="region" aria-labelledby="captures-gallery-heading">
-                <h2 id="captures-gallery-heading">Recent Captures</h2>
-                <div class="gallery-controls">
-                    <button id="clearAll" class="btn btn-danger" aria-describedby="clear-all-desc">
-                        Clear All Captures
-                    </button>
-                    <button id="exportAll" class="btn btn-info" aria-describedby="export-all-desc">
-                        Export All as HTML
-                    </button>
-                </div>
-                <div class="control-descriptions">
-                    <p id="clear-all-desc">Removes all saved captures from storage</p>
-                    <p id="export-all-desc">Exports all captures as an accessible HTML file</p>
+            <!-- Recent Captures - Compact Gallery -->
+            <section class="captures-section" role="region" aria-labelledby="captures-heading">
+                <div class="section-header">
+                    <h3 id="captures-heading">Recent Captures</h3>
+                    <div class="section-actions">
+                        <button id="clearAll" class="btn btn-small btn-danger">🗑️ Clear All</button>
+                        <button id="exportAll" class="btn btn-small btn-info">📄 Export</button>
+                    </div>
                 </div>
                 <div id="capturesList" class="captures-grid" role="list" aria-label="Recent captures list"></div>
             </section>

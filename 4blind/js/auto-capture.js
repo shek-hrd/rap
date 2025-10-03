@@ -15,6 +15,16 @@ class AutoCaptureManager {
         this.manualCaptureMode = true; // Default to manual capture
         this.hardCodedSpeechRecognition = true; // Enable hard-coded speech recognition
 
+        // New features
+        this.countdownInterval = null;
+        this.isCountdownActive = false;
+        this.countdownTime = 10;
+        this.currentCountdown = 0;
+        this.isPaused = false;
+        this.videoRecorder = null;
+        this.isRecording = false;
+        this.recordedChunks = [];
+
         this.init();
     }
 
@@ -39,6 +49,57 @@ class AutoCaptureManager {
         if (emergencyCaptureBtn) {
             emergencyCaptureBtn.addEventListener('click', () => {
                 this.emergencyCapture();
+            });
+        }
+
+        // Manual screen capture button
+        const manualScreenCaptureBtn = document.getElementById('manualScreenCapture');
+        if (manualScreenCaptureBtn) {
+            manualScreenCaptureBtn.addEventListener('click', () => {
+                this.manualScreenCapture();
+            });
+        }
+
+        // Manual video capture button
+        const manualVideoCaptureBtn = document.getElementById('manualVideoCapture');
+        if (manualVideoCaptureBtn) {
+            manualVideoCaptureBtn.addEventListener('click', () => {
+                this.manualVideoCapture();
+            });
+        }
+
+        // Video recording controls
+        const startRecordingBtn = document.getElementById('startRecording');
+        const stopRecordingBtn = document.getElementById('stopRecording');
+        if (startRecordingBtn) {
+            startRecordingBtn.addEventListener('click', () => {
+                this.startVideoRecording();
+            });
+        }
+        if (stopRecordingBtn) {
+            stopRecordingBtn.addEventListener('click', () => {
+                this.stopVideoRecording();
+            });
+        }
+
+        // Countdown controls
+        const pauseCountdownBtn = document.getElementById('pauseCountdown');
+        const stopCountdownBtn = document.getElementById('stopCountdown');
+        const resumeCountdownBtn = document.getElementById('resumeCountdown');
+
+        if (pauseCountdownBtn) {
+            pauseCountdownBtn.addEventListener('click', () => {
+                this.pauseCountdown();
+            });
+        }
+        if (stopCountdownBtn) {
+            stopCountdownBtn.addEventListener('click', () => {
+                this.stopCountdown();
+            });
+        }
+        if (resumeCountdownBtn) {
+            resumeCountdownBtn.addEventListener('click', () => {
+                this.resumeCountdown();
             });
         }
 
@@ -362,20 +423,20 @@ class AutoCaptureManager {
                     }).catch(error => {
                         resolve({
                             success: false,
-                            error: error.message
+                            error: error?.message || error?.toString() || 'Failed to capture image'
                         });
                     });
                 }).catch(error => {
                     resolve({
                         success: false,
-                        error: error.message
+                        error: error?.message || error?.toString() || 'Failed to access screen capture'
                     });
                 });
 
             } catch (error) {
                 resolve({
                     success: false,
-                    error: error.message
+                    error: error?.message || error?.toString() || 'Screen capture error'
                 });
             }
         });
@@ -498,6 +559,311 @@ class AutoCaptureManager {
     }
 
     updateAutoCaptureCountUI() {
+        const autoCaptureCountInput = document.getElementById('autoCaptureCount');
+        if (autoCaptureCountInput) {
+            autoCaptureCountInput.value = this.autoCaptureCount;
+        }
+    }
+
+    // Manual screen capture
+    async manualScreenCapture() {
+        try {
+            console.log('📸 Manual screen capture initiated');
+            window.accessibilityManager.announce('Manual screen capture starting');
+
+            const captureResult = await this.captureScreen();
+
+            if (captureResult.success) {
+                window.accessibilityManager.announceCaptureSuccess(captureResult.filename, 'manual screen capture');
+                console.log('✅ Manual screen capture completed');
+            } else {
+                window.accessibilityManager.announceError('Manual screen capture failed: ' + captureResult.error);
+            }
+        } catch (error) {
+            console.error('Manual screen capture error:', error);
+            window.accessibilityManager.announceError('Manual screen capture failed');
+        }
+    }
+
+    // Manual video capture (takes a screenshot and treats it as video frame)
+    async manualVideoCapture() {
+        try {
+            console.log('🎥 Manual video capture initiated');
+            window.accessibilityManager.announce('Manual video capture starting');
+
+            const captureResult = await this.captureScreen();
+
+            if (captureResult.success) {
+                // Display as video preview
+                this.displayVideoPreview(captureResult);
+                window.accessibilityManager.announceCaptureSuccess(captureResult.filename, 'manual video frame');
+                console.log('✅ Manual video capture completed');
+            } else {
+                window.accessibilityManager.announceError('Manual video capture failed: ' + captureResult.error);
+            }
+        } catch (error) {
+            console.error('Manual video capture error:', error);
+            window.accessibilityManager.announceError('Manual video capture failed');
+        }
+    }
+
+    // Video recording functionality
+    async startVideoRecording() {
+        try {
+            if (this.isRecording) return;
+
+            console.log('🎥 Starting video recording');
+            window.accessibilityManager.announce('Starting video recording');
+
+            const stream = await navigator.mediaDevices.getDisplayMedia({
+                video: { mediaSource: 'screen' },
+                audio: false
+            });
+
+            this.isRecording = true;
+            this.recordedChunks = [];
+
+            // Update UI
+            const startBtn = document.getElementById('startRecording');
+            const stopBtn = document.getElementById('stopRecording');
+            if (startBtn) startBtn.disabled = true;
+            if (stopBtn) stopBtn.disabled = false;
+
+            // Create MediaRecorder
+            this.videoRecorder = new MediaRecorder(stream);
+
+            this.videoRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    this.recordedChunks.push(event.data);
+                }
+            };
+
+            this.videoRecorder.onstop = () => {
+                const blob = new Blob(this.recordedChunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(blob);
+
+                // Display recorded video
+                this.displayRecordedVideo(url);
+
+                // Stop all tracks
+                stream.getTracks().forEach(track => track.stop());
+
+                window.accessibilityManager.announce('Video recording completed');
+                console.log('✅ Video recording completed');
+            };
+
+            this.videoRecorder.start();
+            console.log('🎥 Video recording started');
+
+        } catch (error) {
+            console.error('Video recording error:', error);
+            window.accessibilityManager.announceError('Video recording failed: ' + (error?.message || error));
+        }
+    }
+
+    stopVideoRecording() {
+        if (!this.isRecording || !this.videoRecorder) return;
+
+        console.log('🎥 Stopping video recording');
+        window.accessibilityManager.announce('Stopping video recording');
+
+        this.videoRecorder.stop();
+        this.isRecording = false;
+
+        // Update UI
+        const startBtn = document.getElementById('startRecording');
+        const stopBtn = document.getElementById('stopRecording');
+        if (startBtn) startBtn.disabled = false;
+        if (stopBtn) stopBtn.disabled = true;
+    }
+
+    displayVideoPreview(captureResult) {
+        // Similar to displayCapture but for video preview
+        const canvas = document.createElement('canvas');
+        canvas.width = 640; // Standard video preview size
+        canvas.height = 480;
+        const ctx = canvas.getContext('2d');
+
+        // Create image from capture data
+        const img = new Image();
+        img.onload = () => {
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            const dataUrl = canvas.toDataURL('image/png');
+
+            // Update preview
+            const previewImage = document.getElementById('previewImage');
+            const previewPlaceholder = document.getElementById('previewPlaceholder');
+
+            if (previewImage) {
+                previewImage.src = dataUrl;
+                previewImage.style.display = 'block';
+            }
+
+            if (previewPlaceholder) {
+                previewPlaceholder.style.display = 'none';
+            }
+
+            // Store current capture
+            window.currentCapture = {
+                type: 'video',
+                subtype: 'manual',
+                dataUrl: dataUrl,
+                timestamp: new Date().toISOString(),
+                filename: `video_frame_${Date.now()}.png`
+            };
+
+            // Enable action buttons
+            this.enableActionButtons();
+        };
+        img.src = captureResult.dataUrl || captureResult;
+    }
+
+    displayRecordedVideo(url) {
+        const previewVideo = document.getElementById('previewVideo');
+        const previewPlaceholder = document.getElementById('previewPlaceholder');
+
+        if (previewVideo) {
+            previewVideo.src = url;
+            previewVideo.style.display = 'block';
+            previewVideo.controls = true;
+        }
+
+        if (previewPlaceholder) {
+            previewPlaceholder.style.display = 'none';
+        }
+
+        // Store current capture
+        window.currentCapture = {
+            type: 'video',
+            subtype: 'recording',
+            videoUrl: url,
+            timestamp: new Date().toISOString(),
+            filename: `recording_${Date.now()}.webm`
+        };
+
+        // Enable action buttons
+        this.enableActionButtons();
+    }
+
+    // Countdown functionality
+    startCountdown(seconds = 10, callback = null) {
+        this.countdownTime = seconds;
+        this.currentCountdown = seconds;
+        this.isCountdownActive = true;
+        this.isPaused = false;
+
+        // Show countdown section
+        const countdownSection = document.getElementById('countdownSection');
+        if (countdownSection) {
+            countdownSection.style.display = 'block';
+        }
+
+        this.updateCountdownDisplay();
+
+        this.countdownInterval = setInterval(() => {
+            if (this.isPaused) return;
+
+            this.currentCountdown--;
+            this.updateCountdownDisplay();
+
+            if (this.currentCountdown <= 0) {
+                this.stopCountdown();
+                if (callback) callback();
+            }
+        }, 1000);
+
+        console.log(`⏰ Countdown started: ${seconds} seconds`);
+    }
+
+    pauseCountdown() {
+        if (!this.isCountdownActive) return;
+
+        this.isPaused = true;
+        const resumeBtn = document.getElementById('resumeCountdown');
+        const pauseBtn = document.getElementById('pauseCountdown');
+
+        if (resumeBtn) resumeBtn.style.display = 'inline-flex';
+        if (pauseBtn) pauseBtn.style.display = 'none';
+
+        window.accessibilityManager.announce('Countdown paused');
+        console.log('⏸️ Countdown paused');
+    }
+
+    resumeCountdown() {
+        if (!this.isCountdownActive) return;
+
+        this.isPaused = false;
+        const resumeBtn = document.getElementById('resumeCountdown');
+        const pauseBtn = document.getElementById('pauseCountdown');
+
+        if (resumeBtn) resumeBtn.style.display = 'none';
+        if (pauseBtn) pauseBtn.style.display = 'inline-flex';
+
+        window.accessibilityManager.announce('Countdown resumed');
+        console.log('▶️ Countdown resumed');
+    }
+
+    stopCountdown() {
+        if (!this.isCountdownActive) return;
+
+        this.isCountdownActive = false;
+        this.isPaused = false;
+
+        if (this.countdownInterval) {
+            clearInterval(this.countdownInterval);
+            this.countdownInterval = null;
+        }
+
+        // Hide countdown section
+        const countdownSection = document.getElementById('countdownSection');
+        if (countdownSection) {
+            countdownSection.style.display = 'none';
+        }
+
+        // Reset buttons
+        const resumeBtn = document.getElementById('resumeCountdown');
+        const pauseBtn = document.getElementById('pauseCountdown');
+        if (resumeBtn) resumeBtn.style.display = 'none';
+        if (pauseBtn) pauseBtn.style.display = 'inline-flex';
+
+        window.accessibilityManager.announce('Countdown stopped');
+        console.log('⏹️ Countdown stopped');
+    }
+
+    updateCountdownDisplay() {
+        const countdownTimer = document.getElementById('countdownTimer');
+        if (countdownTimer) {
+            countdownTimer.textContent = this.currentCountdown;
+        }
+    }
+
+    // Sequential actions system
+    async performSequentialActions(actions) {
+        for (let i = 0; i < actions.length; i++) {
+            const action = actions[i];
+
+            console.log(`🔄 Executing sequential action ${i + 1}/${actions.length}: ${action.name}`);
+
+            // Start countdown before each action (except first)
+            if (i > 0) {
+                await new Promise((resolve) => {
+                    this.startCountdown(5, resolve); // 5 second countdown between actions
+                });
+            }
+
+            // Execute the action
+            try {
+                await action.execute();
+                window.accessibilityManager.announce(`Action completed: ${action.name}`);
+            } catch (error) {
+                console.error(`Action failed: ${action.name}`, error);
+                window.accessibilityManager.announceError(`Action failed: ${action.name}`);
+            }
+        }
+
+        window.accessibilityManager.announce('All sequential actions completed');
+        console.log('✅ All sequential actions completed');
+    }
         // Update the button text if currently autocapturing
         if (this.isAutoCapturing) {
             const autoCaptureBtn = document.getElementById('autoCapture');

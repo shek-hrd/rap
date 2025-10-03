@@ -173,7 +173,17 @@ class AccessibilityManager {
             setTimeout(() => this.processAnnouncementQueue(), 100);
         };
 
-        this.speechSynthesis.speak(utterance);
+        // Check if user has activated speech synthesis before speaking
+        if (this.speechSynthesis.speaking) {
+            this.speechSynthesis.cancel();
+        }
+
+        try {
+            this.speechSynthesis.speak(utterance);
+        } catch (error) {
+            console.error('Speech synthesis failed:', error);
+            this.displayAnnouncement(announcement.message);
+        }
 
         // Also display visually
         this.displayAnnouncement(announcement.message);
