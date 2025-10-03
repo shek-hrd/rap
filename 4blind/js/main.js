@@ -503,6 +503,615 @@ class RaptureAccessible {
                 this.startFullSequence();
             });
         }
+
+        // Setup Quick Help button
+        const quickHelpBtn = document.getElementById('quickHelp');
+        if (quickHelpBtn) {
+            quickHelpBtn.addEventListener('click', () => {
+                this.showQuickHelp();
+            });
+        }
+    }
+
+    // ===== NEW FUNCTIONALITY FOR CONSOLE MONITORING AND PROGRESS TRACKING =====
+
+    setupConsoleMonitoring() {
+        this.consoleMonitor = {
+            isPaused: false,
+            logs: [],
+            maxLogs: 1000,
+            errorCount: 0,
+            warningCount: 0,
+            infoCount: 0
+        };
+
+        // Override console methods to capture output
+        const originalConsole = {
+            log: console.log,
+            error: console.error,
+            warn: console.warn,
+            info: console.info
+        };
+
+        // Create console log container
+        this.createConsoleLogContainer();
+
+        // Override console methods
+        console.log = (...args) => {
+            originalConsole.log(...args);
+            this.addConsoleEntry('log', args.join(' '));
+        };
+
+        console.error = (...args) => {
+            originalConsole.error(...args);
+            this.addConsoleEntry('error', args.join(' '));
+            this.consoleMonitor.errorCount++;
+            this.updateConsoleStats();
+        };
+
+        console.warn = (...args) => {
+            originalConsole.warn(...args);
+            this.addConsoleEntry('warning', args.join(' '));
+            this.consoleMonitor.warningCount++;
+            this.updateConsoleStats();
+        };
+
+        console.info = (...args) => {
+            originalConsole.info(...args);
+            this.addConsoleEntry('info', args.join(' '));
+            this.consoleMonitor.infoCount++;
+            this.updateConsoleStats();
+        };
+
+        // Setup console control buttons
+        this.setupConsoleControls();
+    }
+
+    createConsoleLogContainer() {
+        const consoleLog = document.getElementById('consoleLog');
+        if (consoleLog) {
+            consoleLog.innerHTML = '<div class="console-entry info">🖥️ Console monitoring started...</div>';
+        }
+    }
+
+    addConsoleEntry(type, message) {
+        if (this.consoleMonitor.isPaused) return;
+
+        const consoleLog = document.getElementById('consoleLog');
+        if (!consoleLog) return;
+
+        const entry = document.createElement('div');
+        entry.className = `console-entry ${type}`;
+        entry.innerHTML = `<span class="timestamp">[${new Date().toLocaleTimeString()}]</span> ${this.escapeHtml(message)}`;
+
+        // Add to logs array
+        this.consoleMonitor.logs.push({
+            type,
+            message,
+            timestamp: new Date()
+        });
+
+        // Keep only recent logs
+        if (this.consoleMonitor.logs.length > this.consoleMonitor.maxLogs) {
+            this.consoleMonitor.logs.shift();
+        }
+
+        // Add to DOM
+        consoleLog.appendChild(entry);
+        consoleLog.scrollTop = consoleLog.scrollHeight;
+    }
+
+    updateConsoleStats() {
+        const errorCountEl = document.getElementById('errorCount');
+        const warningCountEl = document.getElementById('warningCount');
+        const infoCountEl = document.getElementById('infoCount');
+
+        if (errorCountEl) errorCountEl.textContent = `Errors: ${this.consoleMonitor.errorCount}`;
+        if (warningCountEl) warningCountEl.textContent = `Warnings: ${this.consoleMonitor.warningCount}`;
+        if (infoCountEl) infoCountEl.textContent = `Info: ${this.consoleMonitor.infoCount}`;
+    }
+
+    setupConsoleControls() {
+        const clearConsoleBtn = document.getElementById('clearConsole');
+        const toggleConsoleBtn = document.getElementById('toggleConsole');
+        const exportConsoleBtn = document.getElementById('exportConsole');
+
+        if (clearConsoleBtn) {
+            clearConsoleBtn.addEventListener('click', () => {
+                this.clearConsole();
+            });
+        }
+
+        if (toggleConsoleBtn) {
+            toggleConsoleBtn.addEventListener('click', () => {
+                this.toggleConsoleMonitoring();
+            });
+        }
+
+        if (exportConsoleBtn) {
+            exportConsoleBtn.addEventListener('click', () => {
+                this.exportConsoleLogs();
+            });
+        }
+    }
+
+    clearConsole() {
+        const consoleLog = document.getElementById('consoleLog');
+        if (consoleLog) {
+            consoleLog.innerHTML = '<div class="console-entry info">📝 Console cleared</div>';
+        }
+        this.consoleMonitor.errorCount = 0;
+        this.consoleMonitor.warningCount = 0;
+        this.consoleMonitor.infoCount = 0;
+        this.updateConsoleStats();
+    }
+
+    toggleConsoleMonitoring() {
+        this.consoleMonitor.isPaused = !this.consoleMonitor.isPaused;
+        const toggleBtn = document.getElementById('toggleConsole');
+        if (toggleBtn) {
+            toggleBtn.textContent = this.consoleMonitor.isPaused ? '▶️ Resume Monitoring' : '⏸️ Pause Monitoring';
+            toggleBtn.className = `btn btn-small ${this.consoleMonitor.isPaused ? 'btn-success' : 'btn-info'}`;
+        }
+        this.addConsoleEntry('info', `Console monitoring ${this.consoleMonitor.isPaused ? 'paused' : 'resumed'}`);
+    }
+
+    exportConsoleLogs() {
+        const logsData = this.consoleMonitor.logs.map(log =>
+            `[${log.timestamp.toISOString()}] ${log.type.toUpperCase()}: ${log.message}`
+        ).join('\n');
+
+        const blob = new Blob([logsData], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `console-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // ===== ANALYSIS PROGRESS TRACKING =====
+
+    setupAnalysisProgress() {
+        this.analysisProgress = {
+            currentStep: 0,
+            totalSteps: 3,
+            isActive: false,
+            startTime: null,
+            steps: [
+                { name: 'Image Processing', status: 'pending' },
+                { name: 'AI Analysis', status: 'pending' },
+                { name: 'Result Processing', status: 'pending' }
+            ]
+        };
+
+        this.updateProgressDisplay();
+    }
+
+    startAnalysisProgress() {
+        this.analysisProgress.isActive = true;
+        this.analysisProgress.currentStep = 0;
+        this.analysisProgress.startTime = Date.now();
+        
+        // Update all steps to pending
+        this.analysisProgress.steps.forEach((step, index) => {
+            step.status = index === 0 ? 'active' : 'pending';
+        });
+
+        this.updateProgressDisplay();
+        this.addConsoleEntry('info', '🔄 Analysis started');
+    }
+
+    updateAnalysisStep(stepIndex, status, message = '') {
+        if (!this.analysisProgress.isActive) return;
+
+        this.analysisProgress.steps[stepIndex].status = status;
+        
+        if (status === 'completed' && stepIndex < this.analysisProgress.steps.length - 1) {
+            this.analysisProgress.steps[stepIndex + 1].status = 'active';
+            this.analysisProgress.currentStep = stepIndex + 1;
+        }
+
+        this.updateProgressDisplay();
+
+        if (message) {
+            this.addConsoleEntry('info', `📊 ${this.analysisProgress.steps[stepIndex].name}: ${message}`);
+        }
+    }
+
+    completeAnalysisProgress() {
+        this.analysisProgress.isActive = false;
+        this.analysisProgress.steps.forEach(step => {
+            step.status = 'completed';
+        });
+        this.analysisProgress.currentStep = this.analysisProgress.totalSteps;
+
+        this.updateProgressDisplay();
+        this.addConsoleEntry('info', '✅ Analysis completed');
+    }
+
+    updateProgressDisplay() {
+        const progressBar = document.getElementById('analysisProgressBar');
+        const progressText = document.getElementById('progressText');
+        const progressPercentage = document.getElementById('progressPercentage');
+
+        if (!progressBar || !progressText || !progressPercentage) return;
+
+        const percentage = Math.round((this.analysisProgress.currentStep / this.analysisProgress.totalSteps) * 100);
+        progressBar.style.width = `${percentage}%`;
+        progressBar.setAttribute('aria-valuenow', percentage);
+
+        progressText.textContent = this.analysisProgress.isActive
+            ? `Step ${this.analysisProgress.currentStep + 1}: ${this.analysisProgress.steps[this.analysisProgress.currentStep].name}`
+            : 'Ready to analyze';
+        progressPercentage.textContent = `${percentage}%`;
+
+        // Update step indicators
+        this.analysisProgress.steps.forEach((step, index) => {
+            const stepEl = document.getElementById(`step${index + 1}`);
+            const statusEl = document.getElementById(`step${index + 1}Status`);
+            
+            if (stepEl && statusEl) {
+                stepEl.className = `progress-step ${step.status}`;
+                statusEl.textContent = step.status === 'completed' ? '✅ Completed' :
+                                     step.status === 'active' ? '🔄 Active' : '⏳ Pending';
+            }
+        });
+    }
+
+    // ===== AI REQUESTS SUMMARY =====
+
+    setupAIRequestLogging() {
+        this.aiRequests = {
+            total: 0,
+            successful: 0,
+            failed: 0,
+            logs: [],
+            maxLogs: 50
+        };
+
+        this.updateAIStatsDisplay();
+        this.setupAIRequestControls();
+    }
+
+    logAIRequest(provider, success, duration, error = null) {
+        this.aiRequests.total++;
+        if (success) {
+            this.aiRequests.successful++;
+        } else {
+            this.aiRequests.failed++;
+        }
+
+        // Add to logs
+        this.aiRequests.logs.push({
+            provider,
+            success,
+            duration,
+            error,
+            timestamp: new Date()
+        });
+
+        // Keep only recent logs
+        if (this.aiRequests.logs.length > this.aiRequests.maxLogs) {
+            this.aiRequests.logs.shift();
+        }
+
+        this.updateAIStatsDisplay();
+        this.updateAIRequestLogDisplay();
+
+        // Log to console
+        const status = success ? '✅' : '❌';
+        this.addConsoleEntry(success ? 'info' : 'error',
+            `${status} AI Request (${provider}): ${duration}ms ${error ? '- ' + error : ''}`);
+    }
+
+    updateAIStatsDisplay() {
+        const totalEl = document.getElementById('totalRequests');
+        const successEl = document.getElementById('successRate');
+        const avgTimeEl = document.getElementById('avgResponseTime');
+        const lastRequestEl = document.getElementById('lastRequestTime');
+
+        if (totalEl) totalEl.textContent = this.aiRequests.total;
+
+        if (successEl) {
+            const rate = this.aiRequests.total > 0
+                ? Math.round((this.aiRequests.successful / this.aiRequests.total) * 100)
+                : 100;
+            successEl.textContent = `${rate}%`;
+        }
+
+        if (avgTimeEl) {
+            const validRequests = this.aiRequests.logs.filter(log => log.duration);
+            const avgTime = validRequests.length > 0
+                ? Math.round(validRequests.reduce((sum, log) => sum + log.duration, 0) / validRequests.length)
+                : 0;
+            avgTimeEl.textContent = `${avgTime}ms`;
+        }
+
+        if (lastRequestEl) {
+            const lastRequest = this.aiRequests.logs[this.aiRequests.logs.length - 1];
+            lastRequestEl.textContent = lastRequest
+                ? lastRequest.timestamp.toLocaleTimeString()
+                : 'Never';
+        }
+    }
+
+    updateAIRequestLogDisplay() {
+        const logContainer = document.getElementById('aiRequestLog');
+        if (!logContainer) return;
+
+        logContainer.innerHTML = '';
+
+        this.aiRequests.logs.slice(-10).reverse().forEach(log => {
+            const entry = document.createElement('div');
+            entry.className = `request-entry ${log.success ? 'success' : 'error'}`;
+            entry.innerHTML = `
+                <div class="timestamp">${log.timestamp.toLocaleTimeString()}</div>
+                <div><strong>${log.provider}</strong> - ${log.duration}ms</div>
+                ${log.error ? `<div class="error-text">${log.error}</div>` : ''}
+            `;
+            logContainer.appendChild(entry);
+        });
+    }
+
+    setupAIRequestControls() {
+        // AI request logging is automatic, no controls needed
+        // But we could add export functionality here if needed
+    }
+
+    // ===== SOLUTIONS GUIDE =====
+
+    setupSolutionsGuide() {
+        const tabs = document.querySelectorAll('.solution-tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                this.switchSolutionTab(tab.dataset.tab);
+            });
+        });
+    }
+
+    switchSolutionTab(tabName) {
+        // Hide all tab contents
+        const contents = document.querySelectorAll('.solution-tab-content');
+        contents.forEach(content => {
+            content.classList.remove('active');
+        });
+
+        // Remove active class from all tabs
+        const tabs = document.querySelectorAll('.solution-tab');
+        tabs.forEach(tab => {
+            tab.classList.remove('active');
+        });
+
+        // Show selected tab content
+        const selectedContent = document.getElementById(tabName);
+        const selectedTab = document.querySelector(`[data-tab="${tabName}"]`);
+
+        if (selectedContent && selectedTab) {
+            selectedContent.classList.add('active');
+            selectedTab.classList.add('active');
+        }
+    }
+
+    // ===== BOTTOM STATUS BAR =====
+
+    setupBottomStatusBar() {
+        this.statusBar = {
+            currentActivity: 'Ready',
+            updateInterval: null
+        };
+
+        this.updateStatusBar();
+        this.startStatusBarUpdates();
+    }
+
+    updateStatusBar(activity = null) {
+        if (activity) {
+            this.statusBar.currentActivity = activity;
+        }
+
+        const activityEl = document.getElementById('currentActivity');
+        if (activityEl) {
+            activityEl.textContent = this.statusBar.currentActivity;
+        }
+
+        // Update storage and memory info
+        this.updateSystemStats();
+    }
+
+    startStatusBarUpdates() {
+        // Update every 5 seconds
+        this.statusBar.updateInterval = setInterval(() => {
+            this.updateSystemStats();
+        }, 5000);
+    }
+
+    updateSystemStats() {
+        // Update storage usage
+        if ('storage' in navigator && 'estimate' in navigator.storage) {
+            navigator.storage.estimate().then(estimate => {
+                const storageEl = document.getElementById('storageUsed');
+                if (storageEl && estimate.usage) {
+                    storageEl.textContent = this.formatBytes(estimate.usage);
+                }
+            });
+        }
+
+        // Update memory usage (if available)
+        if ('memory' in performance) {
+            const memoryEl = document.getElementById('memoryUsage');
+            if (memoryEl) {
+                const memInfo = performance.memory;
+                const usedMB = Math.round(memInfo.usedJSHeapSize / 1048576);
+                memoryEl.textContent = `${usedMB} MB`;
+            }
+        }
+
+        // Update captures count
+        const capturesEl = document.getElementById('capturesCount');
+        if (capturesEl && window.captureManager) {
+            capturesEl.textContent = window.captureManager.captures.length;
+        }
+    }
+
+    showQuickHelp() {
+        const helpMessage = `
+🎯 Quick Help - Rapture Accessible
+
+📸 CAPTURE:
+• Manual Screen: Click "📸 Manual Screen Capture" or press Alt+1 for auto
+• Manual Video: Click "🎥 Manual Video Capture"
+• Emergency: Alt+2 for immediate capture
+• Recording: "⏺️ Start Recording" / "⏹️ Stop Recording"
+
+🤖 ANALYSIS:
+• Alt+4 or click "🤖 Analyze Current Capture"
+• Alt+5 or click "🔊 Read Analysis Aloud"
+• Choose AI provider in settings
+
+💾 MANAGEMENT:
+• Ctrl+S to save current capture
+• Ctrl+E to export all captures
+• Click "🗑️ Clear All" to remove captures
+
+⚙️ SETTINGS:
+• Auto-analyze toggle
+• AI provider selection
+• Auto capture count and delay
+
+🎤 VOICE COMMANDS:
+• "Capture screen", "Start recording"
+• "Analyze capture", "Read description"
+• "Save capture", "Speak status"
+
+📊 MONITORING:
+• Console output with error tracking
+• Analysis progress indicator
+• AI request summary and timing
+• Solutions guide for troubleshooting
+
+For detailed help, check the "Voice Commands" section below.
+        `;
+
+        // Show in console
+        console.log(helpMessage);
+
+        // Announce via accessibility manager
+        if (window.accessibilityManager) {
+            window.accessibilityManager.announce('Quick help displayed in console');
+        }
+
+        // Also show in a temporary popup for visual users
+        this.showHelpPopup(helpMessage);
+    }
+
+    showHelpPopup(message) {
+        // Create a temporary popup
+        const popup = document.createElement('div');
+        popup.className = 'help-popup';
+        popup.innerHTML = `
+            <div class="help-content">
+                <button class="help-close">&times;</button>
+                <pre>${message}</pre>
+            </div>
+        `;
+
+        // Add popup styles
+        popup.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        `;
+
+        const content = popup.querySelector('.help-content');
+        content.style.cssText = `
+            background: #1a2332;
+            border: 3px solid #00ff00;
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+        `;
+
+        const closeBtn = popup.querySelector('.help-close');
+        closeBtn.style.cssText = `
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #00ff00;
+            font-size: 24px;
+            cursor: pointer;
+        `;
+
+        document.body.appendChild(popup);
+
+        // Close on button click or Escape key
+        const closePopup = () => {
+            document.body.removeChild(popup);
+        };
+
+        closeBtn.addEventListener('click', closePopup);
+        document.addEventListener('keydown', function escHandler(e) {
+            if (e.key === 'Escape') {
+                closePopup();
+                document.removeEventListener('keydown', escHandler);
+            }
+        });
+
+        // Auto-close after 30 seconds
+        setTimeout(closePopup, 30000);
+    }
+
+    // ===== INITIALIZATION INTEGRATION =====
+
+    performInitialization() {
+        try {
+            // Initialize all modules (existing code)
+            this.initializeModules();
+            this.setupErrorHandling();
+            this.setupKeyboardShortcuts();
+            this.setupSystemMonitoring();
+            this.loadUserPreferences();
+            this.setupFirstLoadAutoCapture();
+            this.setupSequentialActions();
+
+            // Initialize new features
+            this.setupConsoleMonitoring();
+            this.setupAnalysisProgress();
+            this.setupAIRequestLogging();
+            this.setupSolutionsGuide();
+            this.setupBottomStatusBar();
+
+            this.isInitialized = true;
+            console.log('✅ Rapture Accessible initialized successfully');
+            this.announceInitialization();
+
+        } catch (error) {
+            console.error('❌ Initialization failed:', error);
+            this.handleInitializationError(error);
+        }
     }
 }
 

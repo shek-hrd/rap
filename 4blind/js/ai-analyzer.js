@@ -97,6 +97,12 @@ class AIAnalyzer {
 
         this.isAnalyzing = true;
 
+        // Start progress tracking
+        if (window.raptureAccessible) {
+            window.raptureAccessible.startAnalysisProgress();
+            window.raptureAccessible.updateStatusBar('🔄 Analyzing capture...');
+        }
+
         // Update UI
         const analyzeBtn = document.getElementById('analyzeCapture');
         if (analyzeBtn) {
@@ -107,20 +113,49 @@ class AIAnalyzer {
         // Show processing status
         window.accessibilityManager.announceAnalysisStart();
 
+        const startTime = Date.now();
+        let analysis = '';
+        let success = false;
+
         try {
             const provider = document.getElementById('aiProviderSelect')?.value || 'gemini';
-            let analysis = '';
+
+            // Step 1: Image/Video Processing
+            if (window.raptureAccessible) {
+                window.raptureAccessible.updateAnalysisStep(0, 'active', 'Processing capture...');
+            }
 
             if (window.currentCapture.type === 'image') {
+                if (window.raptureAccessible) {
+                    window.raptureAccessible.updateAnalysisStep(0, 'completed', 'Image processed');
+                    window.raptureAccessible.updateAnalysisStep(1, 'active', 'Analyzing with AI...');
+                }
                 analysis = await this.analyzeImage(window.currentCapture.dataUrl, provider);
             } else if (window.currentCapture.type === 'video') {
+                if (window.raptureAccessible) {
+                    window.raptureAccessible.updateAnalysisStep(0, 'completed', 'Video processed');
+                    window.raptureAccessible.updateAnalysisStep(1, 'active', 'Analyzing with AI...');
+                }
                 analysis = await this.analyzeVideo(window.currentCapture.dataUrl, provider);
             }
 
             if (analysis) {
+                success = true;
+
+                // Step 2: AI Analysis completed
+                if (window.raptureAccessible) {
+                    window.raptureAccessible.updateAnalysisStep(1, 'completed', 'AI analysis complete');
+                    window.raptureAccessible.updateAnalysisStep(2, 'active', 'Processing results...');
+                }
+
                 this.displayAnalysis(analysis, provider);
                 this.addToHistory(provider, analysis);
                 window.accessibilityManager.announceAnalysisComplete(provider);
+
+                // Step 3: Results processed
+                if (window.raptureAccessible) {
+                    window.raptureAccessible.updateAnalysisStep(2, 'completed', 'Results ready');
+                }
 
                 // Return the analysis for console logging
                 return analysis;
@@ -132,8 +167,22 @@ class AIAnalyzer {
         } catch (error) {
             console.error('AI analysis error:', error);
             window.accessibilityManager.announceError('Analysis failed: ' + error.message);
+            success = false;
         } finally {
             this.isAnalyzing = false;
+            const duration = Date.now() - startTime;
+
+            // Complete progress tracking
+            if (window.raptureAccessible) {
+                if (success) {
+                    window.raptureAccessible.completeAnalysisProgress();
+                }
+                window.raptureAccessible.updateStatusBar('Ready');
+                
+                // Log AI request
+                const provider = document.getElementById('aiProviderSelect')?.value || 'gemini';
+                window.raptureAccessible.logAIRequest(provider, success, duration, success ? null : error?.message);
+            }
 
             // Reset UI
             if (analyzeBtn) {
