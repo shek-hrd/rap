@@ -1226,25 +1226,6 @@ For detailed help, check the "Voice Commands" section below.
         });
     }
 
-        // Also listen for custom announcements from the main app
-        this.announcementListener = (message) => {
-            this.addMiniAnnouncement(message);
-        };
-
-        // Add initial system ready announcement
-        setTimeout(() => {
-            this.addMiniAnnouncement('System initialized');
-        }, 1000);
-
-        // Test announcements for visibility
-        setTimeout(() => {
-            this.addMiniAnnouncement('Console monitoring active');
-        }, 2000);
-        setTimeout(() => {
-            this.addMiniAnnouncement('AI analysis ready');
-        }, 3000);
-    }
-
     addMiniAnnouncement(message) {
         this.miniAnnouncements.announcements.unshift(message);
 
@@ -1254,6 +1235,11 @@ For detailed help, check the "Voice Commands" section below.
         }
 
         this.updateMiniAnnouncementsDisplay();
+
+        // Also send to main status bar if available
+        if (window.addStatusAnnouncement) {
+            window.addStatusAnnouncement(message);
+        }
     }
 
     updateMiniAnnouncementsDisplay() {

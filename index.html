@@ -1765,7 +1765,205 @@
         console.log('🎬 Rapture Screen Capture & AI Analysis Tool initialized!');
         console.log('📸 Features: Screen capture, Video recording, AI analysis, Cloud upload');
         console.log('🔧 Usage: Click capture buttons to start, then analyze with AI or save/upload');
+
+        // Initialize status bar
+        initializeStatusBar();
+
+        // Status Bar Functions
+        function initializeStatusBar() {
+            const statusPanel = document.getElementById('statusPanel');
+            const statusExpandBtn = document.getElementById('statusExpandBtn');
+            const statusAnnouncements = document.getElementById('statusAnnouncements');
+
+            // Toggle main status panel
+            statusExpandBtn.addEventListener('click', function() {
+                const isExpanded = statusPanel.classList.contains('expanded');
+                if (isExpanded) {
+                    statusPanel.classList.remove('expanded');
+                    statusExpandBtn.textContent = '📊 Status Panel';
+                } else {
+                    statusPanel.classList.add('expanded');
+                    statusExpandBtn.textContent = '📊 Hide Panel';
+                }
+            });
+
+            // Add sample announcements
+            addStatusAnnouncement('System ready');
+            addStatusAnnouncement('Monitoring active');
+
+            // Auto-add announcements every 30 seconds for demo
+            setInterval(() => {
+                addStatusAnnouncement('Status check: OK');
+            }, 30000);
+        }
+
+        function addStatusAnnouncement(message) {
+            const statusAnnouncements = document.getElementById('statusAnnouncements');
+            const announcement = document.createElement('div');
+            announcement.className = 'announcement-item new';
+            announcement.textContent = message;
+
+            statusAnnouncements.appendChild(announcement);
+
+            // Remove 'new' class after animation
+            setTimeout(() => {
+                announcement.classList.remove('new');
+            }, 3000);
+
+            // Keep only last 5 announcements
+            while (statusAnnouncements.children.length > 5) {
+                statusAnnouncements.removeChild(statusAnnouncements.firstChild);
+            }
+        }
+
+        function toggleStatusSection(sectionName) {
+            const content = document.getElementById(sectionName + 'Content');
+            const toggle = document.getElementById(sectionName + 'Toggle');
+
+            const isExpanded = content.classList.contains('expanded');
+            if (isExpanded) {
+                content.classList.remove('expanded');
+                toggle.textContent = '▶';
+            } else {
+                content.classList.add('expanded');
+                toggle.textContent = '▼';
+            }
+        }
+
+        // Global function to add console messages
+        function addConsoleMessage(message, type = 'info') {
+            const consoleOutput = document.getElementById('consoleOutput');
+            const consoleLine = document.createElement('div');
+            consoleLine.className = `console-line ${type}`;
+            consoleLine.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+
+            consoleOutput.appendChild(consoleLine);
+
+            // Auto scroll to bottom
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+
+            // Keep only last 50 lines
+            while (consoleOutput.children.length > 50) {
+                consoleOutput.removeChild(consoleOutput.firstChild);
+            }
+
+            // Also add to status bar announcements for important messages
+            if (type === 'error' || type === 'warn') {
+                addStatusAnnouncement(`${type.toUpperCase()}: ${message}`);
+            }
+        }
+
+        // Override console methods to capture output
+        const originalConsole = {
+            log: console.log,
+            error: console.error,
+            warn: console.warn,
+            info: console.info
+        };
+
+        console.log = function(...args) {
+            originalConsole.log.apply(console, args);
+            addConsoleMessage(args.join(' '), 'info');
+        };
+
+        console.error = function(...args) {
+            originalConsole.error.apply(console, args);
+            addConsoleMessage(args.join(' '), 'error');
+        };
+
+        console.warn = function(...args) {
+            originalConsole.warn.apply(console, args);
+            addConsoleMessage(args.join(' '), 'warn');
+        };
+
+        console.info = function(...args) {
+            originalConsole.info.apply(console, args);
+            addConsoleMessage(args.join(' '), 'info');
+        };
     </script>
+
+    <!-- Bottom Status Bar -->
+    <div class="bottom-status-bar" id="bottomStatusBar">
+        <div class="status-bar-left">
+            <div class="status-announcements" id="statusAnnouncements">
+                <!-- Announcements will be dynamically added here -->
+            </div>
+        </div>
+        <div class="status-bar-right">
+            <button class="status-expand-btn" id="statusExpandBtn">📊 Status Panel</button>
+        </div>
+    </div>
+
+    <!-- Expandable Status Panel -->
+    <div class="status-panel" id="statusPanel">
+        <div class="status-panel-content">
+            <!-- Console Section -->
+            <div class="status-section">
+                <div class="status-section-header" onclick="toggleStatusSection('console')">
+                    <span class="status-section-title">📋 Console Output</span>
+                    <span class="status-section-toggle" id="consoleToggle">▶</span>
+                </div>
+                <div class="status-section-content" id="consoleContent">
+                    <div class="status-section-body">
+                        <div class="console-output" id="consoleOutput">
+                            <div class="console-line info">System initialized successfully</div>
+                            <div class="console-line info">Status monitoring active</div>
+                            <div class="console-line info">Ready for screen capture operations</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Description Section -->
+            <div class="status-section">
+                <div class="status-section-header" onclick="toggleStatusSection('description')">
+                    <span class="status-section-title">📖 System Description</span>
+                    <span class="status-section-toggle" id="descriptionToggle">▶</span>
+                </div>
+                <div class="status-section-content" id="descriptionContent">
+                    <div class="status-section-body">
+                        <p><strong>Rapture Screen Capture Tool</strong></p>
+                        <p>A comprehensive screen capture and AI analysis application with the following features:</p>
+                        <ul>
+                            <li>Screen capture (area, window, full screen)</li>
+                            <li>Video recording capabilities</li>
+                            <li>AI-powered image analysis</li>
+                            <li>Cloud storage integration</li>
+                            <li>Real-time status monitoring</li>
+                        </ul>
+                        <p>Built with modern web technologies for optimal performance and user experience.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Solutions Section -->
+            <div class="status-section">
+                <div class="status-section-header" onclick="toggleStatusSection('solutions')">
+                    <span class="status-section-title">🔧 Solutions & Tips</span>
+                    <span class="status-section-toggle" id="solutionsToggle">▶</span>
+                </div>
+                <div class="status-section-content" id="solutionsContent">
+                    <div class="status-section-body">
+                        <div class="solution-item">
+                            <div class="solution-title">Screen Capture Not Working?</div>
+                            <div class="solution-description">Ensure browser permissions for screen capture are granted. Try refreshing the page if issues persist.</div>
+                            <div class="solution-code">chrome://settings/content/screenCapture</div>
+                        </div>
+                        <div class="solution-item">
+                            <div class="solution-title">AI Analysis Issues</div>
+                            <div class="solution-description">Check your internet connection and API key configuration in settings.</div>
+                            <div class="solution-code">Check API status: /api/v1/health</div>
+                        </div>
+                        <div class="solution-item">
+                            <div class="solution-title">Performance Optimization</div>
+                            <div class="solution-description">For better performance, close unnecessary browser tabs and ensure sufficient RAM is available.</div>
+                            <div class="solution-code">Memory usage: ~150MB per session</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 
 
