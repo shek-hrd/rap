@@ -30,41 +30,6 @@
             <section class="control-panel" role="region" aria-labelledby="control-panel-heading">
                 <h2 id="control-panel-heading">Rapture Accessible Control Panel</h2>
 
-                <!-- Sequential Actions - Enhanced Layout -->
-                <div class="control-group sequential-actions-primary">
-                    <h3>⚡ Sequential Actions <span class="success-rate">Enhanced Success Rate</span></h3>
-                    <div class="sequential-controls-horizontal">
-                        <button id="quickSequence" class="btn btn-wide btn-primary sequential-btn" data-action="quick" aria-describedby="quick-sequence-desc">
-                            <span class="btn-icon">⚡</span>
-                            <span class="btn-text">Quick Sequence</span>
-                            <span class="btn-subtitle">(Capture → Analyze → Save)</span>
-                            <span class="progress-indicator"></span>
-                        </button>
-                        <button id="fullSequence" class="btn btn-wide btn-secondary sequential-btn" data-action="full" aria-describedby="full-sequence-desc">
-                            <span class="btn-icon">🔄</span>
-                            <span class="btn-text">Full Sequence</span>
-                            <span class="btn-subtitle">(Screen → Video → Analyze → Read → Save)</span>
-                            <span class="progress-indicator"></span>
-                        </button>
-                        <button id="emergencySequence" class="btn btn-wide btn-danger sequential-btn" data-action="emergency" aria-describedby="emergency-sequence-desc">
-                            <span class="btn-icon">🚨</span>
-                            <span class="btn-text">Emergency Sequence</span>
-                            <span class="btn-subtitle">(Immediate Capture + Priority Analysis)</span>
-                            <span class="progress-indicator"></span>
-                        </button>
-                    </div>
-                    <div class="sequence-status" id="sequenceStatus" role="status" aria-live="polite">
-                        <span class="status-text">Ready to execute sequence</span>
-                        <div class="sequence-progress">
-                            <div class="progress-steps" id="sequenceProgressSteps">
-                                <span class="step" data-step="capture">Capture</span>
-                                <span class="step" data-step="process">Process</span>
-                                <span class="step" data-step="analyze">Analyze</span>
-                                <span class="step" data-step="save">Save</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Main Controls -->
                 <div class="main-controls">
@@ -74,26 +39,12 @@
                             <button id="manualScreenCapture" class="btn btn-primary" aria-describedby="manual-screen-desc">
                                 📸 Manual Screen Capture
                             </button>
-                            <button id="autoCapture" class="btn btn-secondary" aria-describedby="auto-capture-desc">
-                                🔄 Auto Capture (3x)
-                            </button>
                             <button id="emergencyCapture" class="btn btn-danger" aria-describedby="emergency-capture-desc">
                                 🚨 Emergency Capture
                             </button>
                         </div>
                     </div>
 
-                    <div class="control-group">
-                        <h3>Video Recording</h3>
-                        <div class="button-group">
-                            <button id="manualVideoCapture" class="btn btn-primary" aria-describedby="manual-video-desc">
-                                🎥 Manual Video Capture
-                            </button>
-                            <button id="toggleRecording" class="btn btn-success" aria-describedby="toggle-recording-desc">
-                                ⏺️ Start Recording
-                            </button>
-                        </div>
-                    </div>
 
                     <div class="control-group">
                         <h3>Analysis & Actions</h3>
@@ -112,48 +63,43 @@
 
                 </div>
 
-                <!-- Countdown Timer -->
-                <div class="countdown-section" id="countdownSection" style="display: none;">
-                    <div class="countdown-display">
-                        <span id="countdownText">Next action in:</span>
-                        <span id="countdownTimer" class="timer">10</span>
-                        <span>seconds</span>
-                    </div>
-                    <div class="countdown-controls">
-                        <button id="pauseCountdown" class="btn btn-warning">⏸️ Pause</button>
-                        <button id="stopCountdown" class="btn btn-danger">⏹️ Stop</button>
-                        <button id="resumeCountdown" class="btn btn-success" style="display: none;">▶️ Resume</button>
-                    </div>
-                </div>
 
-                <!-- Settings - Collapsible -->
+                <!-- Settings - Simplified AI Configuration -->
                 <details class="settings-details">
-                    <summary>⚙️ Settings & Configuration</summary>
+                    <summary>⚙️ AI Configuration</summary>
                     <div class="settings-content">
-                        <div class="setting-group">
-                            <label for="autoAnalyzeToggle">Auto-analyze captures:</label>
-                            <input type="checkbox" id="autoAnalyzeToggle" checked aria-describedby="auto-analyze-desc">
-                        </div>
-
                         <div class="setting-group">
                             <label for="aiProviderSelect">AI Provider:</label>
                             <select id="aiProviderSelect" aria-describedby="ai-provider-desc">
-                                <option value="gemini">Gemini (Free)</option>
-                                <option value="huggingface">Hugging Face</option>
-                                <option value="openai">OpenAI GPT-4</option>
+                                <option value="huggingface" selected>Hugging Face (Free)</option>
+                                <option value="openai">OpenAI GPT-4o (Free Tier)</option>
+                                <option value="anthropic">Anthropic Claude (Free)</option>
+                                <option value="google">Google Gemini (Free)</option>
+                                <option value="cohere">Cohere (Free)</option>
                             </select>
                         </div>
 
-                        <div class="setting-group">
-                            <label for="autoCaptureCount">Auto captures:</label>
-                            <input type="number" id="autoCaptureCount" min="1" max="10" value="1">
-                            <button id="updateAutoCaptureCount" class="btn btn-small">Update</button>
+                        <div class="setting-group" id="apiKeyGroup" style="display: none;">
+                            <label for="apiKeyInput">API Key:</label>
+                            <input type="password" id="apiKeyInput" placeholder="Enter your API key" aria-describedby="api-key-desc">
+                            <button id="saveApiKey" class="btn btn-small">Save Key</button>
+                            <button id="clearApiKey" class="btn btn-small btn-danger">Clear</button>
                         </div>
 
                         <div class="setting-group">
-                            <label for="autoCaptureDelay">Delay (seconds):</label>
-                            <input type="number" id="autoCaptureDelay" min="1" max="60" value="5">
-                            <button id="updateAutoCaptureDelay" class="btn btn-small">Update</button>
+                            <label for="autoAnalyzeToggle">Auto-analyze after capture:</label>
+                            <input type="checkbox" id="autoAnalyzeToggle" checked aria-describedby="auto-analyze-desc">
+                        </div>
+
+                        <div class="ai-status" id="aiStatus">
+                            <div class="status-item">
+                                <span class="status-label">Current AI:</span>
+                                <span class="status-value" id="currentAI">Hugging Face</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">Status:</span>
+                                <span class="status-value" id="aiConnectionStatus">Ready</span>
+                            </div>
                         </div>
                     </div>
                 </details>
@@ -201,41 +147,7 @@
                 <div id="capturesList" class="captures-grid" role="list" aria-label="Recent captures list"></div>
             </section>
 
-            <!-- Voice Commands Help -->
-            <section class="help-section" role="region" aria-labelledby="help-heading">
-                <h2 id="help-heading">Voice Commands (Coming Soon)</h2>
-                <details class="help-details">
-                    <summary>Available Voice Commands</summary>
-                    <div class="help-content">
-                        <ul>
-                            <li>"Capture screen" - Take a screenshot</li>
-                            <li>"Start recording" - Begin screen recording</li>
-                            <li>"Stop recording" - End current recording</li>
-                            <li>"Analyze capture" - Run AI analysis on current capture</li>
-                            <li>"Read description" - Speak the AI analysis aloud</li>
-                            <li>"Save capture" - Save current capture to storage</li>
-                            <li>"Clear all" - Remove all saved captures</li>
-                            <li>"Speak status" - Announce current system status</li>
-                        </ul>
-                        <p><strong>Note:</strong> Voice commands will be enabled once speech recognition permissions are granted.</p>
-                    </div>
-                </details>
-            </section>
 
-            <!-- Processing Status -->
-            <div class="processing-status" id="processingStatus" style="display: none;" role="status" aria-live="polite" aria-label="Processing status"></div>
-
-            <!-- AI Conversation Interface -->
-            <div class="ai-conversation" id="aiConversation" style="display: none;" role="region" aria-labelledby="conversation-heading">
-                <h3 id="conversation-heading">AI Conversation</h3>
-                <div class="conversation-messages" id="conversationMessages" role="log" aria-live="polite" aria-label="AI conversation messages"></div>
-                <div class="conversation-input-container">
-                    <label for="aiInput">Ask AI about the capture:</label>
-                    <input type="text" id="aiInput" class="ai-input" placeholder="Type your question here..." aria-describedby="ai-input-desc">
-                    <button id="sendAiMessage" class="btn btn-primary">Send Question</button>
-                </div>
-                <p id="ai-input-desc">Ask questions about the current capture or analysis</p>
-            </div>
 
 
             <!-- Enhanced Bottom Status Bar -->
@@ -262,19 +174,7 @@
                         <span id="currentActivity" class="current-activity">Ready</span>
                     </div>
                     <div class="progress-row">
-                        <!-- Compact Analysis Progress -->
-                        <div class="mini-progress-container">
-                            <div class="mini-progress-track">
-                                <div id="miniAnalysisProgressBar" class="mini-progress-bar" style="width: 0%"></div>
-                            </div>
-                            <span id="miniProgressText" class="mini-progress-text">Ready</span>
-                        </div>
-
-                        <!-- Compact AI Stats -->
-                        <div class="mini-ai-stats">
-                            <span class="mini-stat" id="miniTotalRequests">AI: 0</span>
-                            <span class="mini-stat success-rate" id="miniSuccessRate">100%</span>
-                        </div>
+                        <span class="status-text">Ready for capture and analysis</span>
                     </div>
                 </div>
 
@@ -289,199 +189,50 @@
                         </button>
                     </div>
 
-                    <!-- Compact Announcements -->
-                    <div class="mini-announcements">
-                        <div class="mini-announcements-header">
-                            <span class="announcements-label">📢</span>
-                            <span class="announcements-count" id="announcementsCount">0</span>
-                        </div>
-                        <div class="mini-announcements-list" id="miniAnnouncementsList">
-                            <div class="mini-announcement-item">System ready</div>
-                        </div>
-                    </div>
                 </div>
             </div>
 
-            <!-- Two Lines Under Status Bar -->
-            <div class="status-extension-lines">
-                <div class="extension-line primary-line">
-                    <span class="line-label">System Status:</span>
-                    <span class="line-content" id="systemStatusLine">All systems operational</span>
-                </div>
-                <div class="extension-line secondary-line">
-                    <span class="line-label">Active Tasks:</span>
-                    <span class="line-content" id="activeTasksLine">No active tasks</span>
-                </div>
-            </div>
-
-            <!-- Enhanced Announcements Section (Moved Here) -->
-            <div class="enhanced-announcements" role="region" aria-labelledby="announcements-heading">
-                <div class="announcements-header">
-                    <h3 id="announcements-heading">📢 Recent Announcements & Activity Log</h3>
-                    <div class="announcements-controls">
-                        <button id="clearAnnouncements" class="btn btn-small btn-secondary">🗑️ Clear</button>
-                        <button id="pauseAnnouncements" class="btn btn-small btn-info">⏸️ Pause</button>
-                        <button id="exportAnnouncements" class="btn btn-small btn-primary">📄 Export</button>
-                    </div>
-                </div>
-                <div class="announcements-content">
-                    <div class="announcements-list" id="announcementsList" role="log" aria-live="polite" aria-label="Recent announcements and activity">
-                        <div class="announcement-item system-ready">
-                            <span class="announcement-time">08:07</span>
-                            <span class="announcement-type system">System</span>
-                            <span class="announcement-message">Rapture Accessible initialized and ready</span>
-                        </div>
-                        <div class="announcement-item capture-ready">
-                            <span class="announcement-time">08:07</span>
-                            <span class="announcement-type ready">Ready</span>
-                            <span class="announcement-message">All capture methods available</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Bottom-Up Expandable Tools Section -->
-            <div class="bottom-tools-section">
-                <div class="tools-expander">
-                    <button class="tools-toggle-btn" id="toolsToggle" aria-expanded="false" aria-controls="toolsContent">
-                        <span class="toggle-icon">🔧</span>
-                        <span class="toggle-text">Tools & Features</span>
-                        <span class="toggle-arrow">▲</span>
-                    </button>
-                    <div class="tools-content" id="toolsContent" style="display: none;">
-                        <!-- Tool Features & Description -->
-                        <section class="tool-features-section" role="region" aria-labelledby="features-heading">
-                            <div class="section-header" id="features-heading">
-                                <h3>🔧 Tool Features & Description</h3>
-                            </div>
-                            <div class="features-grid">
-                                <div class="feature-card">
-                                    <h4>📸 Screen Capture</h4>
-                                    <p>Manual and automatic screen capture with customizable timing and count settings.</p>
-                                </div>
-                                <div class="feature-card">
-                                    <h4>🎥 Video Recording</h4>
-                                    <p>Record screen activity with start/stop controls and live preview functionality.</p>
-                                </div>
-                                <div class="feature-card">
-                                    <h4>🤖 AI Analysis</h4>
-                                    <p>Multiple AI providers (Gemini, Hugging Face, OpenAI) for intelligent content analysis.</p>
-                                </div>
-                                <div class="feature-card">
-                                    <h4>🔊 Accessibility</h4>
-                                    <p>Full screen reader support, voice commands, and high contrast interface.</p>
-                                </div>
-                                <div class="feature-card">
-                                    <h4>💾 Data Management</h4>
-                                    <p>Save, export, and manage captures with local storage and ZIP export.</p>
-                                </div>
-                                <div class="feature-card">
-                                    <h4>⚡ Automation</h4>
-                                    <p>Sequential actions, auto-capture, and batch processing capabilities.</p>
-                                </div>
-                            </div>
-                        </section>
-
-                        <!-- Solutions Guide -->
-                        <section class="solutions-guide-section" role="region" aria-labelledby="solutions-heading">
-                            <div class="section-header" id="solutions-heading">
-                                <h3>💡 Solutions Guide</h3>
-                            </div>
-                            <div class="solutions-container">
-                                <div class="solutions-tabs">
-                                    <button class="solution-tab active" data-tab="common-issues">Common Issues</button>
-                                    <button class="solution-tab" data-tab="error-codes">Error Codes</button>
-                                    <button class="solution-tab" data-tab="troubleshooting">Troubleshooting</button>
-                                    <button class="solution-tab" data-tab="best-practices">Best Practices</button>
-                                </div>
-                                <div class="solutions-content">
-                                    <div id="common-issues" class="solution-tab-content active">
-                                        <h4>Common Issues & Solutions</h4>
-                                        <div class="issue-item">
-                                            <h5>🔴 Screen Capture Fails</h5>
-                                            <p><strong>Solution:</strong> Check browser permissions for screen capture. Ensure you're using HTTPS or localhost.</p>
-                                        </div>
-                                        <div class="issue-item">
-                                            <h5>🟡 AI Analysis Timeout</h5>
-                                            <p><strong>Solution:</strong> Check internet connection. Try switching AI providers in settings.</p>
-                                        </div>
-                                        <div class="issue-item">
-                                            <h5>🔵 Voice Commands Not Working</h5>
-                                            <p><strong>Solution:</strong> Grant microphone permissions and ensure browser supports speech recognition.</p>
-                                        </div>
-                                    </div>
-                                    <div id="error-codes" class="solution-tab-content">
-                                        <h4>Error Code Reference</h4>
-                                        <div class="error-item">
-                                            <h5>ERR_CAPTURE_FAILED (1001)</h5>
-                                            <p>Screen capture permission denied or not available.</p>
-                                        </div>
-                                        <div class="error-item">
-                                            <h5>ERR_AI_TIMEOUT (2001)</h5>
-                                            <p>AI service request timed out. Check connection.</p>
-                                        </div>
-                                        <div class="error-item">
-                                            <h5>ERR_STORAGE_FULL (3001)</h5>
-                                            <p>Local storage quota exceeded. Clear old captures.</p>
-                                        </div>
-                                    </div>
-                                    <div id="troubleshooting" class="solution-tab-content">
-                                        <h4>Troubleshooting Steps</h4>
-                                        <ol class="troubleshooting-list">
-                                            <li>Check browser console for error messages</li>
-                                            <li>Verify all permissions are granted</li>
-                                            <li>Test with a simple capture first</li>
-                                            <li>Check internet connectivity</li>
-                                            <li>Try different AI provider if analysis fails</li>
-                                        </ol>
-                                    </div>
-                                    <div id="best-practices" class="solution-tab-content">
-                                        <h4>Best Practices</h4>
-                                        <ul class="best-practices-list">
-                                            <li>Use HTTPS or localhost for screen capture</li>
-                                            <li>Grant all necessary permissions upfront</li>
-                                            <li>Keep browser updated for latest features</li>
-                                            <li>Clear storage regularly to prevent quota issues</li>
-                                            <li>Test voice commands in quiet environment</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-
-                        <!-- Console Output Watch -->
-                        <section class="console-watch-section" role="region" aria-labelledby="console-heading">
-                            <div class="section-header" id="console-heading">
-                                <h3>🖥️ Console Output Monitor</h3>
-                            </div>
-                            <div class="console-controls">
-                                <button id="clearConsole" class="btn btn-small btn-secondary">🗑️ Clear Console</button>
-                                <button id="toggleConsole" class="btn btn-small btn-info">⏸️ Pause Monitoring</button>
-                                <button id="exportConsole" class="btn btn-small btn-primary">📄 Export Logs</button>
-                            </div>
-                            <div class="console-output">
-                                <div class="console-header">
-                                    <span class="console-title">Live Console Output</span>
-                                    <span class="console-stats">
-                                        <span id="errorCount" class="error-count">Errors: 0</span>
-                                        <span id="warningCount" class="warning-count">Warnings: 0</span>
-                                        <span id="infoCount" class="info-count">Info: 0</span>
-                                    </span>
-                                </div>
-                                <div id="consoleLog" class="console-log" role="log" aria-live="polite" aria-label="Console output log"></div>
-                            </div>
-                        </section>
-                    </div>
-                </div>
-            </div>
 
         </main>
+    </div>
+
+    <!-- API Key Dialog -->
+    <div id="apiKeyDialog" class="dialog-overlay" style="display: none;" role="dialog" aria-labelledby="dialog-title" aria-modal="true">
+        <div class="dialog-content">
+            <div class="dialog-header">
+                <h2 id="dialog-title">API Key Required</h2>
+                <button id="dialogClose" class="dialog-close" aria-label="Close dialog">&times;</button>
+            </div>
+            <div class="dialog-body">
+                <div class="provider-info" id="providerInfo">
+                    <h3 id="providerName">Provider Name</h3>
+                    <p id="providerDescription">Provider description and setup instructions.</p>
+                    <div class="api-key-input-group">
+                        <label for="dialogApiKey">API Key:</label>
+                        <input type="password" id="dialogApiKey" placeholder="Enter your API key" aria-describedby="api-key-help">
+                        <button id="testApiKey" class="btn btn-small">Test Key</button>
+                    </div>
+                    <div id="api-key-help" class="help-text">
+                        Enter your API key for the selected provider. The key will be stored locally and used only for analysis requests.
+                    </div>
+                </div>
+                <div class="free-alternatives">
+                    <h4>Free AI Alternatives:</h4>
+                    <div class="alternatives-grid" id="alternativesGrid">
+                        <!-- Free alternatives will be populated here -->
+                    </div>
+                </div>
+            </div>
+            <div class="dialog-footer">
+                <button id="dialogCancel" class="btn btn-secondary">Cancel</button>
+                <button id="dialogConfirm" class="btn btn-primary">Use This Provider</button>
+            </div>
+        </div>
     </div>
 
     <!-- Load JavaScript modules -->
     <script src="js/accessibility.js"></script>
     <script src="js/voice-commands.js"></script>
-    <script src="js/auto-capture.js"></script>
     <script src="js/ai-analyzer.js"></script>
     <script src="js/capture-manager.js"></script>
     <script src="js/main.js"></script>

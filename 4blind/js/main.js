@@ -1,21 +1,22 @@
 /**
  * Main Application Module for Rapture Accessible
- * Coordinates all modules and provides overall application logic
+ * Simplified version focusing on manual capture and AI analysis
  */
 
 class RaptureAccessible {
     constructor() {
         this.isInitialized = false;
         this.currentCapture = null;
-        this.autoCaptureInterval = null;
+        this.aiProviders = new Map();
+        this.currentAIProvider = 'huggingface';
+        this.apiKeys = new Map();
 
         this.init();
     }
 
     async init() {
-        console.log('🚀 Initializing Rapture Accessible...');
+        console.log('🚀 Initializing Rapture Accessible (Simplified)...');
 
-        // Wait for DOM to be ready
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => this.performInitialization());
         } else {
@@ -25,29 +26,16 @@ class RaptureAccessible {
 
     performInitialization() {
         try {
-            // Initialize all modules
             this.initializeModules();
-
-            // Setup global error handling
             this.setupErrorHandling();
-
-            // Setup keyboard shortcuts
             this.setupKeyboardShortcuts();
-
-            // Setup system monitoring
             this.setupSystemMonitoring();
-
-            // Load user preferences
             this.loadUserPreferences();
-
-            // Setup autoCapture on first load
-            this.setupFirstLoadAutoCapture();
-
-            // Setup sequential actions
-            this.setupSequentialActions();
+            this.setupAIProviders();
+            this.setupAPIKeyManagement();
+            this.setupButtons();
 
             this.isInitialized = true;
-
             console.log('✅ Rapture Accessible initialized successfully');
             this.announceInitialization();
 
@@ -58,28 +46,18 @@ class RaptureAccessible {
     }
 
     initializeModules() {
-        // Modules are initialized automatically when their scripts load
-        // This method can be used for any additional setup
-
-        // Make modules globally accessible
         if (window.accessibilityManager) {
             console.log('✅ Accessibility Manager loaded');
         }
         if (window.voiceCommandManager) {
             console.log('✅ Voice Command Manager loaded');
         }
-        if (window.autoCaptureManager) {
-            console.log('✅ Auto Capture Manager loaded');
+        if (window.captureManager) {
+            console.log('✅ Capture Manager loaded');
         }
         if (window.aiAnalyzer) {
             console.log('✅ AI Analyzer loaded');
         }
-        if (window.captureManager) {
-            console.log('✅ Capture Manager loaded');
-        }
-
-        // Setup global button press logging
-        this.setupButtonPressLogging();
     }
 
     setupErrorHandling() {
@@ -97,28 +75,23 @@ class RaptureAccessible {
 
     setupKeyboardShortcuts() {
         document.addEventListener('keydown', (e) => {
-            // Alt key combinations
             if (e.altKey) {
                 switch (e.key.toLowerCase()) {
                     case '1':
                         e.preventDefault();
-                        this.handleQuickAction('autoCapture');
+                        this.handleEmergencyCapture();
                         break;
                     case '2':
                         e.preventDefault();
-                        this.handleQuickAction('emergencyCapture');
+                        this.handleSpeakStatus();
                         break;
                     case '3':
                         e.preventDefault();
-                        this.handleQuickAction('speakStatus');
+                        this.handleAnalyzeCurrent();
                         break;
                     case '4':
                         e.preventDefault();
-                        this.handleQuickAction('analyzeCurrent');
-                        break;
-                    case '5':
-                        e.preventDefault();
-                        this.handleQuickAction('readAloud');
+                        this.handleReadAloud();
                         break;
                     case 'h':
                         e.preventDefault();
@@ -127,71 +100,24 @@ class RaptureAccessible {
                 }
             }
 
-            // Ctrl key combinations
             if (e.ctrlKey) {
                 switch (e.key.toLowerCase()) {
                     case 's':
                         e.preventDefault();
-                        this.handleQuickAction('saveCapture');
-                        break;
-                    case 'e':
-                        e.preventDefault();
-                        this.handleQuickAction('exportAll');
+                        this.handleSaveCapture();
                         break;
                 }
             }
         });
     }
 
-    handleQuickAction(action) {
-        switch (action) {
-            case 'autoCapture':
-                if (window.autoCaptureManager) {
-                    window.autoCaptureManager.toggleAutoCapture();
-                }
-                break;
-            case 'emergencyCapture':
-                if (window.autoCaptureManager) {
-                    window.autoCaptureManager.emergencyCapture();
-                }
-                break;
-            case 'speakStatus':
-                if (window.accessibilityManager) {
-                    window.accessibilityManager.handleSpeakStatus();
-                }
-                break;
-            case 'readAloud':
-                if (window.aiAnalyzer) {
-                    window.aiAnalyzer.readDescriptionAloud();
-                }
-                break;
-            case 'saveCapture':
-                if (window.captureManager) {
-                    window.captureManager.saveCurrentCapture();
-                }
-                break;
-            case 'exportAll':
-                if (window.captureManager) {
-                    window.captureManager.downloadAllAsHtml();
-                }
-                break;
-            case 'analyzeCurrent':
-                if (window.aiAnalyzer) {
-                    window.aiAnalyzer.analyzeWithAI();
-                }
-                break;
-        }
-    }
-
     setupSystemMonitoring() {
-        // Monitor system resources
         if ('performance' in window) {
             setInterval(() => {
                 this.updatePerformanceStats();
-            }, 10000); // Every 10 seconds
+            }, 10000);
         }
 
-        // Monitor online status
         window.addEventListener('online', () => {
             window.accessibilityManager?.announce('Connection restored');
         });
@@ -201,55 +127,183 @@ class RaptureAccessible {
         });
     }
 
-    setupButtonPressLogging() {
-        // Add logging to all buttons
-        const buttons = document.querySelectorAll('button');
-        buttons.forEach(button => {
-            if (!button.hasAttribute('data-logged')) {
-                button.addEventListener('click', (e) => {
-                    const buttonText = e.target.textContent.trim() || e.target.id || 'Unknown Button';
-                    console.log(`🔘 Button pressed: ${buttonText}`);
-                });
-                button.setAttribute('data-logged', 'true');
-            }
+    setupAIProviders() {
+        // Define available AI providers with their configurations
+        this.aiProviders.set('huggingface', {
+            name: 'Hugging Face',
+            type: 'free',
+            requiresKey: false,
+            model: 'microsoft/DialoGPT-medium',
+            endpoint: 'https://api-inference.huggingface.co/models',
+            description: 'Free conversational AI model. No API key required.',
+            status: 'available'
         });
 
-        // Monitor for dynamically added buttons
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                mutation.addedNodes.forEach((node) => {
-                    if (node.nodeType === Node.ELEMENT_NODE) {
-                        const newButtons = node.querySelectorAll ?
-                            node.querySelectorAll('button:not([data-logged])') :
-                            (node.tagName === 'BUTTON' ? [node] : []);
-
-                        newButtons.forEach(button => {
-                            button.addEventListener('click', (e) => {
-                                const buttonText = e.target.textContent.trim() || e.target.id || 'Unknown Button';
-                                console.log(`🔘 Button pressed: ${buttonText}`);
-                            });
-                            button.setAttribute('data-logged', 'true');
-                        });
-                    }
-                });
-            });
+        this.aiProviders.set('openai', {
+            name: 'OpenAI GPT-4o',
+            type: 'free_tier',
+            requiresKey: true,
+            model: 'gpt-4o-mini',
+            endpoint: 'https://api.openai.com/v1/chat/completions',
+            description: 'Free tier available. Requires API key.',
+            status: 'available'
         });
 
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
+        this.aiProviders.set('anthropic', {
+            name: 'Anthropic Claude',
+            type: 'free_tier',
+            requiresKey: true,
+            model: 'claude-3-haiku-20240307',
+            endpoint: 'https://api.anthropic.com/v1/messages',
+            description: 'Free tier available. Requires API key.',
+            status: 'available'
         });
 
-        console.log('✅ Button press logging initialized');
+        this.aiProviders.set('google', {
+            name: 'Google Gemini',
+            type: 'free_tier',
+            requiresKey: true,
+            model: 'gemini-pro',
+            endpoint: 'https://generativelanguage.googleapis.com/v1beta/models',
+            description: 'Free tier available. Requires API key.',
+            status: 'available'
+        });
+
+        this.aiProviders.set('cohere', {
+            name: 'Cohere',
+            type: 'free_tier',
+            requiresKey: true,
+            model: 'command-light',
+            endpoint: 'https://api.cohere.ai/v1/generate',
+            description: 'Free tier available. Requires API key.',
+            status: 'available'
+        });
+
+        // Load saved API keys
+        this.loadAPIKeys();
+
+        // Update UI with current AI status
+        this.updateAIStatusDisplay();
     }
 
-    updatePerformanceStats() {
-        if (performance.memory) {
-            const memoryUsage = performance.memory.usedJSHeapSize;
-            const memoryElement = document.getElementById('memoryUsage');
-            if (memoryElement) {
-                memoryElement.textContent = this.formatBytes(memoryUsage);
+    setupAPIKeyManagement() {
+        const aiSelect = document.getElementById('aiProviderSelect');
+        const apiKeyGroup = document.getElementById('apiKeyGroup');
+        const apiKeyInput = document.getElementById('apiKeyInput');
+        const saveApiKeyBtn = document.getElementById('saveApiKey');
+        const clearApiKeyBtn = document.getElementById('clearApiKey');
+
+        if (aiSelect) {
+            aiSelect.addEventListener('change', () => {
+                this.currentAIProvider = aiSelect.value;
+                this.updateAPIKeyVisibility();
+                this.updateAIStatusDisplay();
+                this.saveUserPreferences();
+            });
+        }
+
+        if (saveApiKeyBtn) {
+            saveApiKeyBtn.addEventListener('click', () => {
+                this.saveCurrentAPIKey();
+            });
+        }
+
+        if (clearApiKeyBtn) {
+            clearApiKeyBtn.addEventListener('click', () => {
+                this.clearCurrentAPIKey();
+            });
+        }
+
+        // Setup dialog API key management
+        this.setupDialogAPIKeyManagement();
+    }
+
+    setupDialogAPIKeyManagement() {
+        const dialog = document.getElementById('apiKeyDialog');
+        const dialogClose = document.getElementById('dialogClose');
+        const dialogCancel = document.getElementById('dialogCancel');
+        const dialogConfirm = document.getElementById('dialogConfirm');
+        const testApiKeyBtn = document.getElementById('testApiKey');
+
+        if (dialogClose) {
+            dialogClose.addEventListener('click', () => {
+                this.closeAPIKeyDialog();
+            });
+        }
+
+        if (dialogCancel) {
+            dialogCancel.addEventListener('click', () => {
+                this.closeAPIKeyDialog();
+            });
+        }
+
+        if (dialogConfirm) {
+            dialogConfirm.addEventListener('click', () => {
+                this.confirmDialogAPIKey();
+            });
+        }
+
+        if (testApiKeyBtn) {
+            testApiKeyBtn.addEventListener('click', () => {
+                this.testDialogAPIKey();
+            });
+        }
+
+        // Close dialog on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && dialog.style.display !== 'none') {
+                this.closeAPIKeyDialog();
             }
+        });
+    }
+
+    setupButtons() {
+        // Manual screen capture
+        const manualScreenBtn = document.getElementById('manualScreenCapture');
+        if (manualScreenBtn) {
+            manualScreenBtn.addEventListener('click', () => {
+                this.handleManualScreenCapture();
+            });
+        }
+
+        // Emergency capture
+        const emergencyBtn = document.getElementById('emergencyCapture');
+        if (emergencyBtn) {
+            emergencyBtn.addEventListener('click', () => {
+                this.handleEmergencyCapture();
+            });
+        }
+
+        // Analyze current
+        const analyzeBtn = document.getElementById('analyzeCapture');
+        if (analyzeBtn) {
+            analyzeBtn.addEventListener('click', () => {
+                this.handleAnalyzeCurrent();
+            });
+        }
+
+        // Read aloud
+        const readAloudBtn = document.getElementById('readAloud');
+        if (readAloudBtn) {
+            readAloudBtn.addEventListener('click', () => {
+                this.handleReadAloud();
+            });
+        }
+
+        // Save capture
+        const saveBtn = document.getElementById('saveCapture');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => {
+                this.handleSaveCapture();
+            });
+        }
+
+        // Quick help
+        const quickHelpBtn = document.getElementById('quickHelp');
+        if (quickHelpBtn) {
+            quickHelpBtn.addEventListener('click', () => {
+                this.showQuickHelp();
+            });
         }
     }
 
@@ -257,16 +311,8 @@ class RaptureAccessible {
         try {
             const preferences = JSON.parse(localStorage.getItem('raptureAccessiblePreferences') || '{}');
 
-            // Apply preferences
-            if (preferences.autoCaptureEnabled) {
-                setTimeout(() => {
-                    if (window.autoCaptureManager) {
-                        window.autoCaptureManager.startAutoCapture();
-                    }
-                }, 2000); // Delay to allow full initialization
-            }
-
             if (preferences.aiProvider) {
+                this.currentAIProvider = preferences.aiProvider;
                 const aiSelect = document.getElementById('aiProviderSelect');
                 if (aiSelect) {
                     aiSelect.value = preferences.aiProvider;
@@ -281,44 +327,342 @@ class RaptureAccessible {
 
     saveUserPreferences() {
         const preferences = {
-            autoCaptureEnabled: window.autoCaptureManager?.isAutoCapturing || false,
-            aiProvider: document.getElementById('aiProviderSelect')?.value || 'gemini',
+            aiProvider: this.currentAIProvider,
             lastUsed: new Date().toISOString()
         };
 
         localStorage.setItem('raptureAccessiblePreferences', JSON.stringify(preferences));
     }
 
-    setupFirstLoadAutoCapture() {
-        // Only perform initial capture if manual capture mode is disabled
-        setTimeout(() => {
-            if (window.autoCaptureManager && !this.currentCapture) {
-                const manualMode = window.autoCaptureManager.manualCaptureMode;
-                if (!manualMode) {
-                    console.log('🚀 Performing first-load auto capture...');
-                    window.autoCaptureManager.performAutoCapture();
+    loadAPIKeys() {
+        try {
+            const keys = JSON.parse(localStorage.getItem('raptureAPIKeys') || '{}');
+            this.apiKeys = new Map(Object.entries(keys));
+        } catch (error) {
+            console.error('Error loading API keys:', error);
+        }
+    }
+
+    saveAPIKeys() {
+        const keys = Object.fromEntries(this.apiKeys);
+        localStorage.setItem('raptureAPIKeys', JSON.stringify(keys));
+    }
+
+    updateAPIKeyVisibility() {
+        const apiKeyGroup = document.getElementById('apiKeyGroup');
+        const provider = this.aiProviders.get(this.currentAIProvider);
+
+        if (provider && provider.requiresKey) {
+            apiKeyGroup.style.display = 'block';
+        } else {
+            apiKeyGroup.style.display = 'none';
+        }
+    }
+
+    saveCurrentAPIKey() {
+        const apiKeyInput = document.getElementById('apiKeyInput');
+        if (apiKeyInput && apiKeyInput.value.trim()) {
+            this.apiKeys.set(this.currentAIProvider, apiKeyInput.value.trim());
+            this.saveAPIKeys();
+            this.updateAIStatusDisplay();
+            window.accessibilityManager?.announce('API key saved successfully');
+        }
+    }
+
+    clearCurrentAPIKey() {
+        this.apiKeys.delete(this.currentAIProvider);
+        this.saveAPIKeys();
+        const apiKeyInput = document.getElementById('apiKeyInput');
+        if (apiKeyInput) {
+            apiKeyInput.value = '';
+        }
+        this.updateAIStatusDisplay();
+        window.accessibilityManager?.announce('API key cleared');
+    }
+
+    updateAIStatusDisplay() {
+        const currentAIEl = document.getElementById('currentAI');
+        const statusEl = document.getElementById('aiConnectionStatus');
+
+        if (currentAIEl) {
+            const provider = this.aiProviders.get(this.currentAIProvider);
+            currentAIEl.textContent = provider ? provider.name : 'Unknown';
+        }
+
+        if (statusEl) {
+            const provider = this.aiProviders.get(this.currentAIProvider);
+            if (provider) {
+                if (provider.requiresKey && !this.apiKeys.has(this.currentAIProvider)) {
+                    statusEl.textContent = 'API Key Required';
+                    statusEl.className = 'status-value disconnected';
                 } else {
-                    console.log('🚀 Manual capture mode enabled - skipping first-load auto capture');
-                    window.accessibilityManager?.announce('Manual capture mode is enabled. Use the Auto Capture button to begin capturing.');
+                    statusEl.textContent = 'Ready';
+                    statusEl.className = 'status-value connected';
                 }
             }
-        }, 3000); // 3 second delay to allow everything to load
+        }
+    }
+
+    async handleManualScreenCapture() {
+        try {
+            if (window.captureManager) {
+                const result = await window.captureManager.manualScreenCapture();
+                if (result) {
+                    this.currentCapture = result;
+                    window.accessibilityManager?.announce('Screen capture completed');
+                    this.enableAnalysisButtons();
+                }
+            }
+        } catch (error) {
+            console.error('Screen capture failed:', error);
+            window.accessibilityManager?.announceError('Screen capture failed');
+        }
+    }
+
+    async handleEmergencyCapture() {
+        try {
+            if (window.captureManager) {
+                const result = await window.captureManager.emergencyCapture();
+                if (result) {
+                    this.currentCapture = result;
+                    window.accessibilityManager?.announce('Emergency capture completed');
+                    this.enableAnalysisButtons();
+                }
+            }
+        } catch (error) {
+            console.error('Emergency capture failed:', error);
+            window.accessibilityManager?.announceError('Emergency capture failed');
+        }
+    }
+
+    enableAnalysisButtons() {
+        const analyzeBtn = document.getElementById('analyzeCapture');
+        const readAloudBtn = document.getElementById('readAloud');
+        const saveBtn = document.getElementById('saveCapture');
+
+        if (analyzeBtn) analyzeBtn.disabled = false;
+        if (readAloudBtn) readAloudBtn.disabled = false;
+        if (saveBtn) saveBtn.disabled = false;
+    }
+
+    async handleAnalyzeCurrent() {
+        try {
+            const provider = await this.getAvailableAIProvider();
+            if (provider && window.aiAnalyzer) {
+                await window.aiAnalyzer.analyzeWithAI(provider);
+                window.accessibilityManager?.announce('Analysis completed');
+            } else {
+                window.accessibilityManager?.announceError('No AI provider available');
+            }
+        } catch (error) {
+            console.error('Analysis failed:', error);
+            window.accessibilityManager?.announceError('Analysis failed');
+        }
+    }
+
+    async handleReadAloud() {
+        try {
+            if (window.aiAnalyzer) {
+                await window.aiAnalyzer.readDescriptionAloud();
+            }
+        } catch (error) {
+            console.error('Read aloud failed:', error);
+            window.accessibilityManager?.announceError('Read aloud failed');
+        }
+    }
+
+    async handleSaveCapture() {
+        try {
+            if (window.captureManager) {
+                await window.captureManager.saveCurrentCapture();
+                window.accessibilityManager?.announce('Capture saved');
+            }
+        } catch (error) {
+            console.error('Save failed:', error);
+            window.accessibilityManager?.announceError('Save failed');
+        }
+    }
+
+    async handleSpeakStatus() {
+        if (window.accessibilityManager) {
+            window.accessibilityManager.handleSpeakStatus();
+        }
+    }
+
+    async getAvailableAIProvider() {
+        // First try current provider
+        const currentProvider = this.aiProviders.get(this.currentAIProvider);
+        if (currentProvider && await this.checkAIProviderStatus(currentProvider)) {
+            return currentProvider;
+        }
+
+        // Fallback to other available providers
+        for (const [key, provider] of this.aiProviders) {
+            if (key !== this.currentAIProvider && await this.checkAIProviderStatus(provider)) {
+                // Switch to this provider
+                this.currentAIProvider = key;
+                const aiSelect = document.getElementById('aiProviderSelect');
+                if (aiSelect) {
+                    aiSelect.value = key;
+                }
+                this.updateAIStatusDisplay();
+                this.saveUserPreferences();
+                return provider;
+            }
+        }
+
+        return null;
+    }
+
+    async checkAIProviderStatus(provider) {
+        try {
+            if (provider.requiresKey && !this.apiKeys.has(this.currentAIProvider)) {
+                return false;
+            }
+
+            // Test the provider with a simple request
+            const testPayload = {
+                model: provider.model,
+                messages: [{ role: 'user', content: 'Hello' }],
+                max_tokens: 10
+            };
+
+            const response = await fetch(`${provider.endpoint}/chat/completions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(provider.requiresKey ? { 'Authorization': `Bearer ${this.apiKeys.get(this.currentAIProvider)}` } : {})
+                },
+                body: JSON.stringify(testPayload)
+            });
+
+            return response.ok;
+        } catch (error) {
+            console.warn(`Provider ${provider.name} check failed:`, error);
+            return false;
+        }
+    }
+
+    showAPIKeyDialog(providerKey) {
+        const dialog = document.getElementById('apiKeyDialog');
+        const provider = this.aiProviders.get(providerKey);
+
+        if (!dialog || !provider) return;
+
+        // Update dialog content
+        const providerName = dialog.querySelector('#providerName');
+        const providerDescription = dialog.querySelector('#providerDescription');
+        const alternativesGrid = dialog.querySelector('#alternativesGrid');
+
+        if (providerName) providerName.textContent = provider.name;
+        if (providerDescription) providerDescription.textContent = provider.description;
+
+        // Populate alternatives
+        if (alternativesGrid) {
+            alternativesGrid.innerHTML = '';
+            this.aiProviders.forEach((altProvider, key) => {
+                if (key !== providerKey) {
+                    const item = document.createElement('div');
+                    item.className = `alternative-item ${altProvider.status}`;
+                    item.innerHTML = `
+                        <div class="alternative-name">${altProvider.name}</div>
+                        <div class="alternative-description">${altProvider.description}</div>
+                        <div class="alternative-status status-${altProvider.status}">
+                            ${altProvider.status === 'available' ? 'Available' : 'Unavailable'}
+                        </div>
+                    `;
+                    item.addEventListener('click', () => {
+                        this.showAPIKeyDialog(key);
+                    });
+                    alternativesGrid.appendChild(item);
+                }
+            });
+        }
+
+        dialog.style.display = 'flex';
+        dialog.querySelector('#dialogApiKey')?.focus();
+    }
+
+    closeAPIKeyDialog() {
+        const dialog = document.getElementById('apiKeyDialog');
+        if (dialog) {
+            dialog.style.display = 'none';
+        }
+    }
+
+    confirmDialogAPIKey() {
+        const dialogApiKey = document.getElementById('dialogApiKey');
+        if (dialogApiKey && dialogApiKey.value.trim()) {
+            this.apiKeys.set(this.currentAIProvider, dialogApiKey.value.trim());
+            this.saveAPIKeys();
+            this.updateAIStatusDisplay();
+            this.closeAPIKeyDialog();
+            window.accessibilityManager?.announce('API key saved successfully');
+        }
+    }
+
+    async testDialogAPIKey() {
+        const dialogApiKey = document.getElementById('dialogApiKey');
+        if (!dialogApiKey || !dialogApiKey.value.trim()) return;
+
+        const testBtn = document.getElementById('testApiKey');
+        const originalText = testBtn.textContent;
+
+        testBtn.textContent = 'Testing...';
+        testBtn.disabled = true;
+
+        try {
+            const provider = this.aiProviders.get(this.currentAIProvider);
+            if (provider) {
+                const isValid = await this.checkAIProviderStatus(provider);
+                if (isValid) {
+                    window.accessibilityManager?.announce('API key is valid');
+                    testBtn.textContent = '✅ Valid';
+                } else {
+                    window.accessibilityManager?.announce('API key is invalid');
+                    testBtn.textContent = '❌ Invalid';
+                }
+            }
+        } catch (error) {
+            window.accessibilityManager?.announce('API key test failed');
+            testBtn.textContent = '❌ Error';
+        }
+
+        setTimeout(() => {
+            testBtn.textContent = originalText;
+            testBtn.disabled = false;
+        }, 2000);
+    }
+
+    updatePerformanceStats() {
+        if (performance.memory) {
+            const memoryUsage = performance.memory.usedJSHeapSize;
+            const memoryElement = document.getElementById('memoryUsage');
+            if (memoryElement) {
+                memoryElement.textContent = this.formatBytes(memoryUsage);
+            }
+        }
+    }
+
+    formatBytes(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
     }
 
     announceInitialization() {
         setTimeout(() => {
-            // Only display visually, don't speak automatically
             const announcement = `
                 Rapture Accessible initialized.
-                Use Alt+1 for auto capture,
-                Alt+2 for emergency capture,
-                Alt+3 to speak status,
-                Alt+4 to analyze current capture,
-                Alt+5 to read analysis aloud,
+                Use Alt+1 for emergency capture,
+                Alt+2 to speak status,
+                Alt+3 to analyze current capture,
+                Alt+4 to read analysis aloud,
                 Alt+H for help.
                 Manual capture buttons are ready to use.
             `;
-            // Just display, don't announce via speech synthesis
             if (window.accessibilityManager) {
                 window.accessibilityManager.displayAnnouncement(announcement);
             }
@@ -337,286 +681,49 @@ class RaptureAccessible {
     showKeyboardShortcuts() {
         const shortcuts = `
             Keyboard Shortcuts:
-            Alt+1: Toggle auto capture
-            Alt+2: Emergency capture
-            Alt+3: Speak system status
-            Alt+4: Analyze current capture
-            Alt+5: Read description aloud
-            Alt+C: Auto capture (alternative)
-            Alt+V: Voice commands (when supported)
-            Alt+R: Read aloud (alternative)
-            Alt+S: Speak status (alternative)
+            Alt+1: Emergency capture
+            Alt+2: Speak system status
+            Alt+3: Analyze current capture
+            Alt+4: Read description aloud
             Alt+H: Show this help
             Ctrl+S: Save current capture
-            Ctrl+E: Export all captures
             Escape: Cancel current operation
         `;
         window.accessibilityManager?.announce(shortcuts);
     }
 
-    // Sequential actions system
-    async performSequentialActions(actionSequence) {
-        if (window.autoCaptureManager) {
-            await window.autoCaptureManager.performSequentialActions(actionSequence);
+    showQuickHelp() {
+        const helpMessage = `
+        🎯 Quick Help - Rapture Accessible (Simplified)
+
+        📸 CAPTURE:
+        • Manual Screen: Click "📸 Manual Screen Capture"
+        • Emergency: Alt+1 or click "🚨 Emergency Capture"
+
+        🤖 ANALYSIS:
+        • Alt+3 or click "🤖 Analyze Current Capture"
+        • Alt+4 or click "🔊 Read Analysis Aloud"
+        • Choose AI provider in settings
+
+        💾 MANAGEMENT:
+        • Ctrl+S to save current capture
+        • Click "🗑️ Clear All" to remove captures
+
+        ⚙️ AI CONFIGURATION:
+        • Default: Hugging Face (no API key needed)
+        • Other providers require API keys
+        • System automatically falls back to available providers
+
+        🎤 VOICE COMMANDS:
+        • "Capture screen", "Analyze capture"
+        • "Read description", "Speak status"
+
+        The system will automatically try multiple free AI providers if one fails.
+        `;
+        console.log(helpMessage);
+        if (window.accessibilityManager) {
+            window.accessibilityManager.announce('Quick help displayed in console');
         }
-    }
-
-    // Enhanced Sequential Actions with Capture-First Workflow
-    async startEnhancedQuickSequence() {
-        const sequenceStatus = document.getElementById('sequenceStatus');
-        const progressSteps = document.getElementById('sequenceProgressSteps');
-
-        try {
-            // Update UI to show sequence starting
-            if (sequenceStatus) {
-                sequenceStatus.querySelector('.status-text').textContent = 'Starting Quick Sequence...';
-            }
-            this.updateSequenceProgress('capture', 'active');
-
-            // Step 1: Load/Ensure Capture First (with retry logic)
-            await this.ensureCaptureAvailable('screen');
-
-            // Step 2: Wait for Live Preview to be ready
-            await this.waitForLivePreview();
-
-            // Step 3: Enable Analysis when preview is ready
-            this.enableAnalysisWhenReady();
-
-            // Step 4: Perform Analysis with enhanced error handling
-            await this.performAnalysisWithRetry();
-
-            // Step 5: Save Results
-            await this.saveSequenceResults();
-
-            // Update UI for success
-            if (sequenceStatus) {
-                sequenceStatus.querySelector('.status-text').textContent = '✅ Quick Sequence completed successfully!';
-            }
-            this.updateSequenceProgress('complete', 'success');
-
-        } catch (error) {
-            console.error('❌ Quick Sequence failed:', error);
-            if (sequenceStatus) {
-                sequenceStatus.querySelector('.status-text').textContent = `❌ Sequence failed: ${error.message}`;
-            }
-            this.updateSequenceProgress('error', 'error');
-        }
-    }
-
-    async startEnhancedFullSequence() {
-        const sequenceStatus = document.getElementById('sequenceStatus');
-
-        try {
-            if (sequenceStatus) {
-                sequenceStatus.querySelector('.status-text').textContent = 'Starting Full Sequence...';
-            }
-
-            // Step 1: Screen Capture
-            await this.ensureCaptureAvailable('screen');
-
-            // Step 2: Video Capture
-            await this.ensureCaptureAvailable('video');
-
-            // Step 3: Wait for Live Preview
-            await this.waitForLivePreview();
-
-            // Step 4: Enable Analysis
-            this.enableAnalysisWhenReady();
-
-            // Step 5: Perform Analysis
-            await this.performAnalysisWithRetry();
-
-            // Step 6: Read Analysis Aloud
-            await this.readAnalysisAloud();
-
-            // Step 7: Save Everything
-            await this.saveSequenceResults();
-
-            if (sequenceStatus) {
-                sequenceStatus.querySelector('.status-text').textContent = '✅ Full Sequence completed successfully!';
-            }
-
-        } catch (error) {
-            console.error('❌ Full Sequence failed:', error);
-            if (sequenceStatus) {
-                sequenceStatus.querySelector('.status-text').textContent = `❌ Sequence failed: ${error.message}`;
-            }
-        }
-    }
-
-    async startEmergencySequence() {
-        const sequenceStatus = document.getElementById('sequenceStatus');
-
-        try {
-            if (sequenceStatus) {
-                sequenceStatus.querySelector('.status-text').textContent = '🚨 Emergency Sequence activated!';
-            }
-
-            // Emergency mode: Quick capture + priority analysis
-            await this.performEmergencyCapture();
-            await this.waitForLivePreview();
-            this.enableAnalysisWhenReady();
-            await this.performPriorityAnalysis();
-            await this.saveSequenceResults();
-
-            if (sequenceStatus) {
-                sequenceStatus.querySelector('.status-text').textContent = '✅ Emergency Sequence completed!';
-            }
-
-        } catch (error) {
-            console.error('❌ Emergency Sequence failed:', error);
-            if (sequenceStatus) {
-                sequenceStatus.querySelector('.status-text').textContent = `❌ Emergency Sequence failed: ${error.message}`;
-            }
-        }
-    }
-
-    async ensureCaptureAvailable(type) {
-        return new Promise(async (resolve, reject) => {
-            try {
-                if (window.autoCaptureManager) {
-                    let captureResult;
-
-                    if (type === 'screen') {
-                        captureResult = await window.autoCaptureManager.manualScreenCapture();
-                    } else if (type === 'video') {
-                        captureResult = await window.autoCaptureManager.manualVideoCapture();
-                    }
-
-                    if (captureResult) {
-                        this.addMiniAnnouncement(`✅ ${type} capture completed`);
-                        resolve(captureResult);
-                    } else {
-                        reject(new Error(`${type} capture failed`));
-                    }
-                } else {
-                    reject(new Error('Auto capture manager not available'));
-                }
-            } catch (error) {
-                console.error(`❌ ${type} capture error:`, error);
-                reject(error);
-            }
-        });
-    }
-
-    async waitForLivePreview() {
-        return new Promise((resolve, reject) => {
-            const checkPreview = () => {
-                const previewVideo = document.getElementById('previewVideo');
-                const previewCanvas = document.getElementById('previewCanvas');
-                const previewImage = document.getElementById('previewImage');
-
-                if ((previewVideo && previewVideo.style.display !== 'none') ||
-                    (previewCanvas && previewCanvas.style.display !== 'none') ||
-                    (previewImage && previewImage.style.display !== 'none')) {
-
-                    this.addMiniAnnouncement('📺 Live preview ready');
-                    resolve();
-                } else {
-                    setTimeout(checkPreview, 500); // Check every 500ms
-                }
-            };
-
-            // Timeout after 10 seconds
-            setTimeout(() => {
-                reject(new Error('Live preview timeout'));
-            }, 10000);
-
-            checkPreview();
-        });
-    }
-
-    enableAnalysisWhenReady() {
-        const analyzeBtn = document.getElementById('analyzeCapture');
-        const readAloudBtn = document.getElementById('readAloud');
-        const saveBtn = document.getElementById('saveCapture');
-
-        if (analyzeBtn) {
-            analyzeBtn.disabled = false;
-            analyzeBtn.classList.add('ready');
-        }
-        if (readAloudBtn) {
-            readAloudBtn.disabled = false;
-        }
-        if (saveBtn) {
-            saveBtn.disabled = false;
-        }
-
-        this.addMiniAnnouncement('🤖 Analysis enabled');
-    }
-
-    async performAnalysisWithRetry(maxRetries = 3) {
-        for (let attempt = 1; attempt <= maxRetries; attempt++) {
-            try {
-                if (window.aiAnalyzer) {
-                    await window.aiAnalyzer.analyzeWithAI();
-                    this.addMiniAnnouncement(`✅ Analysis completed (attempt ${attempt})`);
-                    return; // Success, exit retry loop
-                } else {
-                    throw new Error('AI Analyzer not available');
-                }
-            } catch (error) {
-                console.warn(`⚠️ Analysis attempt ${attempt} failed:`, error);
-
-                if (attempt === maxRetries) {
-                    throw new Error(`Analysis failed after ${maxRetries} attempts: ${error.message}`);
-                }
-
-                // Wait before retry (exponential backoff)
-                await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-            }
-        }
-    }
-
-    async performEmergencyCapture() {
-        if (window.autoCaptureManager) {
-            await window.autoCaptureManager.emergencyCapture();
-            this.addMiniAnnouncement('🚨 Emergency capture completed');
-        }
-    }
-
-    async performPriorityAnalysis() {
-        if (window.aiAnalyzer) {
-            // Set high priority for emergency analysis
-            await window.aiAnalyzer.analyzeWithAI();
-            this.addMiniAnnouncement('🚨 Priority analysis completed');
-        }
-    }
-
-    async readAnalysisAloud() {
-        if (window.aiAnalyzer) {
-            await window.aiAnalyzer.readDescriptionAloud();
-            this.addMiniAnnouncement('🔊 Analysis read aloud');
-        }
-    }
-
-    async saveSequenceResults() {
-        if (window.captureManager) {
-            await window.captureManager.saveCurrentCapture();
-            this.addMiniAnnouncement('💾 Sequence results saved');
-        }
-    }
-
-    updateSequenceProgress(step, status) {
-        const steps = document.querySelectorAll('#sequenceProgressSteps .step');
-        steps.forEach((stepEl, index) => {
-            const stepName = stepEl.dataset.step;
-            stepEl.className = 'step';
-
-            if (stepName === step) {
-                stepEl.classList.add(status);
-            } else if (index < steps.length - 1) {
-                stepEl.classList.add('completed');
-            }
-        });
-    }
-
-    formatBytes(bytes) {
-        if (bytes === 0) return '0 B';
-        const k = 1024;
-        const sizes = ['B', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
     }
 
     // Public API methods
@@ -624,1092 +731,13 @@ class RaptureAccessible {
         return {
             isInitialized: this.isInitialized,
             currentCapture: !!this.currentCapture,
-            autoCapturing: window.autoCaptureManager?.isAutoCapturing || false,
-            capturesCount: window.captureManager?.captures.length || 0,
-            aiProviders: window.aiAnalyzer?.getAvailableProviders() || []
+            currentAIProvider: this.currentAIProvider,
+            availableProviders: Array.from(this.aiProviders.keys()),
+            capturesCount: window.captureManager?.captures.length || 0
         };
-    }
-
-    // Method to handle module communication - Enhanced with Capture-First Workflow
-    broadcast(event, data) {
-        // Broadcast events between modules
-        switch (event) {
-            case 'capture:created':
-                if (data.capture) {
-                    this.currentCapture = data.capture;
-
-                    // CAPTURE-FIRST: Save capture immediately
-                    if (window.captureManager) {
-                        setTimeout(() => {
-                            window.captureManager.saveCurrentCapture();
-                            this.addMiniAnnouncement(`✅ Capture saved: ${data.capture.name || 'Untitled'}`);
-                        }, 100);
-                    }
-
-                    // Don't auto-analyze immediately - wait for live preview
-                    this.scheduleAnalysisAfterPreview(data.capture);
-                }
-                break;
-
-            case 'preview:ready':
-                // Enable analysis when live preview is ready
-                this.enableAnalysisWhenReady();
-                this.addMiniAnnouncement('📺 Live preview ready - analysis enabled');
-                break;
-
-            case 'analysis:completed':
-                if (data.analysis) {
-                    // Save analysis with capture
-                    if (this.currentCapture && window.captureManager) {
-                        this.currentCapture.analysis = data.analysis;
-
-                        // Auto-save after analysis
-                        setTimeout(() => {
-                            window.captureManager.saveCurrentCapture();
-                            this.addMiniAnnouncement('✅ Analysis completed and saved');
-                        }, 100);
-                    }
-                }
-                break;
-
-            case 'analysis:started':
-                // Update UI to show analysis in progress
-                this.updateMiniProgress(50, 'Analyzing...');
-                this.addMiniAnnouncement('🤖 Analysis in progress...');
-                break;
-
-            case 'sequence:step':
-                if (data.step && data.status) {
-                    this.updateSequenceProgress(data.step, data.status);
-                }
-                break;
-        }
-    }
-
-    scheduleAnalysisAfterPreview(capture) {
-        // Set up a check for when preview becomes available
-        const checkForPreview = () => {
-            const previewVideo = document.getElementById('previewVideo');
-            const previewCanvas = document.getElementById('previewCanvas');
-            const previewImage = document.getElementById('previewImage');
-
-            const hasPreview = (previewVideo && previewVideo.style.display !== 'none') ||
-                              (previewCanvas && previewCanvas.style.display !== 'none') ||
-                              (previewImage && previewImage.style.display !== 'none');
-
-            if (hasPreview) {
-                // Preview is ready, enable analysis
-                this.enableAnalysisWhenReady();
-
-                // Auto-analyze if enabled (but only after preview is ready)
-                const autoAnalyzeEnabled = document.getElementById('autoAnalyzeToggle')?.checked ?? true;
-                if (autoAnalyzeEnabled && window.aiAnalyzer) {
-                    setTimeout(() => {
-                        this.performAnalysisWithRetry();
-                    }, 500);
-                }
-            } else {
-                // Check again in 500ms
-                setTimeout(checkForPreview, 500);
-            }
-        };
-
-        // Start checking for preview availability
-        setTimeout(checkForPreview, 100);
-    }
-
-    // Setup sequential action buttons - Enhanced for better success rates
-    setupSequentialActions() {
-        // Setup new enhanced sequential action buttons
-        this.setupEnhancedSequentialButtons();
-
-        // Setup Quick Help button
-        const quickHelpBtn = document.getElementById('quickHelp');
-        if (quickHelpBtn) {
-            quickHelpBtn.addEventListener('click', () => {
-                this.showQuickHelp();
-            });
-        }
-
-        // Setup tools toggle for bottom expandable section
-        this.setupToolsToggle();
-
-        // Setup enhanced announcement controls
-        this.setupAnnouncementControls();
-    }
-
-    setupEnhancedSequentialButtons() {
-        const quickSequenceBtn = document.getElementById('quickSequence');
-        const fullSequenceBtn = document.getElementById('fullSequence');
-        const emergencySequenceBtn = document.getElementById('emergencySequence');
-
-        if (quickSequenceBtn) {
-            quickSequenceBtn.addEventListener('click', async () => {
-                await this.startEnhancedQuickSequence();
-            });
-        }
-
-        if (fullSequenceBtn) {
-            fullSequenceBtn.addEventListener('click', async () => {
-                await this.startEnhancedFullSequence();
-            });
-        }
-
-        if (emergencySequenceBtn) {
-            emergencySequenceBtn.addEventListener('click', async () => {
-                await this.startEmergencySequence();
-            });
-        }
-    }
-
-    setupToolsToggle() {
-        const toolsToggle = document.getElementById('toolsToggle');
-        if (toolsToggle) {
-            toolsToggle.addEventListener('click', () => {
-                this.toggleToolsSection();
-            });
-        }
-    }
-
-    setupAnnouncementControls() {
-        const clearAnnouncementsBtn = document.getElementById('clearAnnouncements');
-        const pauseAnnouncementsBtn = document.getElementById('pauseAnnouncements');
-        const exportAnnouncementsBtn = document.getElementById('exportAnnouncements');
-
-        if (clearAnnouncementsBtn) {
-            clearAnnouncementsBtn.addEventListener('click', () => {
-                this.clearAnnouncements();
-            });
-        }
-
-        if (pauseAnnouncementsBtn) {
-            pauseAnnouncementsBtn.addEventListener('click', () => {
-                this.toggleAnnouncementPause();
-            });
-        }
-
-        if (exportAnnouncementsBtn) {
-            exportAnnouncementsBtn.addEventListener('click', () => {
-                this.exportAnnouncements();
-            });
-        }
-    }
-
-    toggleToolsSection() {
-        const toolsToggle = document.getElementById('toolsToggle');
-        const toolsContent = document.getElementById('toolsContent');
-
-        if (toolsToggle && toolsContent) {
-            const isExpanded = toolsToggle.getAttribute('aria-expanded') === 'true';
-            const newState = !isExpanded;
-
-            toolsToggle.setAttribute('aria-expanded', newState.toString());
-            toolsContent.style.display = newState ? 'block' : 'none';
-            toolsToggle.querySelector('.toggle-arrow').textContent = newState ? '▼' : '▲';
-
-            // Announce state change
-            if (window.accessibilityManager) {
-                window.accessibilityManager.announce(`Tools section ${newState ? 'expanded' : 'collapsed'}`);
-            }
-        }
-    }
-
-    clearAnnouncements() {
-        const announcementsList = document.getElementById('announcementsList');
-        if (announcementsList) {
-            announcementsList.innerHTML = '<div class="announcement-item system-ready">📝 Announcements cleared</div>';
-        }
-    }
-
-    toggleAnnouncementPause() {
-        // This would control announcement flow - implementation depends on announcement system
-        const pauseBtn = document.getElementById('pauseAnnouncements');
-        if (pauseBtn) {
-            const isPaused = pauseBtn.textContent.includes('Resume');
-            pauseBtn.textContent = isPaused ? '⏸️ Pause' : '▶️ Resume';
-        }
-    }
-
-    exportAnnouncements() {
-        const announcements = document.querySelectorAll('#announcementsList .announcement-item');
-        const announcementText = Array.from(announcements)
-            .map(item => {
-                const time = item.querySelector('.announcement-time')?.textContent || '';
-                const type = item.querySelector('.announcement-type')?.textContent || '';
-                const message = item.querySelector('.announcement-message')?.textContent || '';
-                return `[${time}] ${type}: ${message}`;
-            })
-            .join('\n');
-
-        const blob = new Blob([announcementText], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `announcements-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.txt`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    }
-
-    // ===== NEW FUNCTIONALITY FOR CONSOLE MONITORING AND PROGRESS TRACKING =====
-
-    setupConsoleMonitoring() {
-        this.consoleMonitor = {
-            isPaused: false,
-            logs: [],
-            maxLogs: 1000,
-            errorCount: 0,
-            warningCount: 0,
-            infoCount: 0
-        };
-
-        // Override console methods to capture output
-        const originalConsole = {
-            log: console.log,
-            error: console.error,
-            warn: console.warn,
-            info: console.info
-        };
-
-        // Create console log container
-        this.createConsoleLogContainer();
-
-        // Override console methods
-        console.log = (...args) => {
-            originalConsole.log(...args);
-            this.addConsoleEntry('log', args.join(' '));
-        };
-
-        console.error = (...args) => {
-            originalConsole.error(...args);
-            this.addConsoleEntry('error', args.join(' '));
-            this.consoleMonitor.errorCount++;
-            this.updateConsoleStats();
-        };
-
-        console.warn = (...args) => {
-            originalConsole.warn(...args);
-            this.addConsoleEntry('warning', args.join(' '));
-            this.consoleMonitor.warningCount++;
-            this.updateConsoleStats();
-        };
-
-        console.info = (...args) => {
-            originalConsole.info(...args);
-            this.addConsoleEntry('info', args.join(' '));
-            this.consoleMonitor.infoCount++;
-            this.updateConsoleStats();
-        };
-
-        // Setup console control buttons
-        this.setupConsoleControls();
-    }
-
-    createConsoleLogContainer() {
-        const consoleLog = document.getElementById('consoleLog');
-        if (consoleLog) {
-            consoleLog.innerHTML = '<div class="console-entry info">🖥️ Console monitoring started...</div>';
-        }
-    }
-
-    addConsoleEntry(type, message) {
-        if (this.consoleMonitor.isPaused) return;
-
-        const consoleLog = document.getElementById('consoleLog');
-        if (!consoleLog) return;
-
-        const entry = document.createElement('div');
-        entry.className = `console-entry ${type}`;
-        entry.innerHTML = `<span class="timestamp">[${new Date().toLocaleTimeString()}]</span> ${this.escapeHtml(message)}`;
-
-        // Add to logs array
-        this.consoleMonitor.logs.push({
-            type,
-            message,
-            timestamp: new Date()
-        });
-
-        // Keep only recent logs
-        if (this.consoleMonitor.logs.length > this.consoleMonitor.maxLogs) {
-            this.consoleMonitor.logs.shift();
-        }
-
-        // Add to DOM
-        consoleLog.appendChild(entry);
-        consoleLog.scrollTop = consoleLog.scrollHeight;
-    }
-
-    updateConsoleStats() {
-        const errorCountEl = document.getElementById('errorCount');
-        const warningCountEl = document.getElementById('warningCount');
-        const infoCountEl = document.getElementById('infoCount');
-
-        if (errorCountEl) errorCountEl.textContent = `Errors: ${this.consoleMonitor.errorCount}`;
-        if (warningCountEl) warningCountEl.textContent = `Warnings: ${this.consoleMonitor.warningCount}`;
-        if (infoCountEl) infoCountEl.textContent = `Info: ${this.consoleMonitor.infoCount}`;
-    }
-
-    setupConsoleControls() {
-        const clearConsoleBtn = document.getElementById('clearConsole');
-        const toggleConsoleBtn = document.getElementById('toggleConsole');
-        const exportConsoleBtn = document.getElementById('exportConsole');
-
-        if (clearConsoleBtn) {
-            clearConsoleBtn.addEventListener('click', () => {
-                this.clearConsole();
-            });
-        }
-
-        if (toggleConsoleBtn) {
-            toggleConsoleBtn.addEventListener('click', () => {
-                this.toggleConsoleMonitoring();
-            });
-        }
-
-        if (exportConsoleBtn) {
-            exportConsoleBtn.addEventListener('click', () => {
-                this.exportConsoleLogs();
-            });
-        }
-    }
-
-    clearConsole() {
-        const consoleLog = document.getElementById('consoleLog');
-        if (consoleLog) {
-            consoleLog.innerHTML = '<div class="console-entry info">📝 Console cleared</div>';
-        }
-        this.consoleMonitor.errorCount = 0;
-        this.consoleMonitor.warningCount = 0;
-        this.consoleMonitor.infoCount = 0;
-        this.updateConsoleStats();
-    }
-
-    toggleConsoleMonitoring() {
-        this.consoleMonitor.isPaused = !this.consoleMonitor.isPaused;
-        const toggleBtn = document.getElementById('toggleConsole');
-        if (toggleBtn) {
-            toggleBtn.textContent = this.consoleMonitor.isPaused ? '▶️ Resume Monitoring' : '⏸️ Pause Monitoring';
-            toggleBtn.className = `btn btn-small ${this.consoleMonitor.isPaused ? 'btn-success' : 'btn-info'}`;
-        }
-        this.addConsoleEntry('info', `Console monitoring ${this.consoleMonitor.isPaused ? 'paused' : 'resumed'}`);
-    }
-
-    exportConsoleLogs() {
-        const logsData = this.consoleMonitor.logs.map(log =>
-            `[${log.timestamp.toISOString()}] ${log.type.toUpperCase()}: ${log.message}`
-        ).join('\n');
-
-        const blob = new Blob([logsData], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `console-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.txt`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    }
-
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    // ===== ANALYSIS PROGRESS TRACKING =====
-
-    setupAnalysisProgress() {
-        this.analysisProgress = {
-            currentStep: 0,
-            totalSteps: 3,
-            isActive: false,
-            startTime: null,
-            steps: [
-                { name: 'Image Processing', status: 'pending' },
-                { name: 'AI Analysis', status: 'pending' },
-                { name: 'Result Processing', status: 'pending' }
-            ]
-        };
-
-        this.updateProgressDisplay();
-    }
-
-    startAnalysisProgress() {
-        this.analysisProgress.isActive = true;
-        this.analysisProgress.currentStep = 0;
-        this.analysisProgress.startTime = Date.now();
-        
-        // Update all steps to pending
-        this.analysisProgress.steps.forEach((step, index) => {
-            step.status = index === 0 ? 'active' : 'pending';
-        });
-
-        this.updateProgressDisplay();
-        this.addConsoleEntry('info', '🔄 Analysis started');
-    }
-
-    updateAnalysisStep(stepIndex, status, message = '') {
-        if (!this.analysisProgress.isActive) return;
-
-        this.analysisProgress.steps[stepIndex].status = status;
-        
-        if (status === 'completed' && stepIndex < this.analysisProgress.steps.length - 1) {
-            this.analysisProgress.steps[stepIndex + 1].status = 'active';
-            this.analysisProgress.currentStep = stepIndex + 1;
-        }
-
-        this.updateProgressDisplay();
-
-        if (message) {
-            this.addConsoleEntry('info', `📊 ${this.analysisProgress.steps[stepIndex].name}: ${message}`);
-        }
-    }
-
-    completeAnalysisProgress() {
-        this.analysisProgress.isActive = false;
-        this.analysisProgress.steps.forEach(step => {
-            step.status = 'completed';
-        });
-        this.analysisProgress.currentStep = this.analysisProgress.totalSteps;
-
-        this.updateProgressDisplay();
-        this.addConsoleEntry('info', '✅ Analysis completed');
-    }
-
-    updateProgressDisplay() {
-        const progressBar = document.getElementById('analysisProgressBar');
-        const progressText = document.getElementById('progressText');
-        const progressPercentage = document.getElementById('progressPercentage');
-
-        if (!progressBar || !progressText || !progressPercentage) return;
-
-        const percentage = Math.round((this.analysisProgress.currentStep / this.analysisProgress.totalSteps) * 100);
-        progressBar.style.width = `${percentage}%`;
-        progressBar.setAttribute('aria-valuenow', percentage);
-
-        progressText.textContent = this.analysisProgress.isActive
-            ? `Step ${this.analysisProgress.currentStep + 1}: ${this.analysisProgress.steps[this.analysisProgress.currentStep].name}`
-            : 'Ready to analyze';
-        progressPercentage.textContent = `${percentage}%`;
-
-        // Update mini progress bar
-        this.updateMiniProgress(percentage, this.analysisProgress.isActive ? 'Analyzing...' : 'Ready');
-
-        // Update step indicators
-        this.analysisProgress.steps.forEach((step, index) => {
-            const stepEl = document.getElementById(`step${index + 1}`);
-            const statusEl = document.getElementById(`step${index + 1}Status`);
-
-            if (stepEl && statusEl) {
-                stepEl.className = `progress-step ${step.status}`;
-                statusEl.textContent = step.status === 'completed' ? '✅ Completed' :
-                                     step.status === 'active' ? '🔄 Active' : '⏳ Pending';
-            }
-        });
-    }
-
-    // ===== AI REQUESTS SUMMARY =====
-
-    setupAIRequestLogging() {
-        this.aiRequests = {
-            total: 0,
-            successful: 0,
-            failed: 0,
-            logs: [],
-            maxLogs: 50
-        };
-
-        this.updateAIStatsDisplay();
-        this.setupAIRequestControls();
-    }
-
-    logAIRequest(provider, success, duration, error = null) {
-        this.aiRequests.total++;
-        if (success) {
-            this.aiRequests.successful++;
-        } else {
-            this.aiRequests.failed++;
-        }
-
-        // Add to logs
-        this.aiRequests.logs.push({
-            provider,
-            success,
-            duration,
-            error,
-            timestamp: new Date()
-        });
-
-        // Keep only recent logs
-        if (this.aiRequests.logs.length > this.aiRequests.maxLogs) {
-            this.aiRequests.logs.shift();
-        }
-
-        this.updateAIStatsDisplay();
-        this.updateAIRequestLogDisplay();
-
-        // Log to console
-        const status = success ? '✅' : '❌';
-        this.addConsoleEntry(success ? 'info' : 'error',
-            `${status} AI Request (${provider}): ${duration}ms ${error ? '- ' + error : ''}`);
-    }
-
-    updateAIStatsDisplay() {
-        const totalEl = document.getElementById('totalRequests');
-        const successEl = document.getElementById('successRate');
-        const avgTimeEl = document.getElementById('avgResponseTime');
-        const lastRequestEl = document.getElementById('lastRequestTime');
-
-        if (totalEl) totalEl.textContent = this.aiRequests.total;
-
-        const rate = this.aiRequests.total > 0
-            ? Math.round((this.aiRequests.successful / this.aiRequests.total) * 100)
-            : 100;
-
-        if (successEl) {
-            successEl.textContent = `${rate}%`;
-        }
-
-        if (avgTimeEl) {
-            const validRequests = this.aiRequests.logs.filter(log => log.duration);
-            const avgTime = validRequests.length > 0
-                ? Math.round(validRequests.reduce((sum, log) => sum + log.duration, 0) / validRequests.length)
-                : 0;
-            avgTimeEl.textContent = `${avgTime}ms`;
-        }
-
-        if (lastRequestEl) {
-            const lastRequest = this.aiRequests.logs[this.aiRequests.logs.length - 1];
-            lastRequestEl.textContent = lastRequest
-                ? lastRequest.timestamp.toLocaleTimeString()
-                : 'Never';
-        }
-
-        // Update mini status bar
-        this.updateMiniAIStats(this.aiRequests.total, rate);
-    }
-
-    updateAIRequestLogDisplay() {
-        const logContainer = document.getElementById('aiRequestLog');
-        if (!logContainer) return;
-
-        logContainer.innerHTML = '';
-
-        this.aiRequests.logs.slice(-10).reverse().forEach(log => {
-            const entry = document.createElement('div');
-            entry.className = `request-entry ${log.success ? 'success' : 'error'}`;
-            entry.innerHTML = `
-                <div class="timestamp">${log.timestamp.toLocaleTimeString()}</div>
-                <div><strong>${log.provider}</strong> - ${log.duration}ms</div>
-                ${log.error ? `<div class="error-text">${log.error}</div>` : ''}
-            `;
-            logContainer.appendChild(entry);
-        });
-    }
-
-    setupAIRequestControls() {
-        // AI request logging is automatic, no controls needed
-        // But we could add export functionality here if needed
-    }
-
-    // ===== SOLUTIONS GUIDE =====
-
-    setupSolutionsGuide() {
-        const tabs = document.querySelectorAll('.solution-tab');
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                this.switchSolutionTab(tab.dataset.tab);
-            });
-        });
-    }
-
-    switchSolutionTab(tabName) {
-        // Hide all tab contents
-        const contents = document.querySelectorAll('.solution-tab-content');
-        contents.forEach(content => {
-            content.classList.remove('active');
-        });
-
-        // Remove active class from all tabs
-        const tabs = document.querySelectorAll('.solution-tab');
-        tabs.forEach(tab => {
-            tab.classList.remove('active');
-        });
-
-        // Show selected tab content
-        const selectedContent = document.getElementById(tabName);
-        const selectedTab = document.querySelector(`[data-tab="${tabName}"]`);
-
-        if (selectedContent && selectedTab) {
-            selectedContent.classList.add('active');
-            selectedTab.classList.add('active');
-        }
-    }
-
-    // ===== BOTTOM STATUS BAR =====
-
-    setupBottomStatusBar() {
-        this.statusBar = {
-            currentActivity: 'Ready',
-            updateInterval: null
-        };
-
-        this.updateStatusBar();
-        this.startStatusBarUpdates();
-    }
-
-    updateStatusBar(activity = null) {
-        if (activity) {
-            this.statusBar.currentActivity = activity;
-        }
-
-        const activityEl = document.getElementById('currentActivity');
-        if (activityEl) {
-            activityEl.textContent = this.statusBar.currentActivity;
-        }
-
-        // Update storage and memory info
-        this.updateSystemStats();
-    }
-
-    startStatusBarUpdates() {
-        // Update every 5 seconds
-        this.statusBar.updateInterval = setInterval(() => {
-            this.updateSystemStats();
-        }, 5000);
-    }
-
-    updateSystemStats() {
-        // Update storage usage
-        if ('storage' in navigator && 'estimate' in navigator.storage) {
-            navigator.storage.estimate().then(estimate => {
-                const storageEl = document.getElementById('storageUsed');
-                if (storageEl && estimate.usage) {
-                    storageEl.textContent = this.formatBytes(estimate.usage);
-                }
-            });
-        }
-
-        // Update memory usage (if available)
-        if ('memory' in performance) {
-            const memoryEl = document.getElementById('memoryUsage');
-            if (memoryEl) {
-                const memInfo = performance.memory;
-                const usedMB = Math.round(memInfo.usedJSHeapSize / 1048576);
-                memoryEl.textContent = `${usedMB} MB`;
-            }
-        }
-
-        // Update captures count
-        const capturesEl = document.getElementById('capturesCount');
-        if (capturesEl && window.captureManager) {
-            capturesEl.textContent = window.captureManager.captures.length;
-        }
-    }
-
-    showQuickHelp() {
-        const helpMessage = `
-🎯 Quick Help - Rapture Accessible
-
-📸 CAPTURE:
-• Manual Screen: Click "📸 Manual Screen Capture" or press Alt+1 for auto
-• Manual Video: Click "🎥 Manual Video Capture"
-• Emergency: Alt+2 for immediate capture
-• Recording: "⏺️ Start Recording" / "⏹️ Stop Recording"
-
-🤖 ANALYSIS:
-• Alt+4 or click "🤖 Analyze Current Capture"
-• Alt+5 or click "🔊 Read Analysis Aloud"
-• Choose AI provider in settings
-
-💾 MANAGEMENT:
-• Ctrl+S to save current capture
-• Ctrl+E to export all captures
-• Click "🗑️ Clear All" to remove captures
-
-⚙️ SETTINGS:
-• Auto-analyze toggle
-• AI provider selection
-• Auto capture count and delay
-
-🎤 VOICE COMMANDS:
-• "Capture screen", "Start recording"
-• "Analyze capture", "Read description"
-• "Save capture", "Speak status"
-
-📊 MONITORING:
-• Console output with error tracking
-• Analysis progress indicator
-• AI request summary and timing
-• Solutions guide for troubleshooting
-
-For detailed help, check the "Voice Commands" section below.
-        `;
-
-        // Show in console
-        console.log(helpMessage);
-
-        // Announce via accessibility manager
-        if (window.accessibilityManager) {
-            window.accessibilityManager.announce('Quick help displayed in console');
-        }
-
-        // Also show in a temporary popup for visual users
-        this.showHelpPopup(helpMessage);
-    }
-
-    showHelpPopup(message) {
-        // Create a temporary popup
-        const popup = document.createElement('div');
-        popup.className = 'help-popup';
-        popup.innerHTML = `
-            <div class="help-content">
-                <button class="help-close">&times;</button>
-                <pre>${message}</pre>
-            </div>
-        `;
-
-        // Add popup styles
-        popup.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 10000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        `;
-
-        const content = popup.querySelector('.help-content');
-        content.style.cssText = `
-            background: #1a2332;
-            border: 3px solid #00ff00;
-            border-radius: 8px;
-            padding: 20px;
-            max-width: 800px;
-            max-height: 80vh;
-            overflow-y: auto;
-            position: relative;
-            color: #00ff00;
-            font-family: 'Courier New', monospace;
-        `;
-
-        const closeBtn = popup.querySelector('.help-close');
-        closeBtn.style.cssText = `
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            background: none;
-            border: none;
-            color: #00ff00;
-            font-size: 24px;
-            cursor: pointer;
-        `;
-
-        document.body.appendChild(popup);
-
-        // Close on button click or Escape key
-        const closePopup = () => {
-            document.body.removeChild(popup);
-        };
-
-        closeBtn.addEventListener('click', closePopup);
-        document.addEventListener('keydown', function escHandler(e) {
-            if (e.key === 'Escape') {
-                closePopup();
-                document.removeEventListener('keydown', escHandler);
-            }
-        });
-
-        // Auto-close after 30 seconds
-        setTimeout(closePopup, 30000);
-    }
-
-    // ===== COLLAPSIBLE SECTIONS FUNCTIONALITY =====
-
-    setupCollapsibleSections() {
-        const collapsibleHeaders = document.querySelectorAll('.collapsible-header');
-
-        collapsibleHeaders.forEach(header => {
-            // Initialize aria-expanded state if not set
-            if (!header.hasAttribute('aria-expanded')) {
-                header.setAttribute('aria-expanded', 'false');
-            }
-
-            // Ensure content is properly hidden initially
-            const content = header.parentElement.querySelector('.collapsible-content');
-            const toggle = header.querySelector('.collapse-toggle');
-
-            if (header.getAttribute('aria-expanded') === 'false' && content) {
-                content.style.display = 'none';
-            } else if (header.getAttribute('aria-expanded') === 'true' && content) {
-                content.style.display = 'block';
-            }
-
-            // Update toggle indicator
-            if (toggle) {
-                const isExpanded = header.getAttribute('aria-expanded') === 'true';
-                toggle.textContent = isExpanded ? '▲' : '▼';
-            }
-
-            header.addEventListener('click', () => {
-                this.toggleCollapsibleSection(header);
-            });
-
-            header.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    this.toggleCollapsibleSection(header);
-                }
-            });
-        });
-    }
-
-    toggleCollapsibleSection(header) {
-        const isExpanded = header.getAttribute('aria-expanded') === 'true';
-        const content = header.parentElement.querySelector('.collapsible-content');
-        const toggle = header.querySelector('.collapse-toggle');
-
-        if (isExpanded) {
-            header.setAttribute('aria-expanded', 'false');
-            if (content) content.style.display = 'none';
-        } else {
-            header.setAttribute('aria-expanded', 'true');
-            if (content) content.style.display = 'block';
-        }
-
-        // Update toggle indicator
-        if (toggle) {
-            toggle.textContent = isExpanded ? '▼' : '▲';
-        }
-
-        // Announce state change for screen readers
-        if (window.accessibilityManager) {
-            const sectionName = header.querySelector('h3').textContent;
-            window.accessibilityManager.announce(`${sectionName} ${isExpanded ? 'collapsed' : 'expanded'}`);
-        }
-    }
-
-    // ===== MINI STATUS BAR COMPONENTS =====
-
-    setupMiniStatusBar() {
-        this.miniProgress = {
-            bar: document.getElementById('miniAnalysisProgressBar'),
-            text: document.getElementById('miniProgressText')
-        };
-
-        this.miniAIStats = {
-            totalRequests: document.getElementById('miniTotalRequests'),
-            successRate: document.getElementById('miniSuccessRate')
-        };
-
-        this.miniAnnouncements = {
-            count: document.getElementById('announcementsCount'),
-            list: document.getElementById('miniAnnouncementsList'),
-            announcements: []
-        };
-
-        this.setupMiniAnnouncements();
-
-        // Add initial announcements after a short delay to ensure everything is loaded
-        setTimeout(() => {
-            this.addMiniAnnouncement('System initialized and ready');
-        }, 500);
-
-        setTimeout(() => {
-            this.addMiniAnnouncement('Mini status bar active');
-        }, 1000);
-    }
-
-    setupMiniAnnouncements() {
-        // Override the accessibility manager's announce method to capture announcements
-        if (window.accessibilityManager && window.accessibilityManager.announce) {
-            const originalAnnounce = window.accessibilityManager.announce.bind(window.accessibilityManager);
-
-            window.accessibilityManager.announce = (message) => {
-                originalAnnounce(message);
-                this.addMiniAnnouncement(message);
-            };
-        }
-
-        // Also listen for custom events that might be dispatched
-        this.announcementListener = (message) => {
-            this.addMiniAnnouncement(message);
-        };
-
-        // Listen for system events
-        window.addEventListener('systemAnnouncement', (event) => {
-            if (event.detail && event.detail.message) {
-                this.addMiniAnnouncement(event.detail.message);
-            }
-        });
-    }
-
-    addMiniAnnouncement(message) {
-        this.miniAnnouncements.announcements.unshift(message);
-
-        // Keep only last 3 announcements
-        if (this.miniAnnouncements.announcements.length > 3) {
-            this.miniAnnouncements.announcements = this.miniAnnouncements.announcements.slice(0, 3);
-        }
-
-        this.updateMiniAnnouncementsDisplay();
-
-        // Also send to main status bar if available
-        if (window.addStatusAnnouncement) {
-            window.addStatusAnnouncement(message);
-        }
-    }
-
-    updateMiniAnnouncementsDisplay() {
-        if (!this.miniAnnouncements.list || !this.miniAnnouncements.count) return;
-
-        this.miniAnnouncements.count.textContent = this.miniAnnouncements.announcements.length;
-
-        // Clear existing items
-        this.miniAnnouncements.list.innerHTML = '';
-
-        // Show placeholder if no announcements
-        if (this.miniAnnouncements.announcements.length === 0) {
-            const item = document.createElement('div');
-            item.className = 'mini-announcement-item';
-            item.textContent = 'System ready';
-            this.miniAnnouncements.list.appendChild(item);
-        } else {
-            // Add announcements (show last 2)
-            const announcementsToShow = this.miniAnnouncements.announcements.slice(0, 2);
-            announcementsToShow.forEach((announcement) => {
-                const item = document.createElement('div');
-                item.className = 'mini-announcement-item';
-                item.textContent = announcement.length > 25 ? announcement.substring(0, 25) + '...' : announcement;
-                item.title = announcement; // Show full text on hover
-                this.miniAnnouncements.list.appendChild(item);
-            });
-        }
-    }
-
-    updateMiniProgress(percentage, text) {
-        if (this.miniProgress.bar) {
-            this.miniProgress.bar.style.width = `${percentage}%`;
-        }
-        if (this.miniProgress.text) {
-            this.miniProgress.text.textContent = text;
-        }
-    }
-
-    updateMiniAIStats(total, rate) {
-        // Check if miniAIStats is initialized before accessing properties
-        if (!this.miniAIStats) {
-            console.warn('Mini AI stats not initialized yet');
-            return;
-        }
-
-        if (this.miniAIStats.totalRequests) {
-            this.miniAIStats.totalRequests.textContent = `AI: ${total}`;
-        }
-        if (this.miniAIStats.successRate) {
-            this.miniAIStats.successRate.textContent = `${rate}%`;
-        }
-    }
-
-    // ===== INITIALIZATION INTEGRATION =====
-
-    performInitialization() {
-        try {
-            // Initialize all modules (existing code)
-            this.initializeModules();
-            this.setupErrorHandling();
-            this.setupKeyboardShortcuts();
-            this.setupSystemMonitoring();
-            this.loadUserPreferences();
-            this.setupFirstLoadAutoCapture();
-            this.setupSequentialActions();
-
-            // Initialize new features
-            this.setupConsoleMonitoring();
-            this.setupAnalysisProgress();
-            this.setupAIRequestLogging();
-            this.setupSolutionsGuide();
-            this.setupBottomStatusBar();
-            this.setupCollapsibleSections();
-            this.setupMiniStatusBar();
-
-            this.isInitialized = true;
-            console.log('✅ Rapture Accessible initialized successfully');
-            this.announceInitialization();
-
-        } catch (error) {
-            console.error('❌ Initialization failed:', error);
-            this.handleInitializationError(error);
-        }
     }
 }
 
 // Initialize the application
 const raptureAccessible = new RaptureAccessible();
-
-// Make globally accessible for debugging
 window.raptureAccessible = raptureAccessible;
-
-// Enhanced console output
-console.log(`
-🎬 Rapture Accessible - Screen Capture for Blind Users
-══════════════════════════════════════════════════════
-✅ Features:
-   • Manual screen and video capture buttons
-   • Auto screen capture with configurable count and countdown
-   • Video recording with start/stop controls
-   • Real-time countdown timers with pause/resume/stop
-   • Sequential action system (Quick & Full sequences)
-   • Multiple AI providers (Gemini, Hugging Face, OpenAI)
-   • High contrast interface optimized for accessibility
-   • Keyboard shortcuts and screen reader support
-   • Manual capture mode by default
-   • AI communication logging to console
-   • Complete button press logging
-
-🎯 Quick Start:
-   • Manual screen capture: Click "📸 Manual Screen Capture"
-   • Manual video capture: Click "🎥 Manual Video Capture"
-   • Auto capture: Alt+1 or click "🔄 Auto Capture"
-   • Emergency capture: Alt+2 or click "🚨 Emergency Capture"
-   • Video recording: Click "⏺️ Start Recording" / "⏹️ Stop Recording"
-   • Analyze capture: Alt+4 or click "🤖 Analyze Current Capture"
-   • Speak status: Alt+3 or click "Speak System Status"
-   • Read analysis: Alt+5 or click "🔊 Read Analysis Aloud"
-   • Quick sequence: Click "⚡ Quick Sequence"
-   • Full sequence: Click "🔄 Full Sequence"
-
-🔧 Keyboard Shortcuts:
-   • Alt+1: Toggle auto capture
-   • Alt+2: Emergency capture
-   • Alt+3: Speak system status
-   • Alt+4: Analyze current capture
-   • Alt+5: Read description aloud
-   • Alt+H: Show all shortcuts
-   • Ctrl+S: Save current capture
-   • Ctrl+E: Export all captures
-
-📊 System Status:
-   • Initialized: ${raptureAccessible.isInitialized}
-   • Online: ${navigator.onLine}
-   • Screen Reader: ${window.accessibilityManager?.detectScreenReader() || 'Not detected'}
-   • Manual Mode: ${window.autoCaptureManager?.manualCaptureMode ? 'Enabled' : 'Disabled'}
-   • Auto Count: ${window.autoCaptureManager?.autoCaptureCount || 3}
-
-🚀 Ready to use!
-`);
-
-console.log('💡 Tips:');
-console.log('   • Manual capture mode is enabled by default');
-console.log('   • Configure autoCapture count in the settings section');
-console.log('   • All AI communication is logged to the console');
-console.log('   • All button presses are logged to the console');
-console.log('   • Use Alt+3 to hear current system status anytime');
-console.log('   • Use countdown timers to control action timing');
-console.log('   • Sequential actions help automate workflows');

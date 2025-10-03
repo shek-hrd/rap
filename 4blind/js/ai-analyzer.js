@@ -8,551 +8,461 @@ class AIAnalyzer {
         this.currentAnalysis = '';
         this.isAnalyzing = false;
         this.analysisHistory = [];
-        this.aiProviders = {
-            gemini: {
-                name: 'Gemini (Google)',
-                isFree: true,
-                isConfigured: false,
-                model: 'gemini-2.0-flash-lite-001'
-            },
-            huggingface: {
-                name: 'Hugging Face (Free)',
-                isFree: true,
-                isConfigured: true, // No API key needed for basic models
-                model: 'microsoft/DialoGPT-medium'
-            },
-            openai: {
-                name: 'OpenAI GPT-4',
-                isFree: false,
-                isConfigured: false,
-                model: 'gpt-4'
-            }
-        };
+        this.apiKeys = new Map();
 
         this.init();
     }
 
     init() {
-        this.checkPuterAvailability();
-        this.setupEventListeners();
+        this.loadAPIKeys();
         this.loadAnalysisHistory();
+        this.setupEventListeners();
 
         console.log('🤖 AI Analyzer initialized');
     }
 
-    checkPuterAvailability() {
-        // Check if Puter.js is available for Gemini access
-        if (typeof puter !== 'undefined' && puter.ai && typeof puter.ai.chat === 'function') {
-            this.aiProviders.gemini.isConfigured = true;
-            console.log('✅ Puter.js available for Gemini access');
-        } else {
-            console.warn('❌ Puter.js not available for Gemini access');
-        }
-    }
-
-    setupEventListeners() {
-        // Analyze button
-        const analyzeBtn = document.getElementById('analyzeCapture');
-        if (analyzeBtn) {
-            analyzeBtn.addEventListener('click', () => {
-                this.analyzeWithAI();
-            });
-        }
-
-        // Read aloud button
-        const readAloudBtn = document.getElementById('readAloud');
-        if (readAloudBtn) {
-            readAloudBtn.addEventListener('click', () => {
-                this.readDescriptionAloud();
-            });
-        }
-
-        // Re-analyze button
-        const reanalyzeBtn = document.getElementById('reanalyze');
-        if (reanalyzeBtn) {
-            reanalyzeBtn.addEventListener('click', () => {
-                this.reanalyzeWithDifferentAI();
-            });
-        }
-
-        // AI provider selection
-        const aiProviderSelect = document.getElementById('aiProviderSelect');
-        if (aiProviderSelect) {
-            aiProviderSelect.addEventListener('change', () => {
-                this.onAIProviderChanged();
-            });
-        }
-    }
-
-    async analyzeWithAI() {
-        if (!window.currentCapture) {
-            window.accessibilityManager.announce('No capture available for analysis');
-            return;
-        }
-
-        if (this.isAnalyzing) {
-            window.accessibilityManager.announce('Analysis already in progress');
-            return;
-        }
-
-        this.isAnalyzing = true;
-
-        // Start progress tracking
-        if (window.raptureAccessible) {
-            window.raptureAccessible.startAnalysisProgress();
-            window.raptureAccessible.updateStatusBar('🔄 Analyzing capture...');
-        }
-
-        // Update UI
-        const analyzeBtn = document.getElementById('analyzeCapture');
-        if (analyzeBtn) {
-            analyzeBtn.disabled = true;
-            analyzeBtn.textContent = '🤖 Analyzing...';
-        }
-
-        // Show processing status
-        window.accessibilityManager.announceAnalysisStart();
-
-        const startTime = Date.now();
-        let analysis = '';
-        let success = false;
-
+    loadAPIKeys() {
         try {
-            const provider = document.getElementById('aiProviderSelect')?.value || 'gemini';
-
-            // Step 1: Image/Video Processing
-            if (window.raptureAccessible) {
-                window.raptureAccessible.updateAnalysisStep(0, 'active', 'Processing capture...');
-            }
-
-            if (window.currentCapture.type === 'image') {
-                if (window.raptureAccessible) {
-                    window.raptureAccessible.updateAnalysisStep(0, 'completed', 'Image processed');
-                    window.raptureAccessible.updateAnalysisStep(1, 'active', 'Analyzing with AI...');
-                }
-                analysis = await this.analyzeImage(window.currentCapture.dataUrl, provider);
-            } else if (window.currentCapture.type === 'video') {
-                if (window.raptureAccessible) {
-                    window.raptureAccessible.updateAnalysisStep(0, 'completed', 'Video processed');
-                    window.raptureAccessible.updateAnalysisStep(1, 'active', 'Analyzing with AI...');
-                }
-                analysis = await this.analyzeVideo(window.currentCapture.dataUrl, provider);
-            }
-
-            if (analysis) {
-                success = true;
-
-                // Step 2: AI Analysis completed
-                if (window.raptureAccessible) {
-                    window.raptureAccessible.updateAnalysisStep(1, 'completed', 'AI analysis complete');
-                    window.raptureAccessible.updateAnalysisStep(2, 'active', 'Processing results...');
-                }
-
-                this.displayAnalysis(analysis, provider);
-                this.addToHistory(provider, analysis);
-                window.accessibilityManager.announceAnalysisComplete(provider);
-
-                // Step 3: Results processed
-                if (window.raptureAccessible) {
-                    window.raptureAccessible.updateAnalysisStep(2, 'completed', 'Results ready');
-                }
-
-                // Return the analysis for console logging
-                return analysis;
-            } else {
-                window.accessibilityManager.announceError('Analysis failed - no results returned');
-                return null;
-            }
-
+            const keys = JSON.parse(localStorage.getItem('raptureAPIKeys') || '{}');
+            this.apiKeys = new Map(Object.entries(keys));
         } catch (error) {
-            console.error('AI analysis error:', error);
-            window.accessibilityManager.announceError('Analysis failed: ' + error.message);
-            success = false;
-        } finally {
-            this.isAnalyzing = false;
-            const duration = Date.now() - startTime;
-
-            // Complete progress tracking
-            if (window.raptureAccessible) {
-                if (success) {
-                    window.raptureAccessible.completeAnalysisProgress();
-                }
-                window.raptureAccessible.updateStatusBar('Ready');
-                
-                // Log AI request
-                const provider = document.getElementById('aiProviderSelect')?.value || 'gemini';
-                window.raptureAccessible.logAIRequest(provider, success, duration, success ? null : error?.message);
-            }
-
-            // Reset UI
-            if (analyzeBtn) {
-                analyzeBtn.disabled = false;
-                analyzeBtn.textContent = '🤖 Analyze with AI';
-            }
+            console.error('Error loading API keys:', error);
         }
     }
 
-    async analyzeImage(dataUrl, provider) {
-        const providerConfig = this.aiProviders[provider];
-        if (!providerConfig) {
-            throw new Error(`Unknown AI provider: ${provider}`);
-        }
-
-        console.log(`🤖 Analyzing image with ${providerConfig.name}`);
-
-        switch (provider) {
-            case 'gemini':
-                return await this.analyzeWithGemini(dataUrl);
-
-            case 'huggingface':
-                return await this.analyzeWithHuggingFace(dataUrl);
-
-            case 'openai':
-                return await this.analyzeWithOpenAI(dataUrl);
-
-            default:
-                throw new Error(`Unsupported provider: ${provider}`);
-        }
-    }
-
-    async analyzeVideo(dataUrl, provider) {
-        // For video analysis, we'll provide a general description
-        // In a full implementation, you might extract frames or use video-capable AI
-        const providerConfig = this.aiProviders[provider];
-
-        console.log(`🤖 Analyzing video with ${providerConfig.name}`);
-
-        const prompt = "This is a screen recording. Please provide an analysis of what might be shown in such a capture, including potential use cases and common elements.";
-
-        switch (provider) {
-            case 'gemini':
-                return await this.analyzeWithGeminiText(prompt);
-
-            case 'huggingface':
-                return await this.analyzeWithHuggingFaceText(prompt);
-
-            case 'openai':
-                return await this.analyzeWithOpenAIText(prompt);
-
-            default:
-                throw new Error(`Unsupported provider: ${provider}`);
-        }
-    }
-
-    async analyzeWithGemini(dataUrl) {
-        if (!this.aiProviders.gemini.isConfigured) {
-            return 'Gemini analysis requires Puter.js authentication. Please ensure Puter.js is loaded and try again.';
-        }
-
+    loadAnalysisHistory() {
         try {
-            const response = await puter.ai.chat(
-                "Analyze this image in detail for a blind user. Describe what you see, including any text, objects, people, colors, and context. Be thorough and specific.",
-                dataUrl,
-                {
-                    model: this.aiProviders.gemini.model
-                }
-            );
-
-            return response.message?.content || 'Analysis completed but no response text was returned.';
+            this.analysisHistory = JSON.parse(localStorage.getItem('raptureAnalysisHistory') || '[]');
         } catch (error) {
-            console.error('Gemini analysis failed:', error);
-            return `Gemini analysis failed: ${error.message}. Please try a different AI provider.`;
+            console.error('Error loading analysis history:', error);
+            this.analysisHistory = [];
         }
-    }
-
-    async analyzeWithHuggingFace(dataUrl) {
-        try {
-            // For image analysis with Hugging Face, we'll use their free inference API
-            // Convert data URL to blob for upload
-            const blob = this.dataUrlToBlob(dataUrl);
-
-            // Use a free vision model
-            const response = await fetch('https://api-inference.huggingface.co/models/Salesforce/blip-image-captioning-base', {
-                method: 'POST',
-                headers: {
-                    'Authorization': 'Bearer hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', // Free anonymous access
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    image: dataUrl.split(',')[1], // Base64 data
-                    max_new_tokens: 100
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error(`Hugging Face API error: ${response.status}`);
-            }
-
-            const result = await response.json();
-
-            // Enhance the basic caption with more detail
-            const caption = result[0]?.generated_text || 'Image analysis completed but no description available.';
-            return `Hugging Face analysis: ${caption}. This is a screen capture that may contain text, buttons, images, and other interface elements.`;
-        } catch (error) {
-            console.error('Hugging Face analysis failed:', error);
-            return `Hugging Face analysis failed: ${error.message}. This may be due to API limits or network issues.`;
-        }
-    }
-
-    async analyzeWithOpenAI(dataUrl) {
-        const apiKey = localStorage.getItem('openai_api_key');
-        if (!apiKey) {
-            return 'OpenAI analysis requires an API key. Please set your OpenAI API key in the settings or use a free provider like Gemini or Hugging Face.';
-        }
-
-        try {
-            const response = await fetch('https://api.openai.com/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${apiKey}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    model: this.aiProviders.openai.model,
-                    messages: [{
-                        role: 'user',
-                        content: [{
-                            type: 'text',
-                            text: "Analyze this image in detail for a blind user. Describe what you see, including any text, objects, people, colors, and context. Be thorough and specific."
-                        }, {
-                            type: 'image_url',
-                            image_url: { url: dataUrl }
-                        }]
-                    }],
-                    max_tokens: 300
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error(`OpenAI API error: ${response.status}`);
-            }
-
-            const result = await response.json();
-            return result.choices[0]?.message?.content || 'Analysis completed but no response text was returned.';
-        } catch (error) {
-            console.error('OpenAI analysis failed:', error);
-            return `OpenAI analysis failed: ${error.message}. Please check your API key and try again.`;
-        }
-    }
-
-    async analyzeWithGeminiText(prompt) {
-        if (!this.aiProviders.gemini.isConfigured) {
-            return 'Gemini analysis requires Puter.js authentication.';
-        }
-
-        try {
-            const response = await puter.ai.chat(prompt, {
-                model: this.aiProviders.gemini.model
-            });
-
-            return response.message?.content || 'Analysis completed but no response text was returned.';
-        } catch (error) {
-            console.error('Gemini text analysis failed:', error);
-            return `Gemini analysis failed: ${error.message}`;
-        }
-    }
-
-    async analyzeWithHuggingFaceText(prompt) {
-        try {
-            const response = await fetch('https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium', {
-                method: 'POST',
-                headers: {
-                    'Authorization': 'Bearer hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    inputs: prompt,
-                    parameters: {
-                        max_new_tokens: 150,
-                        temperature: 0.7
-                    }
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error(`Hugging Face API error: ${response.status}`);
-            }
-
-            const result = await response.json();
-            return result[0]?.generated_text || 'Analysis completed but no response text was returned.';
-        } catch (error) {
-            console.error('Hugging Face text analysis failed:', error);
-            return `Hugging Face analysis failed: ${error.message}`;
-        }
-    }
-
-    async analyzeWithOpenAIText(prompt) {
-        const apiKey = localStorage.getItem('openai_api_key');
-        if (!apiKey) {
-            return 'OpenAI analysis requires an API key.';
-        }
-
-        try {
-            const response = await fetch('https://api.openai.com/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${apiKey}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    model: this.aiProviders.openai.model,
-                    messages: [{
-                        role: 'user',
-                        content: prompt
-                    }],
-                    max_tokens: 200
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error(`OpenAI API error: ${response.status}`);
-            }
-
-            const result = await response.json();
-            return result.choices[0]?.message?.content || 'Analysis completed but no response text was returned.';
-        } catch (error) {
-            console.error('OpenAI text analysis failed:', error);
-            return `OpenAI analysis failed: ${error.message}`;
-        }
-    }
-
-    displayAnalysis(analysis, provider) {
-        const aiDescription = document.getElementById('aiDescription');
-        if (aiDescription) {
-            aiDescription.value = analysis;
-            this.currentAnalysis = analysis;
-        }
-
-        // Show AI conversation interface
-        this.showAIConversation();
-
-        // Enable read aloud button
-        const readAloudBtn = document.getElementById('readAloud');
-        if (readAloudBtn) {
-            readAloudBtn.disabled = false;
-        }
-
-        console.log(`🤖 Analysis displayed from ${provider}`);
-    }
-
-    showAIConversation() {
-        const aiConversation = document.getElementById('aiConversation');
-        if (aiConversation) {
-            aiConversation.style.display = 'block';
-        }
-    }
-
-    getCurrentAnalysis() {
-        return this.currentAnalysis;
-    }
-
-    getAnalysisHistory() {
-        return this.analysisHistory;
-    }
-
-    readDescriptionAloud() {
-        if (!this.currentAnalysis) {
-            window.accessibilityManager.announce('No analysis available to read');
-            return;
-        }
-
-        window.accessibilityManager.announce('Reading AI analysis: ' + this.currentAnalysis);
-    }
-
-    async reanalyzeWithDifferentAI() {
-        const aiProviderSelect = document.getElementById('aiProviderSelect');
-        if (!aiProviderSelect) return;
-
-        // Cycle to next provider
-        const providers = Object.keys(this.aiProviders);
-        const currentIndex = providers.indexOf(aiProviderSelect.value);
-        const nextIndex = (currentIndex + 1) % providers.length;
-        aiProviderSelect.value = providers[nextIndex];
-
-        // Trigger new analysis
-        this.analyzeWithAI();
-    }
-
-    onAIProviderChanged() {
-        const provider = document.getElementById('aiProviderSelect')?.value;
-        if (provider && this.aiProviders[provider]) {
-            const providerConfig = this.aiProviders[provider];
-            let message = `Switched to ${providerConfig.name}`;
-
-            if (!providerConfig.isConfigured) {
-                message += '. Note: This provider may require additional configuration.';
-            }
-
-            window.accessibilityManager.announce(message);
-            console.log(`🤖 AI provider changed to: ${provider}`);
-        }
-    }
-
-    addToHistory(provider, analysis) {
-        this.analysisHistory.unshift({
-            provider,
-            analysis: analysis.substring(0, 200) + '...', // Truncate for storage
-            timestamp: new Date().toISOString(),
-            fullAnalysis: analysis
-        });
-
-        // Keep only last 20 analyses
-        if (this.analysisHistory.length > 20) {
-            this.analysisHistory.pop();
-        }
-
-        this.saveAnalysisHistory();
     }
 
     saveAnalysisHistory() {
         localStorage.setItem('raptureAnalysisHistory', JSON.stringify(this.analysisHistory));
     }
 
-    loadAnalysisHistory() {
-        const history = localStorage.getItem('raptureAnalysisHistory');
-        if (history) {
-            try {
-                this.analysisHistory = JSON.parse(history);
-                console.log(`📚 Loaded ${this.analysisHistory.length} previous analyses`);
-            } catch (error) {
-                console.error('Error loading analysis history:', error);
+    setupEventListeners() {
+        // Listen for capture events
+        document.addEventListener('capture:created', (e) => {
+            if (e.detail && e.detail.capture) {
+                this.currentCapture = e.detail.capture;
             }
+        });
+    }
+
+    async analyzeWithAI(providerConfig = null) {
+        if (this.isAnalyzing) {
+            console.warn('⚠️ Analysis already in progress');
+            return;
+        }
+
+        if (!this.currentCapture && !window.captureManager?.currentCapture) {
+            window.accessibilityManager?.announceError('No capture available for analysis');
+            return;
+        }
+
+        this.isAnalyzing = true;
+        this.currentAnalysis = '';
+
+        try {
+            // Use provided provider or get available one
+            const provider = providerConfig || await this.getAvailableProvider();
+
+            if (!provider) {
+                throw new Error('No available AI provider found');
+            }
+
+            console.log(`🤖 Starting analysis with ${provider.name}`);
+
+            // Broadcast analysis started event
+            window.dispatchEvent(new CustomEvent('analysis:started', {
+                detail: { provider: provider.name }
+            }));
+
+            const analysis = await this.performAnalysis(provider);
+
+            this.currentAnalysis = analysis;
+            this.addToHistory(provider.name, analysis);
+
+            // Broadcast completion event
+            window.dispatchEvent(new CustomEvent('analysis:completed', {
+                detail: { analysis, provider: provider.name }
+            }));
+
+            console.log(`✅ Analysis completed with ${provider.name}`);
+            return analysis;
+
+        } catch (error) {
+            console.error('❌ Analysis failed:', error);
+
+            // Try fallback provider
+            const fallbackProvider = await this.getFallbackProvider();
+            if (fallbackProvider) {
+                console.log(`🔄 Retrying with fallback provider: ${fallbackProvider.name}`);
+                try {
+                    const analysis = await this.performAnalysis(fallbackProvider);
+                    this.currentAnalysis = analysis;
+                    this.addToHistory(fallbackProvider.name, analysis);
+
+                    window.dispatchEvent(new CustomEvent('analysis:completed', {
+                        detail: { analysis, provider: fallbackProvider.name }
+                    }));
+
+                    return analysis;
+                } catch (fallbackError) {
+                    console.error('❌ Fallback analysis also failed:', fallbackError);
+                    throw fallbackError;
+                }
+            }
+
+            throw error;
+        } finally {
+            this.isAnalyzing = false;
         }
     }
 
-    dataUrlToBlob(dataUrl) {
-        const parts = dataUrl.split(';base64,');
-        const mimeType = parts[0].split(':')[1];
-        const base64 = parts[1];
-        const byteCharacters = atob(base64);
-        const byteNumbers = new Array(byteCharacters.length);
-
-        for (let i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
+    async getAvailableProvider() {
+        // Get provider configurations from main app
+        const mainApp = window.raptureAccessible;
+        if (!mainApp || !mainApp.aiProviders) {
+            throw new Error('Main application not available');
         }
 
-        const byteArray = new Uint8Array(byteNumbers);
-        return new Blob([byteArray], { type: mimeType });
+        // Try current provider first
+        const currentProvider = mainApp.aiProviders.get(mainApp.currentAIProvider);
+        if (currentProvider && await this.testProvider(currentProvider)) {
+            return currentProvider;
+        }
+
+        // Try other providers
+        for (const [key, provider] of mainApp.aiProviders) {
+            if (key !== mainApp.currentAIProvider && await this.testProvider(provider)) {
+                return provider;
+            }
+        }
+
+        return null;
+    }
+
+    async getFallbackProvider() {
+        const mainApp = window.raptureAccessible;
+        if (!mainApp || !mainApp.aiProviders) return null;
+
+        // Return Hugging Face as last resort (free, no key needed)
+        return mainApp.aiProviders.get('huggingface');
+    }
+
+    async testProvider(provider) {
+        try {
+            if (provider.requiresKey && !this.apiKeys.has(provider.name.toLowerCase().replace(' ', ''))) {
+                return false;
+            }
+
+            // Simple connectivity test
+            const testPayload = {
+                model: provider.model,
+                messages: [{ role: 'user', content: 'test' }],
+                max_tokens: 5
+            };
+
+            const response = await fetch(`${provider.endpoint}/chat/completions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(provider.requiresKey ? {
+                        'Authorization': `Bearer ${this.apiKeys.get(provider.name.toLowerCase().replace(' ', ''))}`
+                    } : {})
+                },
+                body: JSON.stringify(testPayload)
+            });
+
+            return response.ok;
+        } catch (error) {
+            console.warn(`Provider ${provider.name} test failed:`, error);
+            return false;
+        }
+    }
+
+    async performAnalysis(provider) {
+        const captureData = this.getCaptureData();
+        const prompt = this.buildAnalysisPrompt(captureData);
+
+        switch (provider.name.toLowerCase().replace(' ', '')) {
+            case 'huggingface':
+                return await this.analyzeWithHuggingFace(prompt);
+            case 'openai':
+                return await this.analyzeWithOpenAI(prompt, provider);
+            case 'anthropic':
+                return await this.analyzeWithAnthropic(prompt, provider);
+            case 'google':
+                return await this.analyzeWithGoogle(prompt, provider);
+            case 'cohere':
+                return await this.analyzeWithCohere(prompt, provider);
+            default:
+                throw new Error(`Unsupported provider: ${provider.name}`);
+        }
+    }
+
+    getCaptureData() {
+        const capture = this.currentCapture || window.captureManager?.currentCapture;
+        if (!capture) {
+            throw new Error('No capture data available');
+        }
+
+        return {
+            image: capture.dataUrl || capture.imageData,
+            type: capture.type || 'screenshot',
+            timestamp: capture.timestamp || new Date().toISOString(),
+            name: capture.name || 'Untitled Capture'
+        };
+    }
+
+    buildAnalysisPrompt(captureData) {
+        return `Please analyze this ${captureData.type} and provide a detailed description of what you see. Describe:
+
+1. The overall layout and structure
+2. Any text content you can identify
+3. Visual elements like buttons, images, or icons
+4. The purpose or function this interface appears to serve
+5. Any important information or actions available
+
+Please be specific and thorough in your analysis, as this is for accessibility purposes to help blind users understand the content.`;
+    }
+
+    async analyzeWithHuggingFace(prompt) {
+        const response = await fetch('https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', // Public token for basic models
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                inputs: prompt,
+                parameters: {
+                    max_length: 200,
+                    temperature: 0.7
+                }
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Hugging Face API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data[0]?.generated_text || 'Analysis could not be completed';
+    }
+
+    async analyzeWithOpenAI(prompt, provider) {
+        const apiKey = this.apiKeys.get('openai');
+        if (!apiKey) {
+            throw new Error('OpenAI API key not configured');
+        }
+
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                model: provider.model,
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'You are an accessibility assistant helping blind users understand screen content. Provide detailed, descriptive analysis of images and interfaces.'
+                    },
+                    {
+                        role: 'user',
+                        content: prompt
+                    }
+                ],
+                max_tokens: 300,
+                temperature: 0.7
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(`OpenAI API error: ${error.error?.message || response.status}`);
+        }
+
+        const data = await response.json();
+        return data.choices[0]?.message?.content || 'Analysis could not be completed';
+    }
+
+    async analyzeWithAnthropic(prompt, provider) {
+        const apiKey = this.apiKeys.get('anthropic');
+        if (!apiKey) {
+            throw new Error('Anthropic API key not configured');
+        }
+
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+                'x-api-key': apiKey,
+                'anthropic-version': '2023-06-01',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                model: provider.model,
+                messages: [
+                    {
+                        role: 'user',
+                        content: prompt
+                    }
+                ],
+                max_tokens: 300
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(`Anthropic API error: ${error.error?.message || response.status}`);
+        }
+
+        const data = await response.json();
+        return data.content[0]?.text || 'Analysis could not be completed';
+    }
+
+    async analyzeWithGoogle(prompt, provider) {
+        const apiKey = this.apiKeys.get('google');
+        if (!apiKey) {
+            throw new Error('Google API key not configured');
+        }
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${provider.model}:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                contents: [
+                    {
+                        parts: [
+                            {
+                                text: prompt
+                            }
+                        ]
+                    }
+                ]
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(`Google API error: ${error.error?.message || response.status}`);
+        }
+
+        const data = await response.json();
+        return data.candidates[0]?.content?.parts[0]?.text || 'Analysis could not be completed';
+    }
+
+    async analyzeWithCohere(prompt, provider) {
+        const apiKey = this.apiKeys.get('cohere');
+        if (!apiKey) {
+            throw new Error('Cohere API key not configured');
+        }
+
+        const response = await fetch('https://api.cohere.ai/v1/generate', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                model: provider.model,
+                prompt: prompt,
+                max_tokens: 300,
+                temperature: 0.7
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(`Cohere API error: ${error.message || response.status}`);
+        }
+
+        const data = await response.json();
+        return data.generations[0]?.text || 'Analysis could not be completed';
+    }
+
+    addToHistory(provider, analysis) {
+        this.analysisHistory.unshift({
+            provider,
+            analysis,
+            timestamp: new Date().toISOString(),
+            captureName: this.currentCapture?.name || 'Unknown'
+        });
+
+        // Keep only last 50 analyses
+        if (this.analysisHistory.length > 50) {
+            this.analysisHistory = this.analysisHistory.slice(0, 50);
+        }
+
+        this.saveAnalysisHistory();
+    }
+
+    async readDescriptionAloud() {
+        if (!this.currentAnalysis) {
+            window.accessibilityManager?.announceError('No analysis available to read');
+            return;
+        }
+
+        try {
+            // Use Web Speech API for text-to-speech
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(this.currentAnalysis);
+                utterance.rate = 0.9;
+                utterance.pitch = 1;
+                utterance.volume = 0.8;
+
+                // Try to find a good voice
+                const voices = speechSynthesis.getVoices();
+                const preferredVoice = voices.find(voice =>
+                    voice.lang.startsWith('en') && voice.name.includes('Female')
+                ) || voices.find(voice => voice.lang.startsWith('en'));
+
+                if (preferredVoice) {
+                    utterance.voice = preferredVoice;
+                }
+
+                speechSynthesis.speak(utterance);
+                console.log('🔊 Reading analysis aloud');
+            } else {
+                window.accessibilityManager?.announceError('Speech synthesis not supported');
+            }
+        } catch (error) {
+            console.error('Read aloud failed:', error);
+            window.accessibilityManager?.announceError('Failed to read analysis aloud');
+        }
     }
 
     getAvailableProviders() {
-        return Object.entries(this.aiProviders)
-            .filter(([key, config]) => config.isConfigured || config.isFree)
-            .map(([key, config]) => ({
-                key,
-                name: config.name,
-                isFree: config.isFree
-            }));
+        const mainApp = window.raptureAccessible;
+        if (!mainApp || !mainApp.aiProviders) return [];
+
+        return Array.from(mainApp.aiProviders.values()).filter(provider => {
+            if (provider.requiresKey) {
+                return this.apiKeys.has(provider.name.toLowerCase().replace(' ', ''));
+            }
+            return true;
+        });
     }
 
     getAnalysisHistory() {
         return this.analysisHistory;
     }
+
+    clearHistory() {
+        this.analysisHistory = [];
+        this.saveAnalysisHistory();
+        console.log('🗑️ Analysis history cleared');
+    }
 }
 
-// Initialize AI analyzer when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    window.aiAnalyzer = new AIAnalyzer();
-});
-
-console.log('🤖 AI analyzer module loaded');
+// Initialize the AI analyzer
+const aiAnalyzer = new AIAnalyzer();
+window.aiAnalyzer = aiAnalyzer;
