@@ -754,11 +754,14 @@ class RaptureAccessible {
             : 'Ready to analyze';
         progressPercentage.textContent = `${percentage}%`;
 
+        // Update mini progress bar
+        this.updateMiniProgress(percentage, this.analysisProgress.isActive ? 'Analyzing...' : 'Ready');
+
         // Update step indicators
         this.analysisProgress.steps.forEach((step, index) => {
             const stepEl = document.getElementById(`step${index + 1}`);
             const statusEl = document.getElementById(`step${index + 1}Status`);
-            
+
             if (stepEl && statusEl) {
                 stepEl.className = `progress-step ${step.status}`;
                 statusEl.textContent = step.status === 'completed' ? '✅ Completed' :
@@ -821,10 +824,11 @@ class RaptureAccessible {
 
         if (totalEl) totalEl.textContent = this.aiRequests.total;
 
+        const rate = this.aiRequests.total > 0
+            ? Math.round((this.aiRequests.successful / this.aiRequests.total) * 100)
+            : 100;
+
         if (successEl) {
-            const rate = this.aiRequests.total > 0
-                ? Math.round((this.aiRequests.successful / this.aiRequests.total) * 100)
-                : 100;
             successEl.textContent = `${rate}%`;
         }
 
@@ -842,6 +846,9 @@ class RaptureAccessible {
                 ? lastRequest.timestamp.toLocaleTimeString()
                 : 'Never';
         }
+
+        // Update mini status bar
+        this.updateMiniAIStats(this.aiRequests.total, rate);
     }
 
     updateAIRequestLogDisplay() {
@@ -1084,6 +1091,129 @@ For detailed help, check the "Voice Commands" section below.
         setTimeout(closePopup, 30000);
     }
 
+    // ===== COLLAPSIBLE SECTIONS FUNCTIONALITY =====
+
+    setupCollapsibleSections() {
+        const collapsibleHeaders = document.querySelectorAll('.collapsible-header');
+
+        collapsibleHeaders.forEach(header => {
+            header.addEventListener('click', () => {
+                this.toggleCollapsibleSection(header);
+            });
+
+            header.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    this.toggleCollapsibleSection(header);
+                }
+            });
+        });
+    }
+
+    toggleCollapsibleSection(header) {
+        const isExpanded = header.getAttribute('aria-expanded') === 'true';
+        const content = header.nextElementSibling;
+        const toggle = header.querySelector('.collapse-toggle');
+
+        if (isExpanded) {
+            header.setAttribute('aria-expanded', 'false');
+            content.style.display = 'none';
+        } else {
+            header.setAttribute('aria-expanded', 'true');
+            content.style.display = 'block';
+        }
+
+        // Announce state change for screen readers
+        if (window.accessibilityManager) {
+            const sectionName = header.querySelector('h3').textContent;
+            window.accessibilityManager.announce(`${sectionName} ${isExpanded ? 'collapsed' : 'expanded'}`);
+        }
+    }
+
+    // ===== MINI STATUS BAR COMPONENTS =====
+
+    setupMiniStatusBar() {
+        this.miniProgress = {
+            bar: document.getElementById('miniAnalysisProgressBar'),
+            text: document.getElementById('miniProgressText')
+        };
+
+        this.miniAIStats = {
+            totalRequests: document.getElementById('miniTotalRequests'),
+            successRate: document.getElementById('miniSuccessRate')
+        };
+
+        this.miniAnnouncements = {
+            count: document.getElementById('announcementsCount'),
+            list: document.getElementById('miniAnnouncementsList'),
+            announcements: []
+        };
+
+        this.setupMiniAnnouncements();
+    }
+
+    setupMiniAnnouncements() {
+        // Override the accessibility manager's announce method to capture announcements
+        if (window.accessibilityManager && window.accessibilityManager.announce) {
+            const originalAnnounce = window.accessibilityManager.announce.bind(window.accessibilityManager);
+
+            window.accessibilityManager.announce = (message) => {
+                originalAnnounce(message);
+                this.addMiniAnnouncement(message);
+            };
+        }
+    }
+
+    addMiniAnnouncement(message) {
+        this.miniAnnouncements.announcements.unshift(message);
+
+        // Keep only last 3 announcements
+        if (this.miniAnnouncements.announcements.length > 3) {
+            this.miniAnnouncements.announcements = this.miniAnnouncements.announcements.slice(0, 3);
+        }
+
+        this.updateMiniAnnouncementsDisplay();
+    }
+
+    updateMiniAnnouncementsDisplay() {
+        if (!this.miniAnnouncements.list || !this.miniAnnouncements.count) return;
+
+        this.miniAnnouncements.count.textContent = this.miniAnnouncements.announcements.length;
+
+        // Clear existing items except the first one
+        while (this.miniAnnouncements.list.children.length > 1) {
+            this.miniAnnouncements.list.removeChild(this.miniAnnouncements.list.lastChild);
+        }
+
+        // Add new announcements
+        this.miniAnnouncements.announcements.forEach((announcement, index) => {
+            if (index > 0) { // Skip the first item which is the placeholder
+                const item = document.createElement('div');
+                item.className = 'mini-announcement-item';
+                item.textContent = announcement.length > 20 ? announcement.substring(0, 20) + '...' : announcement;
+                this.miniAnnouncements.list.appendChild(item);
+            }
+        });
+    }
+
+    updateMiniProgress(percentage, text) {
+        if (this.miniProgress.bar) {
+            this.miniProgress.bar.style.width = `${percentage}%`;
+        }
+        if (this.miniProgress.text) {
+            this.miniProgress.text.textContent = text;
+        }
+    }
+
+    updateMiniAIStats(total, rate) {
+        if (this.miniAIStats.totalRequests) {
+            this.miniAIStats.totalRequests.textContent = `AI: ${total}`;
+        }
+        if (this.miniAIStats.successRate) {
+            this.miniAIStats.successRate.textContent = `${rate}%`;
+        }
+    }
+
     // ===== INITIALIZATION INTEGRATION =====
 
     performInitialization() {
@@ -1103,6 +1233,8 @@ For detailed help, check the "Voice Commands" section below.
             this.setupAIRequestLogging();
             this.setupSolutionsGuide();
             this.setupBottomStatusBar();
+            this.setupCollapsibleSections();
+            this.setupMiniStatusBar();
 
             this.isInitialized = true;
             console.log('✅ Rapture Accessible initialized successfully');

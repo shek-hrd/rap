@@ -216,154 +216,141 @@
                 <p id="ai-input-desc">Ask questions about the current capture or analysis</p>
             </div>
 
-            <!-- Console Output Watch -->
-            <section class="console-watch-section" role="region" aria-labelledby="console-heading">
-                <h3 id="console-heading">🖥️ Console Output Monitor</h3>
-                <div class="console-controls">
-                    <button id="clearConsole" class="btn btn-small btn-secondary">🗑️ Clear Console</button>
-                    <button id="toggleConsole" class="btn btn-small btn-info">⏸️ Pause Monitoring</button>
-                    <button id="exportConsole" class="btn btn-small btn-primary">📄 Export Logs</button>
+            <!-- Collapsible Console Output Watch -->
+            <section class="console-watch-section collapsible-section" role="region" aria-labelledby="console-heading">
+                <div class="section-header collapsible-header" id="console-heading" role="button" aria-expanded="false" tabindex="0">
+                    <h3>🖥️ Console Output Monitor</h3>
+                    <span class="collapse-toggle">▼</span>
                 </div>
-                <div class="console-output">
-                    <div class="console-header">
-                        <span class="console-title">Live Console Output</span>
-                        <span class="console-stats">
-                            <span id="errorCount" class="error-count">Errors: 0</span>
-                            <span id="warningCount" class="warning-count">Warnings: 0</span>
-                            <span id="infoCount" class="info-count">Info: 0</span>
-                        </span>
+                <div class="collapsible-content" style="display: none;">
+                    <div class="console-controls">
+                        <button id="clearConsole" class="btn btn-small btn-secondary">🗑️ Clear Console</button>
+                        <button id="toggleConsole" class="btn btn-small btn-info">⏸️ Pause Monitoring</button>
+                        <button id="exportConsole" class="btn btn-small btn-primary">📄 Export Logs</button>
                     </div>
-                    <div id="consoleLog" class="console-log" role="log" aria-live="polite" aria-label="Console output log"></div>
-                </div>
-            </section>
-
-            <!-- Analysis Progress -->
-            <section class="analysis-progress-section" role="region" aria-labelledby="progress-heading">
-                <h3 id="progress-heading">📊 Analysis Progress</h3>
-                <div class="progress-container">
-                    <div class="progress-track">
-                        <div id="analysisProgressBar" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%"></div>
-                    </div>
-                    <div class="progress-info">
-                        <span id="progressText" class="progress-text">Ready to analyze</span>
-                        <span id="progressPercentage" class="progress-percentage">0%</span>
-                    </div>
-                </div>
-                <div class="progress-details">
-                    <div class="progress-step" id="step1">
-                        <span class="step-indicator">1</span>
-                        <span class="step-name">Image Processing</span>
-                        <span class="step-status" id="step1Status">⏳ Pending</span>
-                    </div>
-                    <div class="progress-step" id="step2">
-                        <span class="step-indicator">2</span>
-                        <span class="step-name">AI Analysis</span>
-                        <span class="step-status" id="step2Status">⏳ Pending</span>
-                    </div>
-                    <div class="progress-step" id="step3">
-                        <span class="step-indicator">3</span>
-                        <span class="step-name">Result Processing</span>
-                        <span class="step-status" id="step3Status">⏳ Pending</span>
+                    <div class="console-output">
+                        <div class="console-header">
+                            <span class="console-title">Live Console Output</span>
+                            <span class="console-stats">
+                                <span id="errorCount" class="error-count">Errors: 0</span>
+                                <span id="warningCount" class="warning-count">Warnings: 0</span>
+                                <span id="infoCount" class="info-count">Info: 0</span>
+                            </span>
+                        </div>
+                        <div id="consoleLog" class="console-log" role="log" aria-live="polite" aria-label="Console output log"></div>
                     </div>
                 </div>
             </section>
 
-            <!-- AI Requests Summary -->
-            <section class="ai-requests-section" role="region" aria-labelledby="ai-summary-heading">
-                <h3 id="ai-summary-heading">🤖 AI Requests Summary</h3>
-                <div class="ai-summary-container">
-                    <div class="ai-stats-grid">
-                        <div class="ai-stat-item">
-                            <span class="stat-label">Total Requests:</span>
-                            <span class="stat-value" id="totalRequests">0</span>
-                        </div>
-                        <div class="ai-stat-item">
-                            <span class="stat-label">Success Rate:</span>
-                            <span class="stat-value" id="successRate">100%</span>
-                        </div>
-                        <div class="ai-stat-item">
-                            <span class="stat-label">Avg Response:</span>
-                            <span class="stat-value" id="avgResponseTime">0ms</span>
-                        </div>
-                        <div class="ai-stat-item">
-                            <span class="stat-label">Last Request:</span>
-                            <span class="stat-value" id="lastRequestTime">Never</span>
-                        </div>
-                    </div>
-                    <div class="ai-request-log">
-                        <h4>Recent AI Requests</h4>
-                        <div id="aiRequestLog" class="request-log" role="log" aria-label="AI request history"></div>
-                    </div>
+            <!-- Collapsible Tool Features & Description -->
+            <section class="tool-features-section collapsible-section" role="region" aria-labelledby="features-heading">
+                <div class="section-header collapsible-header" id="features-heading" role="button" aria-expanded="false" tabindex="0">
+                    <h3>🔧 Tool Features & Description</h3>
+                    <span class="collapse-toggle">▼</span>
                 </div>
-            </section>
-
-            <!-- Solutions Guide -->
-            <section class="solutions-guide-section" role="region" aria-labelledby="solutions-heading">
-                <h3 id="solutions-heading">💡 Solutions Guide</h3>
-                <div class="solutions-container">
-                    <div class="solutions-tabs">
-                        <button class="solution-tab active" data-tab="common-issues">Common Issues</button>
-                        <button class="solution-tab" data-tab="error-codes">Error Codes</button>
-                        <button class="solution-tab" data-tab="troubleshooting">Troubleshooting</button>
-                        <button class="solution-tab" data-tab="best-practices">Best Practices</button>
-                    </div>
-                    <div class="solutions-content">
-                        <div id="common-issues" class="solution-tab-content active">
-                            <h4>Common Issues & Solutions</h4>
-                            <div class="issue-item">
-                                <h5>🔴 Screen Capture Fails</h5>
-                                <p><strong>Solution:</strong> Check browser permissions for screen capture. Ensure you're using HTTPS or localhost.</p>
-                            </div>
-                            <div class="issue-item">
-                                <h5>🟡 AI Analysis Timeout</h5>
-                                <p><strong>Solution:</strong> Check internet connection. Try switching AI providers in settings.</p>
-                            </div>
-                            <div class="issue-item">
-                                <h5>🔵 Voice Commands Not Working</h5>
-                                <p><strong>Solution:</strong> Grant microphone permissions and ensure browser supports speech recognition.</p>
-                            </div>
+                <div class="collapsible-content" style="display: none;">
+                    <div class="features-grid">
+                        <div class="feature-card">
+                            <h4>📸 Screen Capture</h4>
+                            <p>Manual and automatic screen capture with customizable timing and count settings.</p>
                         </div>
-                        <div id="error-codes" class="solution-tab-content">
-                            <h4>Error Code Reference</h4>
-                            <div class="error-item">
-                                <h5>ERR_CAPTURE_FAILED (1001)</h5>
-                                <p>Screen capture permission denied or not available.</p>
-                            </div>
-                            <div class="error-item">
-                                <h5>ERR_AI_TIMEOUT (2001)</h5>
-                                <p>AI service request timed out. Check connection.</p>
-                            </div>
-                            <div class="error-item">
-                                <h5>ERR_STORAGE_FULL (3001)</h5>
-                                <p>Local storage quota exceeded. Clear old captures.</p>
-                            </div>
+                        <div class="feature-card">
+                            <h4>🎥 Video Recording</h4>
+                            <p>Record screen activity with start/stop controls and live preview functionality.</p>
                         </div>
-                        <div id="troubleshooting" class="solution-tab-content">
-                            <h4>Troubleshooting Steps</h4>
-                            <ol class="troubleshooting-list">
-                                <li>Check browser console for error messages</li>
-                                <li>Verify all permissions are granted</li>
-                                <li>Test with a simple capture first</li>
-                                <li>Check internet connectivity</li>
-                                <li>Try different AI provider if analysis fails</li>
-                            </ol>
+                        <div class="feature-card">
+                            <h4>🤖 AI Analysis</h4>
+                            <p>Multiple AI providers (Gemini, Hugging Face, OpenAI) for intelligent content analysis.</p>
                         </div>
-                        <div id="best-practices" class="solution-tab-content">
-                            <h4>Best Practices</h4>
-                            <ul class="best-practices-list">
-                                <li>Use HTTPS or localhost for screen capture</li>
-                                <li>Grant all necessary permissions upfront</li>
-                                <li>Keep browser updated for latest features</li>
-                                <li>Clear storage regularly to prevent quota issues</li>
-                                <li>Test voice commands in quiet environment</li>
-                            </ul>
+                        <div class="feature-card">
+                            <h4>🔊 Accessibility</h4>
+                            <p>Full screen reader support, voice commands, and high contrast interface.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4>💾 Data Management</h4>
+                            <p>Save, export, and manage captures with local storage and ZIP export.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4>⚡ Automation</h4>
+                            <p>Sequential actions, auto-capture, and batch processing capabilities.</p>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Status Bar - Bottom -->
+            <!-- Collapsible Solutions Guide -->
+            <section class="solutions-guide-section collapsible-section" role="region" aria-labelledby="solutions-heading">
+                <div class="section-header collapsible-header" id="solutions-heading" role="button" aria-expanded="false" tabindex="0">
+                    <h3>💡 Solutions Guide</h3>
+                    <span class="collapse-toggle">▼</span>
+                </div>
+                <div class="collapsible-content" style="display: none;">
+                    <div class="solutions-container">
+                        <div class="solutions-tabs">
+                            <button class="solution-tab active" data-tab="common-issues">Common Issues</button>
+                            <button class="solution-tab" data-tab="error-codes">Error Codes</button>
+                            <button class="solution-tab" data-tab="troubleshooting">Troubleshooting</button>
+                            <button class="solution-tab" data-tab="best-practices">Best Practices</button>
+                        </div>
+                        <div class="solutions-content">
+                            <div id="common-issues" class="solution-tab-content active">
+                                <h4>Common Issues & Solutions</h4>
+                                <div class="issue-item">
+                                    <h5>🔴 Screen Capture Fails</h5>
+                                    <p><strong>Solution:</strong> Check browser permissions for screen capture. Ensure you're using HTTPS or localhost.</p>
+                                </div>
+                                <div class="issue-item">
+                                    <h5>🟡 AI Analysis Timeout</h5>
+                                    <p><strong>Solution:</strong> Check internet connection. Try switching AI providers in settings.</p>
+                                </div>
+                                <div class="issue-item">
+                                    <h5>🔵 Voice Commands Not Working</h5>
+                                    <p><strong>Solution:</strong> Grant microphone permissions and ensure browser supports speech recognition.</p>
+                                </div>
+                            </div>
+                            <div id="error-codes" class="solution-tab-content">
+                                <h4>Error Code Reference</h4>
+                                <div class="error-item">
+                                    <h5>ERR_CAPTURE_FAILED (1001)</h5>
+                                    <p>Screen capture permission denied or not available.</p>
+                                </div>
+                                <div class="error-item">
+                                    <h5>ERR_AI_TIMEOUT (2001)</h5>
+                                    <p>AI service request timed out. Check connection.</p>
+                                </div>
+                                <div class="error-item">
+                                    <h5>ERR_STORAGE_FULL (3001)</h5>
+                                    <p>Local storage quota exceeded. Clear old captures.</p>
+                                </div>
+                            </div>
+                            <div id="troubleshooting" class="solution-tab-content">
+                                <h4>Troubleshooting Steps</h4>
+                                <ol class="troubleshooting-list">
+                                    <li>Check browser console for error messages</li>
+                                    <li>Verify all permissions are granted</li>
+                                    <li>Test with a simple capture first</li>
+                                    <li>Check internet connectivity</li>
+                                    <li>Try different AI provider if analysis fails</li>
+                                </ol>
+                            </div>
+                            <div id="best-practices" class="solution-tab-content">
+                                <h4>Best Practices</h4>
+                                <ul class="best-practices-list">
+                                    <li>Use HTTPS or localhost for screen capture</li>
+                                    <li>Grant all necessary permissions upfront</li>
+                                    <li>Keep browser updated for latest features</li>
+                                    <li>Clear storage regularly to prevent quota issues</li>
+                                    <li>Test voice commands in quiet environment</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Enhanced Bottom Status Bar -->
             <div class="bottom-status-bar">
+                <!-- Left Section - System Stats -->
                 <div class="status-left">
                     <div class="status-item">
                         <span class="status-label">Storage:</span>
@@ -378,30 +365,53 @@
                         <span class="status-value" id="capturesCount">-</span>
                     </div>
                 </div>
+
+                <!-- Center Section - Current Activity & Progress -->
                 <div class="status-center">
-                    <span id="currentActivity" class="current-activity">Ready</span>
+                    <div class="activity-row">
+                        <span id="currentActivity" class="current-activity">Ready</span>
+                    </div>
+                    <div class="progress-row">
+                        <!-- Compact Analysis Progress -->
+                        <div class="mini-progress-container">
+                            <div class="mini-progress-track">
+                                <div id="miniAnalysisProgressBar" class="mini-progress-bar" style="width: 0%"></div>
+                            </div>
+                            <span id="miniProgressText" class="mini-progress-text">Ready</span>
+                        </div>
+
+                        <!-- Compact AI Stats -->
+                        <div class="mini-ai-stats">
+                            <span class="mini-stat" id="miniTotalRequests">AI: 0</span>
+                            <span class="mini-stat success-rate" id="miniSuccessRate">100%</span>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Right Section - Controls & Recent Announcements -->
                 <div class="status-right">
-                    <button id="speakStatus" class="btn btn-info btn-small" aria-describedby="speak-status-desc">
-                        🔊 Speak Status
-                    </button>
-                    <button id="quickHelp" class="btn btn-secondary btn-small" title="Quick Help">
-                        ❓ Help
-                    </button>
+                    <div class="status-controls">
+                        <button id="speakStatus" class="btn btn-info btn-small" aria-describedby="speak-status-desc">
+                            🔊 Speak Status
+                        </button>
+                        <button id="quickHelp" class="btn btn-secondary btn-small" title="Quick Help">
+                            ❓ Help
+                        </button>
+                    </div>
+
+                    <!-- Compact Announcements -->
+                    <div class="mini-announcements">
+                        <div class="mini-announcements-header">
+                            <span class="announcements-label">📢</span>
+                            <span class="announcements-count" id="announcementsCount">0</span>
+                        </div>
+                        <div class="mini-announcements-list" id="miniAnnouncementsList">
+                            <div class="mini-announcement-item">System ready</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Announcements Section - Bottom of Page -->
-            <section class="announcements-section" role="region" aria-labelledby="announcements-heading">
-                <h3 id="announcements-heading" class="sr-only">System Announcements</h3>
-                <div class="announcements-container">
-                    <div class="announcements-header">
-                        <h4>📢 Recent Announcements</h4>
-                        <button id="clearAnnouncements" class="btn btn-small btn-secondary">🗑️ Clear</button>
-                    </div>
-                    <div id="announcementsList" class="announcements-list" role="log" aria-live="polite" aria-label="Recent announcements"></div>
-                </div>
-            </section>
         </main>
     </div>
 
