@@ -52,90 +52,90 @@ class AIAnalyzer {
         });
     }
 
-        async analyzeWithAI(providerConfig = null) {
-        console.log('🚀 Starting AI analysis process...');
+async analyzeWithAI(providerConfig = null) {
+    console.log('🚀 Starting AI analysis process...');
 
-        if (this.isAnalyzing) {
-            console.warn('⚠️ Analysis already in progress');
-            window.accessibilityManager?.announceError('Analysis already in progress');
-            return;
-        }
-
-        if (!this.currentCapture && !window.captureManager?.currentCapture) {
-            console.error('❌ No capture available for analysis');
-            window.accessibilityManager?.announceError('No capture available for analysis');
-            return;
-        }
-
-        this.isAnalyzing = true;
-        this.currentAnalysis = '';
-
-        try {
-            // Use provided provider or get available one
-            const provider = providerConfig || await this.getAvailableProvider();
-
-            if (!provider) {
-                console.error('❌ No available AI provider found');
-                throw new Error('No available AI provider found');
-            }
-
-            console.log(`🤖 Starting analysis with ${provider.name} (type: ${provider.type}, endpoint: ${provider.endpoint})`);
-
-            // Broadcast analysis started event
-            window.dispatchEvent(new CustomEvent('analysis:started', {
-                detail: { provider: provider.name }
-            }));
-
-            console.log(`📊 Capture data: ${this.getCaptureData().type}, ${this.getCaptureData().name}`);
-            const analysis = await this.performAnalysis(provider);
-
-            this.currentAnalysis = analysis;
-            this.addToHistory(provider.name, analysis);
-
-            // Broadcast completion event
-            window.dispatchEvent(new CustomEvent('analysis:completed', {
-                detail: { analysis, provider: provider.name }
-            }));
-
-            console.log(`✅ Analysis completed successfully with ${provider.name}`);
-            console.log(`📝 Analysis length: ${analysis.length} characters`);
-            window.accessibilityManager?.announce('Analysis completed successfully');
-            return analysis;
-
-        } catch (error) {
-            console.error('❌ Analysis failed:', error.message);
-            console.error('❌ Error details:', error);
-
-            // Try fallback provider
-            const fallbackProvider = await this.getFallbackProvider();
-            if (fallbackProvider) {
-                console.log(`🔄 Retrying with fallback provider: ${fallbackProvider.name}`);
-                try {
-                    const analysis = await this.performAnalysis(fallbackProvider);
-                    this.currentAnalysis = analysis;
-                    this.addToHistory(fallbackProvider.name, analysis);
-
-                    window.dispatchEvent(new CustomEvent('analysis:completed', {
-                        detail: { analysis, provider: fallbackProvider.name }
-                    }));
-
-                    console.log(`✅ Fallback analysis completed with ${fallbackProvider.name}`);
-                    window.accessibilityManager?.announce('Analysis completed with fallback provider');
-                    return analysis;
-                } catch (fallbackError) {
-                    console.error('❌ Fallback analysis also failed:', fallbackError.message);
-                    console.error('❌ Fallback error details:', fallbackError);
-                    window.accessibilityManager?.announceError(`Analysis failed: ${fallbackError.message}`);
-                    throw fallbackError;
-                }
-            }
-
-            window.accessibilityManager?.announceError(`Analysis failed: ${error.message}`);
-            throw error;
-        } finally {
-            this.isAnalyzing = false;
-        }
+    if (this.isAnalyzing) {
+        console.warn('⚠️ Analysis already in progress');
+        window.accessibilityManager?.announceError('Analysis already in progress');
+        return;
     }
+
+    if (!this.currentCapture && !window.captureManager?.currentCapture) {
+        console.error('❌ No capture available for analysis');
+        window.accessibilityManager?.announceError('No capture available for analysis');
+        return;
+    }
+
+    this.isAnalyzing = true;
+    this.currentAnalysis = '';
+
+    try {
+        // Use provided provider or get available one
+        const provider = providerConfig || await this.getAvailableProvider();
+
+        if (!provider) {
+            console.error('❌ No available AI provider found');
+            throw new Error('No available AI provider found');
+        }
+
+        console.log(`🤖 Starting analysis with ${provider.name} (type: ${provider.type}, endpoint: ${provider.endpoint})`);
+
+        // Broadcast analysis started event
+        window.dispatchEvent(new CustomEvent('analysis:started', {
+            detail: { provider: provider.name }
+        }));
+
+        console.log(`📊 Capture data: ${this.getCaptureData().type}, ${this.getCaptureData().name}`);
+        const analysis = await this.performAnalysis(provider);
+
+        this.currentAnalysis = analysis;
+        this.addToHistory(provider.name, analysis);
+
+        // Broadcast completion event
+        window.dispatchEvent(new CustomEvent('analysis:completed', {
+            detail: { analysis, provider: provider.name }
+        }));
+
+        console.log(`✅ Analysis completed successfully with ${provider.name}`);
+        console.log(`📝 Analysis length: ${analysis.length} characters`);
+        window.accessibilityManager?.announce('Analysis completed successfully');
+        return analysis;
+
+    } catch (error) {
+        console.error('❌ Analysis failed:', error.message);
+        console.error('❌ Error details:', error);
+
+        // Try fallback provider
+        const fallbackProvider = await this.getFallbackProvider();
+        if (fallbackProvider) {
+            console.log(`🔄 Retrying with fallback provider: ${fallbackProvider.name}`);
+            try {
+                const analysis = await this.performAnalysis(fallbackProvider);
+                this.currentAnalysis = analysis;
+                this.addToHistory(fallbackProvider.name, analysis);
+
+                window.dispatchEvent(new CustomEvent('analysis:completed', {
+                    detail: { analysis, provider: fallbackProvider.name }
+                }));
+
+                console.log(`✅ Fallback analysis completed with ${fallbackProvider.name}`);
+                window.accessibilityManager?.announce('Analysis completed with fallback provider');
+                return analysis;
+            } catch (fallbackError) {
+                console.error('❌ Fallback analysis also failed:', fallbackError.message);
+                console.error('❌ Fallback error details:', fallbackError);
+                window.accessibilityManager?.announceError(`Analysis failed: ${fallbackError.message}`);
+                throw fallbackError;
+            }
+        }
+
+        window.accessibilityManager?.announceError(`Analysis failed: ${error.message}`);
+        throw error;
+    } finally {
+        this.isAnalyzing = false;
+    }
+}
 
     async getAvailableProvider() {
         // Get provider configurations from main app
@@ -177,7 +177,7 @@ class AIAnalyzer {
         return null;
     }
 
-        async testProvider(provider) {
+    async testProvider(provider) {
         console.log(`🔍 Testing AI provider: ${provider.name}`);
 
         try {
@@ -236,8 +236,7 @@ class AIAnalyzer {
             console.warn(`❌ Provider ${provider.name} test failed:`, error.message);
             return false;
         }
-    }</search>
-</search_and_replace>
+    }
 
     async performAnalysis(provider) {
         const captureData = this.getCaptureData();
@@ -489,7 +488,7 @@ Please be specific and thorough in your analysis, as this is for accessibility p
 
             if (!response.ok) {
                 if (response.status === 401 || response.status === 429) {
-                    return 'I can see this is a screen capture, but I\'m unable to provide a detailed analysis right now. Please try again later or use a different AI provider.';
+                    return 'I can see this is a screen capture, but I\'m unable to provide a detailed analysis right now due to API limitations. Please try again later or use a different AI provider.';
                 }
                 throw new Error(`Axiom.ai API error: ${response.status}`);
             }
@@ -727,7 +726,7 @@ Please be specific and thorough in your analysis, as this is for accessibility p
 
         } catch (error) {
             console.warn('Web GPT analysis failed:', error);
-            return 'I can see this is a screen capture, but I\'m unable to provide a detailed analysis right now due to API limitations. Please try again later or use a different AI provider.';
+            return 'I can see this is a screen capture, but I\'m unable to provide a detailed analysis right now. Please try again later or use a different AI provider.';
         }
     }
 
@@ -808,7 +807,7 @@ Please be specific and thorough in your analysis, as this is for accessibility p
 
             // If all endpoints failed, return fallback message
             console.warn('All Claude endpoints failed, using fallback');
-            return 'I can see this is a screen capture, but I\'m unable to provide a detailed analysis right now. Please try again later or use a different AI provider.';
+            return 'I can see this is a screen capture, but I\'m unable to provide a detailed analysis right now due to API limitations. Please try again later or use a different AI provider.';
 
         } catch (error) {
             console.warn('Web Claude analysis failed:', error);
