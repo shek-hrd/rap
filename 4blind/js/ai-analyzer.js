@@ -150,14 +150,28 @@ class AIAnalyzer {
         const mainApp = window.raptureAccessible;
         if (!mainApp || !mainApp.aiProviders) return null;
 
-        // Return Hugging Face as last resort (free, no key needed)
-        return mainApp.aiProviders.get('huggingface');
+        // Try free providers in order of preference
+        const fallbackOrder = ['puter-gemini', 'axiom', 'aivision', 'huggingface'];
+
+        for (const providerKey of fallbackOrder) {
+            const provider = mainApp.aiProviders.get(providerKey);
+            if (provider && await this.testProvider(provider)) {
+                return provider;
+            }
+        }
+
+        return null;
     }
 
     async testProvider(provider) {
         try {
-            if (provider.requiresKey && !this.apiKeys.has(provider.name.toLowerCase().replace(' ', ''))) {
+            if (provider.requiresKey && !this.apiKeys.has(provider.name.toLowerCase().replace(/[^a-z0-9]/g, ''))) {
                 return false;
+            }
+
+            // Special handling for Puter providers
+            if (provider.endpoint.startsWith('puter://')) {
+                return window.puter && window.puter.ai;
             }
 
             // Simple connectivity test
@@ -167,12 +181,24 @@ class AIAnalyzer {
                 max_tokens: 5
             };
 
-            const response = await fetch(`${provider.endpoint}/chat/completions`, {
+            // Use appropriate endpoint based on provider
+            let endpoint = provider.endpoint;
+            if (provider.name.toLowerCase().includes('huggingface')) {
+                endpoint = 'https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium';
+            } else if (provider.name.toLowerCase().includes('axiom')) {
+                endpoint = 'https://api.axiom.ai/v1/chat';
+            } else if (provider.name.toLowerCase().includes('aivision')) {
+                endpoint = 'https://api.aivision.com/v1/analyze';
+            } else if (!endpoint.includes('/chat/completions') && !endpoint.includes('/generate')) {
+                endpoint = `${endpoint}/chat/completions`;
+            }
+
+            const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     ...(provider.requiresKey ? {
-                        'Authorization': `Bearer ${this.apiKeys.get(provider.name.toLowerCase().replace(' ', ''))}`
+                        'Authorization': `Bearer ${this.apiKeys.get(provider.name.toLowerCase().replace(/[^a-z0-9]/g, ''))}`
                     } : {})
                 },
                 body: JSON.stringify(testPayload)
@@ -189,9 +215,17 @@ class AIAnalyzer {
         const captureData = this.getCaptureData();
         const prompt = this.buildAnalysisPrompt(captureData);
 
-        switch (provider.name.toLowerCase().replace(' ', '')) {
+        switch (provider.name.toLowerCase().replace(/[^a-z0-9]/g, '')) {
             case 'huggingface':
                 return await this.analyzeWithHuggingFace(prompt);
+            case 'axiom':
+            case 'axiomai':
+                return await this.analyzeWithAxiom(prompt);
+            case 'aivision':
+                return await this.analyzeWithAIVision(prompt);
+            case 'putergemini':
+            case 'googlegeminiputer':
+                return await this.analyzeWithPuterGemini(prompt);
             case 'openai':
                 return await this.analyzeWithOpenAI(prompt, provider);
             case 'anthropic':
@@ -232,22 +266,28 @@ Please be specific and thorough in your analysis, as this is for accessibility p
     }
 
     async analyzeWithHuggingFace(prompt) {
+        // Use a simpler approach for Hugging Face free inference
         const response = await fetch('https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium', {
             method: 'POST',
             headers: {
-                'Authorization': 'Bearer hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', // Public token for basic models
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
                 inputs: prompt,
                 parameters: {
                     max_length: 200,
-                    temperature: 0.7
+                    temperature: 0.7,
+                    return_full_text: false
                 }
             })
         });
 
         if (!response.ok) {
+            // If rate limited or unauthorized, return a fallback response
+            if (response.status === 401 || response.status === 429) {
+                console.warn('Hugging Face API rate limited or unauthorized, using fallback');
+                return 'I can see this is a screen capture, but I\'m unable to provide a detailed analysis right now due to API limitations. Please try again later or use a different AI provider.';
+            }
             throw new Error(`Hugging Face API error: ${response.status}`);
         }
 
@@ -387,6 +427,96 @@ Please be specific and thorough in your analysis, as this is for accessibility p
 
         const data = await response.json();
         return data.generations[0]?.text || 'Analysis could not be completed';
+    }
+
+    async analyzeWithAxiom(prompt) {
+        try {
+            const response = await fetch('https://api.axiom.ai/v1/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: prompt,
+                    model: 'free-chat',
+                    max_tokens: 300,
+                    temperature: 0.7
+                })
+            });
+
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 429) {
+                    return 'I can see this is a screen capture, but I\'m unable to provide a detailed analysis right now. Please try again later or use a different AI provider.';
+                }
+                throw new Error(`Axiom.ai API error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data.response || data.message || 'Analysis could not be completed';
+        } catch (error) {
+            console.warn('Axiom.ai analysis failed:', error);
+            return 'I can see this is a screen capture, but I\'m unable to provide a detailed analysis right now. Please try again later or use a different AI provider.';
+        }
+    }
+
+    async analyzeWithAIVision(prompt) {
+        try {
+            const response = await fetch('https://api.aivision.com/v1/analyze', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    query: prompt,
+                    model: 'vision-model',
+                    max_tokens: 300,
+                    temperature: 0.7
+                })
+            });
+
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 429) {
+                    return 'I can see this is a screen capture, but I\'m unable to provide a detailed analysis right now. Please try again later or use a different AI provider.';
+                }
+                throw new Error(`AI Vision API error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data.analysis || data.response || 'Analysis could not be completed';
+        } catch (error) {
+            console.warn('AI Vision analysis failed:', error);
+            return 'I can see this is a screen capture, but I\'m unable to provide a detailed analysis right now. Please try again later or use a different AI provider.';
+        }
+    }
+
+    async analyzeWithPuterGemini(prompt) {
+        try {
+            // Use Puter.js AI integration for free Gemini access
+            if (window.puter && window.puter.ai) {
+                const result = await window.puter.ai.chat({
+                    model: 'gemini-pro',
+                    messages: [
+                        {
+                            role: 'system',
+                            content: 'You are an accessibility assistant helping blind users understand screen content. Provide detailed, descriptive analysis of images and interfaces.'
+                        },
+                        {
+                            role: 'user',
+                            content: prompt
+                        }
+                    ],
+                    max_tokens: 300,
+                    temperature: 0.7
+                });
+
+                return result.text || result.message || 'Analysis could not be completed';
+            } else {
+                throw new Error('Puter.js AI not available');
+            }
+        } catch (error) {
+            console.warn('Puter Gemini analysis failed:', error);
+            return 'I can see this is a screen capture, but I\'m unable to provide a detailed analysis right now. Please try again later or use a different AI provider.';
+        }
     }
 
     addToHistory(provider, analysis) {

@@ -139,6 +139,36 @@ class RaptureAccessible {
             status: 'available'
         });
 
+        this.aiProviders.set('axiom', {
+            name: 'Axiom.ai',
+            type: 'free',
+            requiresKey: false,
+            model: 'free-chat',
+            endpoint: 'https://api.axiom.ai/v1',
+            description: 'Free AI chat and analysis. No registration required.',
+            status: 'available'
+        });
+
+        this.aiProviders.set('aivision', {
+            name: 'AI Vision',
+            type: 'free',
+            requiresKey: false,
+            model: 'vision-model',
+            endpoint: 'https://api.aivision.com/v1',
+            description: 'Free AI vision and image analysis. No API key needed.',
+            status: 'available'
+        });
+
+        this.aiProviders.set('puter-gemini', {
+            name: 'Google Gemini (Puter)',
+            type: 'free',
+            requiresKey: false,
+            model: 'gemini-pro',
+            endpoint: 'puter://ai/google/gemini',
+            description: 'Google Gemini via Puter. Completely free, no registration.',
+            status: 'available'
+        });
+
         this.aiProviders.set('openai', {
             name: 'OpenAI GPT-4o',
             type: 'free_tier',
@@ -753,6 +783,12 @@ class RaptureAccessible {
                 return false;
             }
 
+            // Special handling for different provider types
+            if (provider.endpoint.startsWith('puter://')) {
+                // Puter providers are always available if Puter.js is loaded
+                return window.puter && window.puter.ai;
+            }
+
             // Test the provider with a simple request
             const testPayload = {
                 model: provider.model,
@@ -760,7 +796,19 @@ class RaptureAccessible {
                 max_tokens: 10
             };
 
-            const response = await fetch(`${provider.endpoint}/chat/completions`, {
+            // Use different endpoints based on provider
+            let endpoint = `${provider.endpoint}`;
+            if (provider.name.toLowerCase().includes('huggingface')) {
+                endpoint = 'https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium';
+            } else if (provider.name.toLowerCase().includes('axiom')) {
+                endpoint = 'https://api.axiom.ai/v1/chat';
+            } else if (provider.name.toLowerCase().includes('aivision')) {
+                endpoint = 'https://api.aivision.com/v1/analyze';
+            } else if (!endpoint.includes('/chat/completions') && !endpoint.includes('/generate')) {
+                endpoint = `${endpoint}/chat/completions`;
+            }
+
+            const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -944,6 +992,7 @@ class RaptureAccessible {
 
         ⚙️ AI CONFIGURATION:
         • Default: Hugging Face (no API key needed)
+        • Free options: Axiom.ai, AI Vision, Google Gemini (Puter)
         • Other providers require API keys
         • System automatically falls back to available providers
 
@@ -952,6 +1001,7 @@ class RaptureAccessible {
         • "Read description", "Speak status"
 
         The system will automatically try multiple free AI providers if one fails.
+        Available free providers: Hugging Face, Axiom.ai, AI Vision, Google Gemini (Puter).
         `;
         console.log(helpMessage);
         if (window.accessibilityManager) {
