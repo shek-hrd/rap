@@ -361,83 +361,254 @@ class RaptureAccessible {
         }
     }
 
-    // Predefined action sequences
-    startQuickSequence() {
-        const actions = [
-            {
-                name: "Screen Capture",
-                execute: async () => {
-                    if (window.autoCaptureManager) {
-                        await window.autoCaptureManager.manualScreenCapture();
-                    }
-                }
-            },
-            {
-                name: "AI Analysis",
-                execute: async () => {
-                    if (window.aiAnalyzer) {
-                        await window.aiAnalyzer.analyzeWithAI();
-                    }
-                }
-            },
-            {
-                name: "Save Capture",
-                execute: async () => {
-                    if (window.captureManager) {
-                        window.captureManager.saveCurrentCapture();
-                    }
-                }
-            }
-        ];
+    // Enhanced Sequential Actions with Capture-First Workflow
+    async startEnhancedQuickSequence() {
+        const sequenceStatus = document.getElementById('sequenceStatus');
+        const progressSteps = document.getElementById('sequenceProgressSteps');
 
-        this.performSequentialActions(actions);
+        try {
+            // Update UI to show sequence starting
+            if (sequenceStatus) {
+                sequenceStatus.querySelector('.status-text').textContent = 'Starting Quick Sequence...';
+            }
+            this.updateSequenceProgress('capture', 'active');
+
+            // Step 1: Load/Ensure Capture First (with retry logic)
+            await this.ensureCaptureAvailable('screen');
+
+            // Step 2: Wait for Live Preview to be ready
+            await this.waitForLivePreview();
+
+            // Step 3: Enable Analysis when preview is ready
+            this.enableAnalysisWhenReady();
+
+            // Step 4: Perform Analysis with enhanced error handling
+            await this.performAnalysisWithRetry();
+
+            // Step 5: Save Results
+            await this.saveSequenceResults();
+
+            // Update UI for success
+            if (sequenceStatus) {
+                sequenceStatus.querySelector('.status-text').textContent = '✅ Quick Sequence completed successfully!';
+            }
+            this.updateSequenceProgress('complete', 'success');
+
+        } catch (error) {
+            console.error('❌ Quick Sequence failed:', error);
+            if (sequenceStatus) {
+                sequenceStatus.querySelector('.status-text').textContent = `❌ Sequence failed: ${error.message}`;
+            }
+            this.updateSequenceProgress('error', 'error');
+        }
     }
 
-    startFullSequence() {
-        const actions = [
-            {
-                name: "Screen Capture",
-                execute: async () => {
-                    if (window.autoCaptureManager) {
-                        await window.autoCaptureManager.manualScreenCapture();
-                    }
-                }
-            },
-            {
-                name: "Video Frame Capture",
-                execute: async () => {
-                    if (window.autoCaptureManager) {
-                        await window.autoCaptureManager.manualVideoCapture();
-                    }
-                }
-            },
-            {
-                name: "AI Analysis",
-                execute: async () => {
-                    if (window.aiAnalyzer) {
-                        await window.aiAnalyzer.analyzeWithAI();
-                    }
-                }
-            },
-            {
-                name: "Read Analysis Aloud",
-                execute: async () => {
-                    if (window.aiAnalyzer) {
-                        window.aiAnalyzer.readDescriptionAloud();
-                    }
-                }
-            },
-            {
-                name: "Save All Captures",
-                execute: async () => {
-                    if (window.captureManager) {
-                        window.captureManager.saveCurrentCapture();
-                    }
-                }
-            }
-        ];
+    async startEnhancedFullSequence() {
+        const sequenceStatus = document.getElementById('sequenceStatus');
 
-        this.performSequentialActions(actions);
+        try {
+            if (sequenceStatus) {
+                sequenceStatus.querySelector('.status-text').textContent = 'Starting Full Sequence...';
+            }
+
+            // Step 1: Screen Capture
+            await this.ensureCaptureAvailable('screen');
+
+            // Step 2: Video Capture
+            await this.ensureCaptureAvailable('video');
+
+            // Step 3: Wait for Live Preview
+            await this.waitForLivePreview();
+
+            // Step 4: Enable Analysis
+            this.enableAnalysisWhenReady();
+
+            // Step 5: Perform Analysis
+            await this.performAnalysisWithRetry();
+
+            // Step 6: Read Analysis Aloud
+            await this.readAnalysisAloud();
+
+            // Step 7: Save Everything
+            await this.saveSequenceResults();
+
+            if (sequenceStatus) {
+                sequenceStatus.querySelector('.status-text').textContent = '✅ Full Sequence completed successfully!';
+            }
+
+        } catch (error) {
+            console.error('❌ Full Sequence failed:', error);
+            if (sequenceStatus) {
+                sequenceStatus.querySelector('.status-text').textContent = `❌ Sequence failed: ${error.message}`;
+            }
+        }
+    }
+
+    async startEmergencySequence() {
+        const sequenceStatus = document.getElementById('sequenceStatus');
+
+        try {
+            if (sequenceStatus) {
+                sequenceStatus.querySelector('.status-text').textContent = '🚨 Emergency Sequence activated!';
+            }
+
+            // Emergency mode: Quick capture + priority analysis
+            await this.performEmergencyCapture();
+            await this.waitForLivePreview();
+            this.enableAnalysisWhenReady();
+            await this.performPriorityAnalysis();
+            await this.saveSequenceResults();
+
+            if (sequenceStatus) {
+                sequenceStatus.querySelector('.status-text').textContent = '✅ Emergency Sequence completed!';
+            }
+
+        } catch (error) {
+            console.error('❌ Emergency Sequence failed:', error);
+            if (sequenceStatus) {
+                sequenceStatus.querySelector('.status-text').textContent = `❌ Emergency Sequence failed: ${error.message}`;
+            }
+        }
+    }
+
+    async ensureCaptureAvailable(type) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                if (window.autoCaptureManager) {
+                    let captureResult;
+
+                    if (type === 'screen') {
+                        captureResult = await window.autoCaptureManager.manualScreenCapture();
+                    } else if (type === 'video') {
+                        captureResult = await window.autoCaptureManager.manualVideoCapture();
+                    }
+
+                    if (captureResult) {
+                        this.addMiniAnnouncement(`✅ ${type} capture completed`);
+                        resolve(captureResult);
+                    } else {
+                        reject(new Error(`${type} capture failed`));
+                    }
+                } else {
+                    reject(new Error('Auto capture manager not available'));
+                }
+            } catch (error) {
+                console.error(`❌ ${type} capture error:`, error);
+                reject(error);
+            }
+        });
+    }
+
+    async waitForLivePreview() {
+        return new Promise((resolve, reject) => {
+            const checkPreview = () => {
+                const previewVideo = document.getElementById('previewVideo');
+                const previewCanvas = document.getElementById('previewCanvas');
+                const previewImage = document.getElementById('previewImage');
+
+                if ((previewVideo && previewVideo.style.display !== 'none') ||
+                    (previewCanvas && previewCanvas.style.display !== 'none') ||
+                    (previewImage && previewImage.style.display !== 'none')) {
+
+                    this.addMiniAnnouncement('📺 Live preview ready');
+                    resolve();
+                } else {
+                    setTimeout(checkPreview, 500); // Check every 500ms
+                }
+            };
+
+            // Timeout after 10 seconds
+            setTimeout(() => {
+                reject(new Error('Live preview timeout'));
+            }, 10000);
+
+            checkPreview();
+        });
+    }
+
+    enableAnalysisWhenReady() {
+        const analyzeBtn = document.getElementById('analyzeCapture');
+        const readAloudBtn = document.getElementById('readAloud');
+        const saveBtn = document.getElementById('saveCapture');
+
+        if (analyzeBtn) {
+            analyzeBtn.disabled = false;
+            analyzeBtn.classList.add('ready');
+        }
+        if (readAloudBtn) {
+            readAloudBtn.disabled = false;
+        }
+        if (saveBtn) {
+            saveBtn.disabled = false;
+        }
+
+        this.addMiniAnnouncement('🤖 Analysis enabled');
+    }
+
+    async performAnalysisWithRetry(maxRetries = 3) {
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                if (window.aiAnalyzer) {
+                    await window.aiAnalyzer.analyzeWithAI();
+                    this.addMiniAnnouncement(`✅ Analysis completed (attempt ${attempt})`);
+                    return; // Success, exit retry loop
+                } else {
+                    throw new Error('AI Analyzer not available');
+                }
+            } catch (error) {
+                console.warn(`⚠️ Analysis attempt ${attempt} failed:`, error);
+
+                if (attempt === maxRetries) {
+                    throw new Error(`Analysis failed after ${maxRetries} attempts: ${error.message}`);
+                }
+
+                // Wait before retry (exponential backoff)
+                await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            }
+        }
+    }
+
+    async performEmergencyCapture() {
+        if (window.autoCaptureManager) {
+            await window.autoCaptureManager.emergencyCapture();
+            this.addMiniAnnouncement('🚨 Emergency capture completed');
+        }
+    }
+
+    async performPriorityAnalysis() {
+        if (window.aiAnalyzer) {
+            // Set high priority for emergency analysis
+            await window.aiAnalyzer.analyzeWithAI();
+            this.addMiniAnnouncement('🚨 Priority analysis completed');
+        }
+    }
+
+    async readAnalysisAloud() {
+        if (window.aiAnalyzer) {
+            await window.aiAnalyzer.readDescriptionAloud();
+            this.addMiniAnnouncement('🔊 Analysis read aloud');
+        }
+    }
+
+    async saveSequenceResults() {
+        if (window.captureManager) {
+            await window.captureManager.saveCurrentCapture();
+            this.addMiniAnnouncement('💾 Sequence results saved');
+        }
+    }
+
+    updateSequenceProgress(step, status) {
+        const steps = document.querySelectorAll('#sequenceProgressSteps .step');
+        steps.forEach((stepEl, index) => {
+            const stepName = stepEl.dataset.step;
+            stepEl.className = 'step';
+
+            if (stepName === step) {
+                stepEl.classList.add(status);
+            } else if (index < steps.length - 1) {
+                stepEl.classList.add('completed');
+            }
+        });
     }
 
     formatBytes(bytes) {
@@ -459,7 +630,7 @@ class RaptureAccessible {
         };
     }
 
-    // Method to handle module communication
+    // Method to handle module communication - Enhanced with Capture-First Workflow
     broadcast(event, data) {
         // Broadcast events between modules
         switch (event) {
@@ -467,22 +638,23 @@ class RaptureAccessible {
                 if (data.capture) {
                     this.currentCapture = data.capture;
 
-                    // Auto-save capture
+                    // CAPTURE-FIRST: Save capture immediately
                     if (window.captureManager) {
                         setTimeout(() => {
                             window.captureManager.saveCurrentCapture();
-                            this.addMiniAnnouncement(`Capture saved: ${data.capture.name || 'Untitled'}`);
+                            this.addMiniAnnouncement(`✅ Capture saved: ${data.capture.name || 'Untitled'}`);
                         }, 100);
                     }
 
-                    // Auto-analyze if enabled
-                    const autoAnalyzeEnabled = document.getElementById('autoAnalyzeToggle')?.checked ?? true;
-                    if (autoAnalyzeEnabled && window.aiAnalyzer) {
-                        setTimeout(() => {
-                            window.aiAnalyzer.analyzeWithAI();
-                        }, 500);
-                    }
+                    // Don't auto-analyze immediately - wait for live preview
+                    this.scheduleAnalysisAfterPreview(data.capture);
                 }
+                break;
+
+            case 'preview:ready':
+                // Enable analysis when live preview is ready
+                this.enableAnalysisWhenReady();
+                this.addMiniAnnouncement('📺 Live preview ready - analysis enabled');
                 break;
 
             case 'analysis:completed':
@@ -494,30 +666,62 @@ class RaptureAccessible {
                         // Auto-save after analysis
                         setTimeout(() => {
                             window.captureManager.saveCurrentCapture();
-                            this.addMiniAnnouncement('Analysis completed and saved');
+                            this.addMiniAnnouncement('✅ Analysis completed and saved');
                         }, 100);
                     }
+                }
+                break;
+
+            case 'analysis:started':
+                // Update UI to show analysis in progress
+                this.updateMiniProgress(50, 'Analyzing...');
+                this.addMiniAnnouncement('🤖 Analysis in progress...');
+                break;
+
+            case 'sequence:step':
+                if (data.step && data.status) {
+                    this.updateSequenceProgress(data.step, data.status);
                 }
                 break;
         }
     }
 
-    // Setup sequential action buttons
+    scheduleAnalysisAfterPreview(capture) {
+        // Set up a check for when preview becomes available
+        const checkForPreview = () => {
+            const previewVideo = document.getElementById('previewVideo');
+            const previewCanvas = document.getElementById('previewCanvas');
+            const previewImage = document.getElementById('previewImage');
+
+            const hasPreview = (previewVideo && previewVideo.style.display !== 'none') ||
+                              (previewCanvas && previewCanvas.style.display !== 'none') ||
+                              (previewImage && previewImage.style.display !== 'none');
+
+            if (hasPreview) {
+                // Preview is ready, enable analysis
+                this.enableAnalysisWhenReady();
+
+                // Auto-analyze if enabled (but only after preview is ready)
+                const autoAnalyzeEnabled = document.getElementById('autoAnalyzeToggle')?.checked ?? true;
+                if (autoAnalyzeEnabled && window.aiAnalyzer) {
+                    setTimeout(() => {
+                        this.performAnalysisWithRetry();
+                    }, 500);
+                }
+            } else {
+                // Check again in 500ms
+                setTimeout(checkForPreview, 500);
+            }
+        };
+
+        // Start checking for preview availability
+        setTimeout(checkForPreview, 100);
+    }
+
+    // Setup sequential action buttons - Enhanced for better success rates
     setupSequentialActions() {
-        const quickSequenceBtn = document.getElementById('quickSequence');
-        const fullSequenceBtn = document.getElementById('fullSequence');
-
-        if (quickSequenceBtn) {
-            quickSequenceBtn.addEventListener('click', () => {
-                this.startQuickSequence();
-            });
-        }
-
-        if (fullSequenceBtn) {
-            fullSequenceBtn.addEventListener('click', () => {
-                this.startFullSequence();
-            });
-        }
+        // Setup new enhanced sequential action buttons
+        this.setupEnhancedSequentialButtons();
 
         // Setup Quick Help button
         const quickHelpBtn = document.getElementById('quickHelp');
@@ -526,6 +730,126 @@ class RaptureAccessible {
                 this.showQuickHelp();
             });
         }
+
+        // Setup tools toggle for bottom expandable section
+        this.setupToolsToggle();
+
+        // Setup enhanced announcement controls
+        this.setupAnnouncementControls();
+    }
+
+    setupEnhancedSequentialButtons() {
+        const quickSequenceBtn = document.getElementById('quickSequence');
+        const fullSequenceBtn = document.getElementById('fullSequence');
+        const emergencySequenceBtn = document.getElementById('emergencySequence');
+
+        if (quickSequenceBtn) {
+            quickSequenceBtn.addEventListener('click', async () => {
+                await this.startEnhancedQuickSequence();
+            });
+        }
+
+        if (fullSequenceBtn) {
+            fullSequenceBtn.addEventListener('click', async () => {
+                await this.startEnhancedFullSequence();
+            });
+        }
+
+        if (emergencySequenceBtn) {
+            emergencySequenceBtn.addEventListener('click', async () => {
+                await this.startEmergencySequence();
+            });
+        }
+    }
+
+    setupToolsToggle() {
+        const toolsToggle = document.getElementById('toolsToggle');
+        if (toolsToggle) {
+            toolsToggle.addEventListener('click', () => {
+                this.toggleToolsSection();
+            });
+        }
+    }
+
+    setupAnnouncementControls() {
+        const clearAnnouncementsBtn = document.getElementById('clearAnnouncements');
+        const pauseAnnouncementsBtn = document.getElementById('pauseAnnouncements');
+        const exportAnnouncementsBtn = document.getElementById('exportAnnouncements');
+
+        if (clearAnnouncementsBtn) {
+            clearAnnouncementsBtn.addEventListener('click', () => {
+                this.clearAnnouncements();
+            });
+        }
+
+        if (pauseAnnouncementsBtn) {
+            pauseAnnouncementsBtn.addEventListener('click', () => {
+                this.toggleAnnouncementPause();
+            });
+        }
+
+        if (exportAnnouncementsBtn) {
+            exportAnnouncementsBtn.addEventListener('click', () => {
+                this.exportAnnouncements();
+            });
+        }
+    }
+
+    toggleToolsSection() {
+        const toolsToggle = document.getElementById('toolsToggle');
+        const toolsContent = document.getElementById('toolsContent');
+
+        if (toolsToggle && toolsContent) {
+            const isExpanded = toolsToggle.getAttribute('aria-expanded') === 'true';
+            const newState = !isExpanded;
+
+            toolsToggle.setAttribute('aria-expanded', newState.toString());
+            toolsContent.style.display = newState ? 'block' : 'none';
+            toolsToggle.querySelector('.toggle-arrow').textContent = newState ? '▼' : '▲';
+
+            // Announce state change
+            if (window.accessibilityManager) {
+                window.accessibilityManager.announce(`Tools section ${newState ? 'expanded' : 'collapsed'}`);
+            }
+        }
+    }
+
+    clearAnnouncements() {
+        const announcementsList = document.getElementById('announcementsList');
+        if (announcementsList) {
+            announcementsList.innerHTML = '<div class="announcement-item system-ready">📝 Announcements cleared</div>';
+        }
+    }
+
+    toggleAnnouncementPause() {
+        // This would control announcement flow - implementation depends on announcement system
+        const pauseBtn = document.getElementById('pauseAnnouncements');
+        if (pauseBtn) {
+            const isPaused = pauseBtn.textContent.includes('Resume');
+            pauseBtn.textContent = isPaused ? '⏸️ Pause' : '▶️ Resume';
+        }
+    }
+
+    exportAnnouncements() {
+        const announcements = document.querySelectorAll('#announcementsList .announcement-item');
+        const announcementText = Array.from(announcements)
+            .map(item => {
+                const time = item.querySelector('.announcement-time')?.textContent || '';
+                const type = item.querySelector('.announcement-type')?.textContent || '';
+                const message = item.querySelector('.announcement-message')?.textContent || '';
+                return `[${time}] ${type}: ${message}`;
+            })
+            .join('\n');
+
+        const blob = new Blob([announcementText], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `announcements-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     }
 
     // ===== NEW FUNCTIONALITY FOR CONSOLE MONITORING AND PROGRESS TRACKING =====
